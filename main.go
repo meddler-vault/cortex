@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/meddler-xyz/watchdog/watchdog"
 
@@ -11,6 +12,7 @@ import (
 )
 
 func main() {
+	log.Println("Starting watchdog")
 	topic := "test_topic"
 
 	// make a new reader that consumes from topic-A
@@ -21,6 +23,8 @@ func main() {
 		MinBytes: 10e0, // 10KB
 		MaxBytes: 10e6, // 10MB
 	})
+
+	log.Println("Starting listening to message queue")
 
 	for {
 		msg, err := r.ReadMessage(context.Background())
