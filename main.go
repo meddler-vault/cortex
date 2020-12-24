@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/meddler-xyz/watchdog/watchdog"
 
@@ -13,18 +14,29 @@ import (
 
 func main() {
 	log.Println("Starting watchdog")
-	topic := "test_topic"
+
+	kafkaAddress := os.Getenv("KAFKA_ADDRESS")
+	if kafkaAddress == "" {
+		kafkaAddress = "localhost:9092"
+	}
+
+	kafkaTopic := os.Getenv("KAFKA_TOPIC")
+	if kafkaTopic == "" {
+		kafkaTopic = "test_topic"
+	}
 
 	// make a new reader that consumes from topic-A
 	r := kaf.NewReader(kaf.ReaderConfig{
-		Brokers:  []string{"localhost:9092"},
+		Brokers:  []string{kafkaAddress},
 		GroupID:  "consumer-group-id",
-		Topic:    topic,
+		Topic:    kafkaTopic,
 		MinBytes: 10e0, // 10KB
 		MaxBytes: 10e6, // 10MB
 	})
 
 	log.Println("Starting listening to message queue")
+	log.Println("kafkaAddress", kafkaAddress)
+	log.Println("kafkaTopic", kafkaTopic)
 
 	for {
 		msg, err := r.ReadMessage(context.Background())
