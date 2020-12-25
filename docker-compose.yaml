@@ -3,6 +3,6 @@ services:
   watchdog_test:
     build: .
     environment:
-      KAFKA_ADDRESS: "kafka:9092"
+      KAFKA_ADDRESS: "kafka:19092"
       luent_host: fluentd
       fluent_port: 24224
