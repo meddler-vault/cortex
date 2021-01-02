@@ -16,11 +16,11 @@ func Bootstrap() (err error) {
 
 	inputDir := filepath.Join(*BASEPATH, *INPUTDIR)
 	outputDir := filepath.Join(*BASEPATH, *OUTPUTDIR)
-	schemaDir := filepath.Join(*BASEPATH, *SCHEMADIR)
+	resultsSchema := filepath.Join(*BASEPATH, *RESULTSSCHEMA)
 
 	log.Println("inputDir", inputDir)
 	log.Println("outputDir", outputDir)
-	log.Println("schemaDir", schemaDir)
+	log.Println("schemaDir", resultsSchema)
 
 	err = os.RemoveAll(inputDir)
 	if err != nil {
@@ -30,20 +30,12 @@ func Bootstrap() (err error) {
 	if err != nil {
 		return
 	}
-	err = os.RemoveAll(schemaDir)
-	if err != nil {
-		return
-	}
 
 	err = os.MkdirAll(inputDir, os.ModePerm)
 	if err != nil {
 		return
 	}
 	err = os.MkdirAll(outputDir, os.ModePerm)
-	if err != nil {
-		return
-	}
-	err = os.MkdirAll(schemaDir, os.ModePerm)
 	if err != nil {
 		return
 	}
