@@ -1,8 +1,19 @@
 version: '3'
 services: 
-  watchdog_test:
+  watchdog:
     build: .
     environment:
       fluent_host: fluentd
       fluent_port: 24224
       RMQ_HOST: rabbitmq
+
+  watchdog_test:
+    build: .
+    volumes:
+      - ./:/go/src/github.com/meddler-xyz/watchdog
+    environment:
+      fluent_host: fluentd
+      fluent_port: 24224
+      RMQ_HOST: rabbitmq
+
+      

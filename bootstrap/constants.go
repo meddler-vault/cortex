@@ -1,12 +1,15 @@
 package bootstrap
 
-import "flag"
+import (
+	"flag"
+	"path/filepath"
+)
 
 // Configurable Constants
 var (
 	BASEPATH          = PopulateStr("BASEPATH", "/Users/meddler/Office/Workspaces/Secoflex/secoflex/modules/watchdog/tmp", "Base Path")
 	INPUTDIR          = PopulateStr("INPUTDIR", "input", "Specify output directory")
-	OUTPUTDIR         = PopulateStr("OUTPUTDIR", "ouput", "Specify output directory")
+	OUTPUTDIR         = PopulateStr("OUTPUTDIR", "output", "Specify output directory")
 	RESULTSJSON       = PopulateStr("RESULTSJSON", "ouput", "Specify output directory")
 	RESULTSSCHEMA     = PopulateStr("RESULTSSCHEMA", "schema", "Specify output directory")
 	LOGTOFILE         = PopulateBool("LOGTOFILE", false, "Specify output directory")
@@ -28,4 +31,7 @@ var (
 
 func init() {
 	flag.Parse()
+	*INPUTDIR = filepath.Join(*BASEPATH, *INPUTDIR)
+	*OUTPUTDIR = filepath.Join(*BASEPATH, *OUTPUTDIR)
+	*RESULTSSCHEMA = filepath.Join(*BASEPATH, *RESULTSSCHEMA)
 }

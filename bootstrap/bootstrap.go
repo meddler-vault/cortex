@@ -3,7 +3,6 @@ package bootstrap
 import (
 	"log"
 	"os"
-	"path/filepath"
 )
 
 //
@@ -14,13 +13,17 @@ func setupFileSystem() {
 // Bootstrap...
 func Bootstrap() (err error) {
 
-	inputDir := filepath.Join(*BASEPATH, *INPUTDIR)
-	outputDir := filepath.Join(*BASEPATH, *OUTPUTDIR)
-	resultsSchema := filepath.Join(*BASEPATH, *RESULTSSCHEMA)
+	// inputDir := filepath.Join(*BASEPATH, *INPUTDIR)
+	// outputDir := filepath.Join(*BASEPATH, *OUTPUTDIR)
+	// resultsSchema := filepath.Join(*BASEPATH, *RESULTSSCHEMA)
+
+	inputDir := *INPUTDIR
+	outputDir := *OUTPUTDIR
+	resultsSchema := *RESULTSSCHEMA
 
 	log.Println("inputDir", inputDir)
 	log.Println("outputDir", outputDir)
-	log.Println("schemaDir", resultsSchema)
+	log.Println("resultsSchema", resultsSchema)
 
 	err = os.RemoveAll(inputDir)
 	if err != nil {
