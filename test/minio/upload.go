@@ -13,8 +13,8 @@ import (
 
 func main() {
 	// err := syncDirToStorage("synctest", "/Users/meddler/Office/Workspaces/Secoflex/secoflex/modules/watchdog", false)
-	// err := syncDirToStorage("synctest", "/Users/meddler/Office/Workspaces/Secoflex/secoflex/modules/watchdog/", false)
-	err := syncDirToStorage("synctest", "./", false, false)
+	err := syncDirToStorage("synctest", "/Users/meddler/Office/Workspaces/Secoflex/secoflex/modules/watchdog/", false, true)
+	// err := syncDirToStorage("synctest", "./", false, false)
 	log.Println(err)
 }
 
@@ -72,10 +72,6 @@ func syncDirToStorage(bucketName string, dirPath string, stopAfterError bool, re
 
 			// Print errors received from RemoveObjects API
 			for e := range errorCh {
-				// if e.Err != nil {
-				// return e.Err
-				// }
-				log.Fatalln("Failed to remove " + e.ObjectName + ", error: " + e.Err.Error())
 				return e.Err
 			}
 
@@ -147,16 +143,4 @@ func syncDirToStorage(bucketName string, dirPath string, stopAfterError bool, re
 
 	return
 
-}
-
-func FilePathWalkDir(root string) ([]string, error) {
-	var files []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			files = append(files, path)
-		}
-		return nil
-	})
-	log.Println(files)
-	return files, err
 }
