@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/meddler-xyz/watchdog/bootstrap"
 	"github.com/meddler-xyz/watchdog/watchdog"
 )
 
@@ -34,21 +35,42 @@ func Main() {
 		data := make(map[string]string)
 		err := json.Unmarshal([]byte(msg), &data)
 		if err != nil {
-			log.Println(err, "Invalid format")
+			log.Println(err, "Invalid data format")
+			return
+		}
 
-			// if err := msg.Ack(false); err != nil {
-			// 	log.Println(err, "Failed to ack")
-			// } else {
+		var bucketID string
+		var bucketIDK bool
+		if bucketID, bucketIDK = data["_id"]; !bucketIDK {
+			//do something
+			log.Println("Bucket Key '_id' not present in data")
+			return
+		}
 
-			// 	log.Println("Successfully ackd")
+		log.Println("Starting Bootstraping")
 
-			// }
+		if err = bootstrap.Bootstrap(); err != nil {
+			log.Println("Error Bootstraping")
+			log.Println(err)
+			return
 
 		}
 
+		// FOrkng Process
 		log.Println("Starting task")
 		watchdog.Start(data)
 		log.Println("Finished task")
+		// Process Finished
+
+		log.Println("Starting Sync", *bootstrap.OUTPUTDIR)
+		if err = bootstrap.SyncDirToStorage(bucketID, *bootstrap.OUTPUTDIR, false, true); err != nil {
+			log.Println("Error Sync")
+			log.Println(err)
+			return
+
+		}
+
+		log.Println("Finished Sync")
 
 	})
 

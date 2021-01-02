@@ -13,7 +13,7 @@ import (
 
 func main() {
 	// err := syncDirToStorage("synctest", "/Users/meddler/Office/Workspaces/Secoflex/secoflex/modules/watchdog", false)
-	err := syncDirToStorage("synctest", "/Users/meddler/Office/Workspaces/Secoflex/secoflex/modules/watchdog/", false, true)
+	err := syncDirToStorage("synctest", "./", false, true)
 	// err := syncDirToStorage("synctest", "./", false, false)
 	log.Println(err)
 }
