@@ -1,0 +1,64 @@
+# github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
+## explicit
+# github.com/fluent/fluent-logger-golang v1.5.0
+## explicit
+github.com/fluent/fluent-logger-golang/fluent
+# github.com/google/uuid v1.1.1
+github.com/google/uuid
+# github.com/json-iterator/go v1.1.10
+github.com/json-iterator/go
+# github.com/klauspost/cpuid v1.3.1
+github.com/klauspost/cpuid
+# github.com/kr/pretty v0.2.1
+## explicit
+# github.com/kr/text v0.2.0
+## explicit
+# github.com/minio/md5-simd v1.1.0
+github.com/minio/md5-simd
+# github.com/minio/minio-go/v7 v7.0.6
+## explicit
+github.com/minio/minio-go/v7
+github.com/minio/minio-go/v7/pkg/credentials
+github.com/minio/minio-go/v7/pkg/encrypt
+github.com/minio/minio-go/v7/pkg/lifecycle
+github.com/minio/minio-go/v7/pkg/notification
+github.com/minio/minio-go/v7/pkg/replication
+github.com/minio/minio-go/v7/pkg/s3utils
+github.com/minio/minio-go/v7/pkg/set
+github.com/minio/minio-go/v7/pkg/signer
+github.com/minio/minio-go/v7/pkg/sse
+github.com/minio/minio-go/v7/pkg/tags
+# github.com/minio/sha256-simd v0.1.1
+github.com/minio/sha256-simd
+# github.com/mitchellh/go-homedir v1.1.0
+github.com/mitchellh/go-homedir
+# github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
+github.com/modern-go/concurrent
+# github.com/modern-go/reflect2 v1.0.1
+github.com/modern-go/reflect2
+# github.com/philhofer/fwd v1.1.1
+github.com/philhofer/fwd
+# github.com/rs/xid v1.2.1
+github.com/rs/xid
+# github.com/streadway/amqp v1.0.0
+## explicit
+github.com/streadway/amqp
+# github.com/tinylib/msgp v1.1.5
+## explicit
+github.com/tinylib/msgp/msgp
+# golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+golang.org/x/crypto/argon2
+golang.org/x/crypto/blake2b
+# golang.org/x/net v0.0.0-20201021035429-f5854403a974
+golang.org/x/net/http/httpguts
+golang.org/x/net/idna
+golang.org/x/net/publicsuffix
+# golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
+golang.org/x/sys/cpu
+# golang.org/x/text v0.3.3
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+# gopkg.in/ini.v1 v1.57.0
+gopkg.in/ini.v1

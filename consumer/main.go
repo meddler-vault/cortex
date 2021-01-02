@@ -3,14 +3,28 @@ package consumer
 import (
 	"encoding/json"
 	"log"
+	"os"
 
 	"github.com/meddler-xyz/watchdog/watchdog"
 )
 
+func getenvStr(key string, defaultValue string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		return defaultValue
+	}
+	return v
+}
+
 func Main() {
 	forever := make(chan bool)
 
-	queue := NewQueue("amqp://user:bitnami@127.0.0.1", "tasks")
+	username := getenvStr("RMQ_USERNAME", "user")
+	password := getenvStr("RMQ_PASSWORD", "bitnami")
+	host := getenvStr("RMQ_HOST", "localhost")
+	// password := getenvStr("PORt", "bitnami")
+
+	queue := NewQueue("amqp://"+username+":"+password+"@"+host, "tasks")
 	defer queue.Close()
 
 	queue.Consume(func(msg string) {
