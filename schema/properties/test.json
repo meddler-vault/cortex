@@ -1,0 +1,22 @@
+{
+    "properties": {
+        "severity": {
+			"$ref": "#severityType"
+        },
+
+        "test": {
+            "$ref": "#json-pointer"
+        },
+        "ip": {
+            "$ref": "#ip"
+        },
+
+        "uri": {
+            "$ref": "#filestore"
+        }
+    
+    },
+
+    "required": ["severity", "uri" ]
+
+}
