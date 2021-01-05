@@ -1,22 +1,51 @@
 {
-    "properties": {
-        "severity": {
-			"$ref": "#severityType"
-        },
+   
 
-        "test": {
-            "$ref": "#json-pointer"
-        },
-        "ip": {
-            "$ref": "#ip"
-        },
 
-        "uri": {
-            "$ref": "#filestore"
+    "oneOf": [
+        
+        {
+            "type": "object",
+            "properties": {
+                "severity": {
+                    "$ref": "#severityType"
+                },
+        
+                "test": {
+                    "$ref": "#json-pointer"
+                },
+                "ip": {
+                    "$ref": "#ip"
+                },
+        
+                "uri": {
+                    "$ref": "#filestore"
+                }
+            
+            }
+        } ,
+        {
+            "type": "array",
+            "items": { 
+                "properties": {
+                "severity": {
+                    "$ref": "#severityType"
+                },
+        
+                "test": {
+                    "$ref": "#json-pointer"
+                },
+                "ip": {
+                    "$ref": "#ip"
+                },
+        
+                "uri": {
+                    "$ref": "#filestore"
+                }
+            
+            }
         }
-    
-    },
-
-    "required": ["severity", "uri" ]
+        }
+    ]
 
 }

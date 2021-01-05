@@ -53,7 +53,6 @@ func main() {
 	schemaLoader := gojsonschema.NewSchemaLoader()
 	schemaJSONLoader := gojsonschema.NewStringLoader(string(schemaBytes))
 
-	gojsonschema.FormatCheckers.Add("role", RoleFormatChecker{})
 	// err = schemaLoader.AddSchemas(schemaJSONLoader)
 
 	schema, err := schemaLoader.Compile(schemaJSONLoader)
@@ -63,11 +62,13 @@ func main() {
 	}
 
 	documentLoader := gojsonschema.NewStringLoader(`
+	[
 	{
 
 		"severity" : "HIGH",
 		"uri": "filestore//:/s/dasd d dasd"
 	}
+	]
 	`)
 
 	result, err := schema.Validate(documentLoader)
