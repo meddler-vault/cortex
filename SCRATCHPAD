@@ -1,0 +1,9 @@
+RabbitMQ message Spec. :
+
+
+WatchDogEnviron: []string
+Environ: []string
+ENTRYPOINT: # Command(.. , ...)
+CMD: # Command(.. , ...)
+
+
