@@ -70,6 +70,8 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	start := time.Now()
 	cmd := exec.Command(req.Process, req.ProcessArgs...)
 	cmd.Env = req.Environment
+	cmd.Env = append(cmd.Env, os.Environ()...)
+	log.Println("EnvVaribles", cmd.Env)
 	cmd.Dir = req.CurrentWorkingDirectory
 
 	var timer *time.Timer

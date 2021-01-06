@@ -16,4 +16,3 @@ services:
       fluent_port: 24224
       RMQ_HOST: rabbitmq
 
-      
