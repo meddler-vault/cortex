@@ -32,20 +32,17 @@ func Main() {
 		log.Printf("Received message with second consumer: %s", msg)
 
 		log.Printf(" [x] %s", msg)
-		data := make(map[string]string)
+		// data := make(map[string]string)
+		data := &bootstrap.MessageSpec{}
 		err := json.Unmarshal([]byte(msg), &data)
 		if err != nil {
 			log.Println(err, "Invalid data format")
 			return
 		}
 
-		var bucketID string
-		var bucketIDK bool
-		if bucketID, bucketIDK = data["_id"]; !bucketIDK {
-			//do something
-			log.Println("Bucket Key '_id' not present in data")
-			return
-		}
+		log.Println("MessageSpec", data)
+
+		bucketID := data.Identifier
 
 		log.Println("Starting Bootstraping")
 
@@ -58,7 +55,7 @@ func Main() {
 
 		// FOrkng Process
 		log.Println("Starting task")
-		watchdog.Start(data)
+		watchdog.Start(data.Environ)
 		log.Println("Finished task")
 		// Process Finished
 
