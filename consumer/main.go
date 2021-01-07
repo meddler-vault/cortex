@@ -17,7 +17,7 @@ func getenvStr(key string, defaultValue string) string {
 	return v
 }
 
-func Main() {
+func Start() {
 	forever := make(chan bool)
 
 	username := getenvStr("RMQ_USERNAME", "user")
@@ -25,7 +25,7 @@ func Main() {
 	host := getenvStr("RMQ_HOST", "localhost")
 	// password := getenvStr("PORt", "bitnami")
 
-	queue := NewQueue("amqp://"+username+":"+password+"@"+host, "tasks")
+	queue := NewQueue("amqp://"+username+":"+password+"@"+host, *bootstrap.MESSAGEQUEUE)
 	defer queue.Close()
 
 	queue.Consume(func(msg string) {

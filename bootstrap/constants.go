@@ -29,6 +29,11 @@ var (
 	OUTPUTAPI     = PopulateStr("OUTPUTAPI", "input", "Specify output directory")
 )
 
+// COnstomized Constants
+var (
+	MESSAGEQUEUE = PopulateStr("MESSAGEQUEUE", "MESSAGEQUEUE", "Message Queue Topic")
+)
+
 func init() {
 	flag.Parse()
 	*INPUTDIR = filepath.Join(*BASEPATH, *INPUTDIR)

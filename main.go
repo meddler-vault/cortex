@@ -6,5 +6,5 @@ import (
 
 func main() {
 
-	consumer.Main()
+	consumer.Start()
 }

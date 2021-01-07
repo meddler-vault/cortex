@@ -1,0 +1,124 @@
+{
+    "$id": "http://meddler.io/development/v1/schema.json",
+    "$comment" : "Version ",
+    "title": "Meddler: Input From Assets",
+    "definitions": {
+
+        "schemaCategory": {
+            "id": "#schemaCategory",
+            "type": "string",
+            "enum": [ "INPUT", "OUTPUT" ],
+            "default": "NONE"
+        },
+
+     
+        "ipv4": {
+            "id": "#ipv4",
+            "type": "string",
+            "format": "ipv4"
+
+        },
+        "ipv6": {
+            "id": "#ipv6",
+            "type": "string",
+            "format": "ipv6"
+        },
+
+        "ip": {
+            "id": "#ip",
+
+            "anyOf": [
+                {
+                    "$ref": "#ipv4"
+                },
+                {
+                    "$ref": "#ipv6"
+                }
+            ]
+        },
+
+
+        "hostname": {
+            "id": "#hostname",
+            "type": "string",
+            "format": "hostname"
+        },
+
+        "uri": {
+            "id": "#uri",
+            "type": "string",
+            "format": "uri"
+        },
+
+        
+        "filestore": {
+            "id": "#filestore",
+            "type": "string",
+            "pattern": "^filestore\/\/:(.+)\/([^/]+)$"
+        },
+
+        "directorystore": {
+            "id": "#directorystore",
+            "type": "string",
+            "pattern": "^directorystore\/\/:(.+)\/([^/]+)$"
+        },
+
+
+        "json-pointer": {
+            "id": "#json-pointer",
+            "type": "string",
+            "format": "json-pointer"
+        },
+
+        
+
+        "severityType": {
+            "id": "#severityType",
+            "type": "string",
+            "enum": [ "NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL" ],
+            "default": "NONE"
+        },
+
+        "scoreType": {
+            "id": "#scoreType",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+        },
+
+        "ipType": {
+            "type": "string",
+            "format": "ip"
+        },
+
+        "ipv4Type": {
+            "type": "string",
+            "format": "ipv4"
+        },
+        "ipv6Type": {
+            "type": "string",
+            "format": "ipv6"
+        },
+        "urlType": {
+            "type": "string",
+            "format": "uri"
+        },
+        "fileType": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [ "FILE", "FOLDER" ]
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        }
+    
+
+    }
+    
+
+    
+  }
