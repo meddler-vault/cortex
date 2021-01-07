@@ -1,0 +1,50 @@
+{
+    "$id": "http://meddler.io/development/v1/schema.json",
+    "$comment" : "Version ",
+    "title": "Meddler: Input From Assets",
+    "definitions": {
+
+    },
+      
+     
+      "type" : "object",
+        
+      "properties": {
+        
+        "dependencies" : {
+        	"type": "array",
+             "items": {
+             	
+             	"type": "object",
+                 "properties": {
+                 		
+                   "id": {
+                    "type": "string" 
+                   },
+                   "version": {
+                    "type": "string" 
+                   },
+                     "type": {
+                     "type": "string",
+                       "enum": [ "asset" , "tool" ]
+                     }
+                   	
+                 }
+               ,
+                       "required": [ "id", "type", "version" ]
+
+             }
+        } 
+        
+         
+      }
+  
+  
+      ,
+  	"required": [ "dependencies" ]
+      
+      
+
+
+    
+  }

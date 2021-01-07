@@ -1,0 +1,38 @@
+{
+
+"type" : "object",
+
+"properties": {
+
+"dependencies" : {
+"type": "array",
+  "items": {
+    
+    "type": "object",
+      "properties": {
+          
+        "id": {
+        "type": "string" 
+        },
+          "type": {
+          "type": "string",
+            "enum": [ "asset" , "tool" ]
+          }
+          
+      }
+    ,
+            "required": [ "id", "type" ]
+
+  }
+} 
+
+
+}
+
+
+,
+"required": [ "dependencies" ]
+
+
+
+}
