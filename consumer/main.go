@@ -46,8 +46,17 @@ func Start() {
 
 		log.Println("Starting Bootstraping")
 
+		// Prepare / Reset ENV & FS
 		if err = bootstrap.Bootstrap(); err != nil {
 			log.Println("Error Bootstraping")
+			log.Println(err)
+			return
+
+		}
+
+		log.Println("Starting INP Sync", *bootstrap.INPUTDIR)
+		if err = bootstrap.SyncStorageToDir(bucketID, *bootstrap.INPUTDIR, "tool_identifier", false, true); err != nil {
+			log.Println("Erro INP Sync")
 			log.Println(err)
 			return
 
@@ -59,9 +68,9 @@ func Start() {
 		log.Println("Finished task")
 		// Process Finished
 
-		log.Println("Starting Sync", *bootstrap.OUTPUTDIR)
+		log.Println("Starting OUT Sync", *bootstrap.OUTPUTDIR)
 		if err = bootstrap.SyncDirToStorage(bucketID, *bootstrap.OUTPUTDIR, false, true); err != nil {
-			log.Println("Error Sync")
+			log.Println("Error OUT Sync")
 			log.Println(err)
 			return
 
