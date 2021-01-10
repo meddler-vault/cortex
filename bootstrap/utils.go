@@ -208,3 +208,62 @@ func SyncDirToStorage(bucketName string, dirPath string, stopAfterError bool, re
 	return
 
 }
+
+//SyncStorageToDir ()
+func SyncStorageToDir(bucketName string, dirPath string, identifier string, stopAfterError bool, replace bool) (err error) {
+
+	dirPath, err = filepath.Abs(dirPath)
+	if err != nil {
+		return err
+	}
+	dirPath += "/"
+
+	ctx := context.Background()
+	endpoint := "localhost:9000"
+	accessKeyID := "MEDDLER"
+	secretAccessKey := "SUPERDUPERSECRET"
+	useSSL := false
+
+	// Initialize minio client object.
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		return
+	}
+	//
+	exists, errBucketExists := minioClient.BucketExists(ctx, bucketName)
+
+	if errBucketExists != nil {
+		return errBucketExists
+	}
+
+	if exists {
+
+		log.Println("Eglisting")
+
+		listObjectsChann := minioClient.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+			Recursive: true,
+			Prefix:    "/",
+		})
+
+		for obj := range listObjectsChann {
+			log.Println(obj.Key)
+			filePath := filepath.Join(dirPath, identifier, obj.Key)
+			err = minioClient.FGetObject(context.Background(), bucketName, obj.Key, filePath, minio.GetObjectOptions{})
+			if err != nil && stopAfterError {
+				return err
+			}
+			log.Println(err)
+
+		}
+
+		// errorCh := minioClient.FGetObject(context.Background(), bucketName, objectsCh, minio.RemoveObjectsOptions{})
+
+		return
+	}
+
+	return
+
+}

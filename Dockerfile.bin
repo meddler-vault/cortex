@@ -1,8 +1,0 @@
-FROM rounak316/watchdog:0.0.1 as build
-
-FROM scratch
-
-ARG PLATFORM
-
-COPY  --from=build  /go/src/github.com/meddler-xyz/watchdog$PLATFORM  /usr/bin/watchdog
-ENTRYPOINT [ "/usr/bin/watchdog" ]

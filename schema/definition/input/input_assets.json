@@ -10,30 +10,55 @@
       "type" : "object",
         
       "properties": {
-        
+
         "dependencies" : {
         	"type": "array",
              "items": {
-             	
              	"type": "object",
                  "properties": {
                  		
                    "id": {
                     "type": "string" 
                    },
+
+                   "alias": {
+                    "type": "string" 
+                   },
+
                    "version": {
                     "type": "string" 
                    },
                      "type": {
                      "type": "string",
                        "enum": [ "asset" , "tool" ]
-                     }
+                     },
+                     "fields": {
+                        "type": "object",
+                        "properties":{
+                            "include": {
+                                    "type": "array",
+                                    "items":{
+                                        "type": "string",
+                                    }
+
+                            },
+                            "exclude": {
+                                "type": "array",
+                                "items":{
+                                    "type": "string",
+                                }
+
+                        }
+                        }
                    	
                  }
-               ,
-                       "required": [ "id", "type", "version" ]
+               
 
-             }
+             },
+            "required": [ "id", "type", "version" ]
+
+            }
+        
         } 
         
          
