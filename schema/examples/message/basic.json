@@ -1,0 +1,14 @@
+{
+
+
+    "id": "UniqueIdentifier",
+    "dependencies": [
+        {
+            "id": "identifier",
+            "alias": "alias",
+            "type": "asset"
+
+        }
+    ]
+
+}

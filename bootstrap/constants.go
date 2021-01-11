@@ -31,7 +31,7 @@ var (
 
 // COnstomized Constants
 var (
-	MESSAGEQUEUE = PopulateStr("MESSAGEQUEUE", "MESSAGEQUEUE", "Message Queue Topic")
+	MESSAGEQUEUE = PopulateStr("MESSAGEQUEUE", "tasks", "Message Queue Topic")
 )
 
 func init() {
