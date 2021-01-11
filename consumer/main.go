@@ -31,7 +31,7 @@ func Start() {
 	queue.Consume(func(msg string) {
 		log.Printf("Received message with second consumer: %s", msg)
 
-		log.Printf(" [x] %s", msg)
+		// log.Printf(" [x] %s", msg)
 		// data := make(map[string]string)
 		data := &bootstrap.MessageSpec{}
 		err := json.Unmarshal([]byte(msg), &data)
@@ -40,11 +40,7 @@ func Start() {
 			return
 		}
 
-		log.Println("MessageSpec", data)
-
-		bucketID := data.Identifier
-
-		log.Println("Starting Bootstraping")
+		// log.Println("MessageSpec", data)
 
 		// Prepare / Reset ENV & FS
 		if err = bootstrap.Bootstrap(); err != nil {
@@ -55,10 +51,17 @@ func Start() {
 		}
 
 		log.Println("Starting INP Sync", *bootstrap.INPUTDIR)
-		if err = bootstrap.SyncStorageToDir(bucketID, *bootstrap.INPUTDIR, "tool_identifier", false, true); err != nil {
-			log.Println("Erro INP Sync")
-			log.Println(err)
-			return
+
+		for _, dependency := range data.Dependencies {
+			bucketID := dependency.Identifier
+
+			log.Println("dependency", dependency)
+			if err = bootstrap.SyncStorageToDir(bucketID, *bootstrap.INPUTDIR, bucketID, false, true); err != nil {
+				log.Println("Erro INP Sync")
+				log.Println(err)
+				return
+
+			}
 
 		}
 
@@ -69,7 +72,8 @@ func Start() {
 		// Process Finished
 
 		log.Println("Starting OUT Sync", *bootstrap.OUTPUTDIR)
-		if err = bootstrap.SyncDirToStorage(bucketID, *bootstrap.OUTPUTDIR, false, true); err != nil {
+
+		if err = bootstrap.SyncDirToStorage(data.Identifier, *bootstrap.OUTPUTDIR, false, true); err != nil {
 			log.Println("Error OUT Sync")
 			log.Println(err)
 			return

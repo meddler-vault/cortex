@@ -30,7 +30,7 @@
                    },
                      "type": {
                      "type": "string",
-                       "enum": [ "asset" , "tool" ]
+                       "enum": [ "asset" , "tool", "custom" ]
                      },
                      "fields": {
                         "type": "object",
@@ -38,14 +38,14 @@
                             "include": {
                                     "type": "array",
                                     "items":{
-                                        "type": "string",
+                                        "type": "string"
                                     }
 
                             },
                             "exclude": {
                                 "type": "array",
                                 "items":{
-                                    "type": "string",
+                                    "type": "string"
                                 }
 
                         }
