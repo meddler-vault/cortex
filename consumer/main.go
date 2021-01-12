@@ -25,7 +25,7 @@ func Start() {
 	host := getenvStr("RMQ_HOST", "localhost")
 	// password := getenvStr("PORt", "bitnami")
 
-	queue := NewQueue("amqp://"+username+":"+password+"@"+host, *bootstrap.MESSAGEQUEUE)
+	queue := NewQueue("amqp://"+username+":"+password+"@"+host, bootstrap.CONSTANTS.ReservedConstants.MESSAGEQUEUE)
 	defer queue.Close()
 
 	queue.Consume(func(msg string) {
@@ -50,13 +50,13 @@ func Start() {
 
 		}
 
-		log.Println("Starting INP Sync", *bootstrap.INPUTDIR)
+		log.Println("Starting INP Sync", bootstrap.CONSTANTS.SystemConstants.INPUTDIR)
 
 		for _, dependency := range data.Dependencies {
 			bucketID := dependency.Identifier
 
 			log.Println("dependency", dependency)
-			if err = bootstrap.SyncStorageToDir(bucketID, *bootstrap.INPUTDIR, bucketID, false, true); err != nil {
+			if err = bootstrap.SyncStorageToDir(bucketID, bootstrap.CONSTANTS.SystemConstants.INPUTDIR, bucketID, false, true); err != nil {
 				log.Println("Erro INP Sync")
 				log.Println(err)
 				return
@@ -71,9 +71,9 @@ func Start() {
 		log.Println("Finished task")
 		// Process Finished
 
-		log.Println("Starting OUT Sync", *bootstrap.OUTPUTDIR)
+		log.Println("Starting OUT Sync", bootstrap.CONSTANTS.SystemConstants.OUTPUTDIR)
 
-		if err = bootstrap.SyncDirToStorage(data.Identifier, *bootstrap.OUTPUTDIR, false, true); err != nil {
+		if err = bootstrap.SyncDirToStorage(data.Identifier, bootstrap.CONSTANTS.SystemConstants.OUTPUTDIR, false, true); err != nil {
 			log.Println("Error OUT Sync")
 			log.Println(err)
 			return

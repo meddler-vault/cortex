@@ -17,9 +17,9 @@ func Bootstrap() (err error) {
 	// outputDir := filepath.Join(*BASEPATH, *OUTPUTDIR)
 	// resultsSchema := filepath.Join(*BASEPATH, *RESULTSSCHEMA)
 
-	inputDir := *INPUTDIR
-	outputDir := *OUTPUTDIR
-	resultsSchema := *RESULTSSCHEMA
+	inputDir := CONSTANTS.systemConstants.INPUTDIR
+	outputDir := CONSTANTS.systemConstants.OUTPUTDIR
+	resultsSchema := CONSTANTS.systemConstants.RESULTSSCHEMA
 
 	log.Println("inputDir", inputDir)
 	log.Println("outputDir", outputDir)
