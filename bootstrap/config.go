@@ -12,6 +12,12 @@ type MessageDataSpec struct {
 	Dependencies []DependencySchema `json:"dependencies"`
 }
 
+// type MessageConfig struct {
+// 	System   SystemConstants   `json:"system"`
+// 	Process  ProcessConstants  `json:"process"`
+// 	Reserved ReservedConstants `json:"reserved"`
+// }
+
 //MessageSpec...
 type MessageSpec struct {
 	MessageDataSpec
@@ -20,7 +26,8 @@ type MessageSpec struct {
 	Environ       map[string]string `json:"environ"`        // Environ. Variables to inject / override inside the actial process
 	Entrypoint    []string          `json:"entrypoint"`     // Override entrypoint
 	Cmd           []string          `json:"cmd"`            // Override CMD
-	Config        map[string]string `json:"config"`         // TODO: Config:
 	Variables     map[string]string `json:"variables"`      // TODO: Variables: Replace placeholders with actual value
+
+	Config Constants `json:"config"` // TODO: Config:
 
 }
