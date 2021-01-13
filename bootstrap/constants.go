@@ -104,16 +104,30 @@ type Constants struct {
 	System  SystemConstants `json:"system"`
 }
 
-func (constants Constants) GenerateMapForSystemEnv() map[string]string {
+func (constants Constants) GenerateMapForProcessEnv() map[string]string {
 
 	dataMap := make(map[string]string)
-	dataMap["base_path"] = *constants.Process.INPUTAPI
+	if constants.Process.INPUTAPI != nil {
+		dataMap["input_api"] = *constants.Process.INPUTAPI
+	}
+	if constants.Process.INPUTAPITOKEN != nil {
+
+		dataMap["input_api_token"] = *constants.Process.INPUTAPITOKEN
+	}
+	if constants.Process.OUTPUTAPI != nil {
+
+		dataMap["output_api"] = *constants.Process.OUTPUTAPI
+	}
+	if constants.Process.FILEUPLOADAPI != nil {
+
+		dataMap["file_upload_api"] = *constants.Process.FILEUPLOADAPI
+	}
 
 	return dataMap
 
 }
 
-func (constants Constants) GenerateMapForProcessEnv() map[string]string {
+func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 
 	dataMap := make(map[string]string)
 
