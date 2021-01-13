@@ -5,6 +5,9 @@
 github.com/fluent/fluent-logger-golang/fluent
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
+# github.com/jinzhu/copier v0.2.0
+## explicit
+github.com/jinzhu/copier
 # github.com/json-iterator/go v1.1.10
 github.com/json-iterator/go
 # github.com/klauspost/cpuid v1.3.1
