@@ -85,7 +85,7 @@ func Start() {
 
 		// FOrkng Process
 		log.Println("Starting task")
-		watchdog.Start(data.Config.GenerateMapForProcessEnv())
+		watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
 		log.Println("Finished task")
 		// Process Finished
 

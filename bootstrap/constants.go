@@ -25,6 +25,13 @@ type ProcessConstants struct {
 }
 
 // SystemConstants
+type ConfigConstants struct {
+	BaseConstants
+	Process   *string   `json:"process"`
+	Arguments []*string `json:"args"`
+}
+
+// SystemConstants
 type SystemConstants struct {
 	BaseConstants
 	BASEPATH          *string `json:"base_path"`

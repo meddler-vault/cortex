@@ -8,12 +8,16 @@ import (
 	"github.com/meddler-xyz/watchdog/executor"
 )
 
-func Start(env map[string]string) {
+func Start(cmd string, args []string, env map[string]string) {
 
 	// environment := make(map[string]string)
 	environment := []string{
 		"exec_timeout=2",
 		"fprocess=sleep",
+	}
+
+	for k, v := range env {
+		environment = append(environment, k+"="+v)
 	}
 
 	// environment["exec_timeout"] = "1000"
@@ -24,16 +28,17 @@ func Start(env map[string]string) {
 
 	}
 
-	commandName, arguments := watchdogConfig.Process()
+	// commandName, arguments := watchdogConfig.Process()
 	functionInvoker := executor.ForkFunctionRunner{
 		ExecTimeout: watchdogConfig.ExecTimeout,
 	}
 
 	// commandName = "echo"
 	// arguments = []string{"10"}
+	log.Println("Running", cmd, args)
 	req := executor.FunctionRequest{
-		Process:                 commandName,
-		ProcessArgs:             arguments,
+		Process:                 cmd,
+		ProcessArgs:             args,
 		InputReader:             os.Stdin,
 		OutputWriter:            os.Stdout,
 		Environment:             environment,
