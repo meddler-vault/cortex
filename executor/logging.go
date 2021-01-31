@@ -81,7 +81,7 @@ func bindFluentLoggingPipe(logger *fluent.Fluent, name string, tag string, pipe 
 		for scanner.Scan() {
 			loggingData["message"] = scanner.Text()
 			logger.Post(tag, loggingData)
-			log.Println("message", tag, loggingData)
+			log.Println("stdout", loggingData["message"])
 
 		}
 
@@ -90,6 +90,8 @@ func bindFluentLoggingPipe(logger *fluent.Fluent, name string, tag string, pipe 
 		if err := scanner.Err(); err != nil {
 			loggingData["message"] = err.Error()
 			logger.Post(tag, loggingData)
+			log.Println("stderr", loggingData["message"])
+
 			log.Println("err", err)
 
 		}

@@ -39,36 +39,19 @@ func Start() {
 			log.Println(err, "Invalid data format")
 			return
 		}
-		log.Printf("Received message with second consumer: %s", msg)
-
-		// log.Printf(" [x] %s", msg)
-		// data := make(map[string]string)
-
-		log.Println("Constants via API: ", data.Config)
-		// log.Println("ProcessConstants preProcess: ", bootstrap.CONSTANTS.Process)
-		log.Println("SystemConstants preProcess: ", *bootstrap.CONSTANTS.System.BASEPATH)
-		// log.Println("ReservedConstants preProcess: ", bootstrap.CONSTANTS.Reserved)
 
 		bootstrap.CONSTANTS.Override(&data.Config)
 
-		// bootstrap.CONSTANTS.Process = data.Config.Process
-		// bootstrap.CONSTANTS.Reserved = data.Config.Reserved
-		// bootstrap.CONSTANTS.System = data.Config.System
-		// log.Println("ProcessConstants postProcess: ", bootstrap.CONSTANTS.Process)
-		log.Println("SystemConstants postProcess: ", *bootstrap.CONSTANTS.System.BASEPATH)
-		// log.Println("ReservedConstants postProcess: ", bootstrap.CONSTANTS.Reserved)
+		log.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
+		log.Println("SystemConstants preProcess: INPUTDIR:", *bootstrap.CONSTANTS.System.INPUTDIR)
+		log.Println("SystemConstants preProcess: OUTPUTDIR:", *bootstrap.CONSTANTS.System.OUTPUTDIR)
 
-		// log.Println("MessageSpec", data)
-
-		// Prepare / Reset ENV & FS
 		if err = bootstrap.Bootstrap(); err != nil {
 			log.Println("Error Bootstraping")
 			log.Println(err)
 			return
 
 		}
-
-		log.Println("Starting INP Sync", bootstrap.CONSTANTS.System.INPUTDIR)
 
 		for _, dependency := range data.Dependencies {
 			bucketID := dependency.Identifier
@@ -85,11 +68,19 @@ func Start() {
 
 		// FOrkng Process
 		log.Println("Starting task")
-		watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
+
+		environment := data.Environ
+
+		for k, v := range bootstrap.CONSTANTS.GenerateMapForSystemEnv() {
+			environment[k] = v
+		}
+
+		// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
+		watchdog.Start(data.Cmd, data.Args, environment)
 		log.Println("Finished task")
 		// Process Finished
 
-		log.Println("Starting OUT Sync", bootstrap.CONSTANTS.System.OUTPUTDIR)
+		log.Println("Starting OUT Sync")
 
 		if err = bootstrap.SyncDirToStorage(data.Identifier, *bootstrap.CONSTANTS.System.OUTPUTDIR, false, true); err != nil {
 			log.Println("Error OUT Sync")
@@ -99,6 +90,8 @@ func Start() {
 		}
 
 		log.Println("Finished Sync")
+		log.Println("**************************")
+		log.Println()
 
 	})
 

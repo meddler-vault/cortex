@@ -65,12 +65,12 @@ var logger, _ = fluent.New(fluent.Config{
 
 // Run run a fork for each invocation
 func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
-	log.Printf("Running %s", req.Process)
+	log.Println("Running ", req.Process, req.ProcessArgs, req.Environment)
 	log.Println("fluentd debug", getenvInt("fluent_port", 24224), getenvStr("fluent_host", "localhost"))
 	start := time.Now()
 	cmd := exec.Command(req.Process, req.ProcessArgs...)
 	cmd.Env = req.Environment
-	cmd.Env = append(cmd.Env, os.Environ()...) //Load & Curren Env From Docker File via current process
+	// cmd.Env = append(cmd.Env, os.Environ()...) //Load & Curren Env From Docker File via current process
 	// log.Println("EnvVaribles", cmd.Env)
 	cmd.Dir = req.CurrentWorkingDirectory
 
