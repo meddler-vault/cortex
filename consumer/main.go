@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/meddler-xyz/watchdog/bootstrap"
 	"github.com/meddler-xyz/watchdog/watchdog"
@@ -73,6 +74,21 @@ func Start() {
 
 		for k, v := range bootstrap.CONSTANTS.GenerateMapForSystemEnv() {
 			environment[k] = v
+		}
+
+		// Replace variables & placeholders
+		if data.SubstituteVariables {
+			for i, arg := range data.Args {
+				for k, v := range data.Variables {
+					if strings.HasPrefix(v, "$") {
+						if val, ok := environment[v[1:]]; ok {
+							v = val
+						}
+					}
+					log.Println("ReplaceAll", environment[v], arg, "$"+k, v)
+					data.Args[i] = strings.ReplaceAll(arg, "$"+k, v)
+				}
+			}
 		}
 
 		// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
