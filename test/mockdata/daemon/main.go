@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/meddler-xyz/watchdog/consumer"
+	"github.com/meddler-io/watchdog/consumer"
 )
 
 func main() {

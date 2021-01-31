@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/meddler-xyz/watchdog/bootstrap"
-	"github.com/meddler-xyz/watchdog/watchdog"
+	"github.com/meddler-io/watchdog/bootstrap"
+	"github.com/meddler-io/watchdog/watchdog"
 )
 
 func getenvStr(key string, defaultValue string) string {

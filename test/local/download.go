@@ -5,7 +5,7 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/meddler-xyz/watchdog/bootstrap"
+	"github.com/meddler-io/watchdog/bootstrap"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )

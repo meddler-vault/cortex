@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/meddler-xyz/watchdog/bootstrap"
+	"github.com/meddler-io/watchdog/bootstrap"
 )
 
 func main() {
