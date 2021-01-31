@@ -97,6 +97,16 @@ func (current *Constants) Override(new *Constants) {
 		current.System.SAMPLEINPUTFILE = new.System.SAMPLEINPUTFILE
 	}
 
+	current.resolveRelativePaths()
+}
+
+func (current *Constants) resolveRelativePaths() {
+	// Relative to Absolute Path
+	*current.System.INPUTDIR = filepath.Join(*current.System.BASEPATH, *current.System.INPUTDIR)
+	*current.System.OUTPUTDIR = filepath.Join(*current.System.BASEPATH, *current.System.OUTPUTDIR)
+	*current.System.RESULTSJSON = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSJSON+".json")
+	*current.System.RESULTSSCHEMA = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSSCHEMA)
+
 }
 
 // Constants
@@ -221,11 +231,6 @@ func initialize() *Constants {
 		SAMPLEOUTPUTFILE:  PopulateStr("sample_outputfile", "PopulateStr", "Enable Logging"),
 	}
 
-	// Relative to Absolute Path
-	*systemConstants.INPUTDIR = filepath.Join(*systemConstants.BASEPATH, *systemConstants.INPUTDIR)
-	*systemConstants.OUTPUTDIR = filepath.Join(*systemConstants.BASEPATH, *systemConstants.OUTPUTDIR)
-	*systemConstants.RESULTSSCHEMA = filepath.Join(*systemConstants.BASEPATH, *systemConstants.RESULTSSCHEMA)
-
 	processConstants := ProcessConstants{
 
 		INPUTAPI:      PopulateStr("input_api", "input", "Specify output directory"),
@@ -259,7 +264,6 @@ func (constants *Constants) reset() {
 
 	copier.Copy(&constants.System, &constants._system)
 	copier.Copy(&constants.Process, &constants._process)
-	// copier.Copy(&constants.System, &constants._system)
 
 }
 

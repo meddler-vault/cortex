@@ -16,6 +16,8 @@ func Start(cmd string, args []string, env map[string]string) {
 		"fprocess=sleep",
 	}
 
+	environment = []string{}
+
 	for k, v := range env {
 		environment = append(environment, k+"="+v)
 	}
