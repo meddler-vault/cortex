@@ -219,7 +219,8 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 	dirPath += "/"
 
 	ctx := context.Background()
-	endpoint := "localhost:9000"
+	endpoint := populateStringFromEnv("MINIOURL", "localhost:9000")
+
 	accessKeyID := "MEDDLER"
 	secretAccessKey := "SUPERDUPERSECRET"
 	useSSL := false
