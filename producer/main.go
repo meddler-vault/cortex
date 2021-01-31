@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/meddler-xyz/watchdog/bootstrap"
+	"github.com/meddler-io/watchdog/bootstrap"
 	"github.com/streadway/amqp"
 )
 

@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/meddler-xyz/watchdog/config"
-	"github.com/meddler-xyz/watchdog/executor"
+	"github.com/meddler-io/watchdog/config"
+	"github.com/meddler-io/watchdog/executor"
 )
 
 func Start(cmd string, args []string, env map[string]string) {

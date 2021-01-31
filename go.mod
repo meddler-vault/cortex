@@ -1,4 +1,4 @@
-module github.com/meddler-xyz/watchdog
+module github.com/meddler-io/watchdog
 
 go 1.14
 
