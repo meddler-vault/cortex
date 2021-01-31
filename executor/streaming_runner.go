@@ -70,7 +70,7 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	start := time.Now()
 	cmd := exec.Command(req.Process, req.ProcessArgs...)
 	cmd.Env = req.Environment
-	// cmd.Env = append(cmd.Env, os.Environ()...) //Load & Curren Env From Docker File via current process
+	cmd.Env = append(cmd.Env, os.Environ()...) //Load & Curren Env From Docker File via current process
 	// log.Println("EnvVaribles", cmd.Env)
 	cmd.Dir = req.CurrentWorkingDirectory
 

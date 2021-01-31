@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/meddler-io/watchdog/bootstrap"
@@ -17,6 +18,13 @@ func main() {
 	log.Println(err)
 }
 
+func populateStringFromEnv(key string, defaultVal string) string {
+	if val, ok := os.LookupEnv(key); ok {
+		return val
+	}
+	return defaultVal
+}
+
 func SyncStorageToDir(bucketName string, dirPath string, identifier string, stopAfterError bool, replace bool) (err error) {
 
 	dirPath, err = filepath.Abs(dirPath)
@@ -26,7 +34,8 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 	dirPath += "/"
 
 	ctx := context.Background()
-	endpoint := "localhost:9000"
+	endpoint := populateStringFromEnv("MINIOURL", "localhost:9000")
+
 	accessKeyID := "MEDDLER"
 	secretAccessKey := "SUPERDUPERSECRET"
 	useSSL := false

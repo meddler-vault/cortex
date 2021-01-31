@@ -24,6 +24,10 @@ func Start() {
 	username := getenvStr("RMQ_USERNAME", "user")
 	password := getenvStr("RMQ_PASSWORD", "bitnami")
 	host := getenvStr("RMQ_HOST", "localhost")
+	log.Println("username", username)
+	log.Println("password", password)
+	log.Println("host", host)
+	log.Println("MESSAGEQUEUE", bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
 	// password := getenvStr("PORt", "bitnami")
 
 	queue := NewQueue("amqp://"+username+":"+password+"@"+host, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
@@ -87,6 +91,7 @@ func Start() {
 					}
 					log.Println("ReplaceAll", environment[v], arg, "$"+k, v)
 					data.Args[i] = strings.ReplaceAll(arg, "$"+k, v)
+					arg = data.Args[i]
 				}
 			}
 		}
