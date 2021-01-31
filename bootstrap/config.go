@@ -21,13 +21,14 @@ type MessageDataSpec struct {
 //MessageSpec...
 type MessageSpec struct {
 	MessageDataSpec
-	Identifier    string            `json:"id"`                            // For changing status, ingesting data, persisting FS on Storage (Bucket Name)
-	SystemEnviron map[string]string `json:"system_environ"`                // SystemEnviron. Variables to inject to Watchdog & override for a particular task
-	Environ       map[string]string `json:"environ"`                       // Environ. Variables to inject / override inside the actial process
-	Entrypoint    []string          `json:"entrypoint"`                    // Override entrypoint
-	Cmd           string            `json:"cmd" validate:"required,cmd"`   // Override CMD
-	Args          []string          `json:"args" validate:"required,args"` // Override ARGS
-	Variables     map[string]string `json:"variables"`                     // TODO: Variables: Replace placeholders with actual value
+	Identifier          string            `json:"id"`                                      // For changing status, ingesting data, persisting FS on Storage (Bucket Name)
+	SystemEnviron       map[string]string `json:"system_environ"`                          // SystemEnviron. Variables to inject to Watchdog & override for a particular task
+	Environ             map[string]string `json:"environ"`                                 // Environ. Variables to inject / override inside the actial process
+	Entrypoint          []string          `json:"entrypoint"`                              // Override entrypoint
+	Cmd                 string            `json:"cmd" validate:"required,cmd"`             // Override CMD
+	Args                []string          `json:"args" validate:"required,args"`           // Override ARGS
+	SubstituteVariables bool              `json:"substitute_var" validate:"required,args"` // Parse ARGS for variables
+	Variables           map[string]string `json:"variables"`                               // TODO: Variables: Replace placeholders with actual value
 
 	Config Constants `json:"config"` // TODO: Config:
 
