@@ -27,9 +27,9 @@ func sendData() {
 	"config": {
 
 		"system": {
-			"base_path": "/workspace",
-			"input_dir":  "input_dirs",
-			"output_dir":  "output_dirs"
+			"base_path": "/kaniko/fs",
+			"input_dir":  "/input",
+			"output_dir":  "/output"
 
 		} ,
 
@@ -48,17 +48,15 @@ func sendData() {
 
 
 	"cmd": "/kaniko/executor",
-	"args": [  "--context=dir:///$input_dir/new-bucket" ,  "--no-push"  ,  "--destination=image" , "--tarPath=$output_dir/test.tar" ,  "--dockerfile=Dockerfile"  ],
+	"args": [  "--context=dir://$input_dir/new-bucket", "--destination=image" ,  "--tarPath=$output_dir/image.tar"  , "--no-push" ,  "--dockerfile=Dockerfile"  ],
 
 	"id": "outputbucket" ,
 
 	"environ": 
 	{
 
-		"exec_timeout": "1000" ,  
-		"$INPUTDIR": "inpudir",
-		"TraceId":"5fde15c7ed17c3374c56990e" ,
-		"fprocess":"echo \\$fprocess $fprocess $BASEPATH "  
+		"exec_timeout": "1000" ,   
+		"TraceId":"5fde15c7ed17c3374c56990e" 
 
 	} ,
 		

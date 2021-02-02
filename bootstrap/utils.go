@@ -242,8 +242,6 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 
 	if exists {
 
-		log.Println("Eglisting")
-
 		listObjectsChann := minioClient.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
 			Recursive: true,
 			Prefix:    "/",
