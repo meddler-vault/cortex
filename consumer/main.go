@@ -35,6 +35,7 @@ func Start() {
 
 	queue.Consume(func(msg string) {
 		log.Println("**************************")
+		bootstrap.PrintDir("/kaniko/fs", "PRE")
 
 		bootstrap.CONSTANTS.Reset()
 		data := &bootstrap.MessageSpec{}
@@ -58,6 +59,8 @@ func Start() {
 
 		}
 
+		bootstrap.PrintDir("/kaniko/fs", "Sync")
+
 		for _, dependency := range data.Dependencies {
 			bucketID := dependency.Identifier
 
@@ -70,6 +73,8 @@ func Start() {
 			}
 
 		}
+
+		bootstrap.PrintDir("/kaniko/fs", "Bootstrap")
 
 		// FOrkng Process
 		log.Println("Starting task")
@@ -89,7 +94,7 @@ func Start() {
 							v = val
 						}
 					}
-					log.Println("ReplaceAll", environment[v], arg, "$"+k, v)
+
 					data.Args[i] = strings.ReplaceAll(arg, "$"+k, v)
 					arg = data.Args[i]
 				}
@@ -102,6 +107,7 @@ func Start() {
 		// Process Finished
 
 		log.Println("Starting OUT Sync")
+		bootstrap.PrintDir("/kaniko/fs", "POST")
 
 		if err = bootstrap.SyncDirToStorage(data.Identifier, *bootstrap.CONSTANTS.System.OUTPUTDIR, false, true); err != nil {
 			log.Println("Error OUT Sync")
