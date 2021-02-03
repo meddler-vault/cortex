@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 //
@@ -16,7 +17,7 @@ func Bootstrap() (err error) {
 
 	inputDir := *CONSTANTS.System.INPUTDIR
 	outputDir := *CONSTANTS.System.OUTPUTDIR
-	resultsSchema := *CONSTANTS.System.RESULTSSCHEMA
+	resultsJson := *CONSTANTS.System.RESULTSJSON
 
 	// outputDir := filepath.Join(*BASEPATH, *OUTPUTDIR)
 	// resultsSchema := filepath.Join(*BASEPATH, *RESULTSSCHEMA)
@@ -24,7 +25,7 @@ func Bootstrap() (err error) {
 
 	log.Println("inputDir", inputDir)
 	log.Println("outputDir", outputDir)
-	log.Println("resultsSchema", resultsSchema)
+	log.Println("resultsSchema", resultsJson)
 
 	err = os.RemoveAll(inputDir)
 	if err != nil {
@@ -40,11 +41,18 @@ func Bootstrap() (err error) {
 	if err != nil {
 		return
 	}
+
 	err = os.MkdirAll(outputDir, os.ModePerm)
+	log.Println("Creating Directory: outputDir", outputDir, err)
 	if err != nil {
 		return
 	}
-	log.Println("Creating Directory: outputDir", outputDir, err)
+
+	err = os.MkdirAll(filepath.Dir(resultsJson), os.ModePerm)
+	log.Println("Creating Directory: resultsSchema", resultsJson, filepath.Dir(resultsJson))
+	if err != nil {
+		return
+	}
 
 	return
 
