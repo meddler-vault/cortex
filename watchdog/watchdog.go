@@ -8,7 +8,7 @@ import (
 	"github.com/meddler-io/watchdog/executor"
 )
 
-func Start(cmd string, args []string, env map[string]string) {
+func Start(cmd string, args []string, env map[string]string) error {
 
 	// environment := make(map[string]string)
 	environment := []string{
@@ -52,4 +52,5 @@ func Start(cmd string, args []string, env map[string]string) {
 	if err != nil {
 		log.Println(err)
 	}
+	return err
 }

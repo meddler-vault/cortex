@@ -102,8 +102,8 @@ func Start() {
 		}
 
 		// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
-		watchdog.Start(data.Cmd, data.Args, environment)
-		log.Println("Finished task")
+		processErr := watchdog.Start(data.Cmd, data.Args, environment)
+		log.Println("Finished task", "Error:", processErr)
 		// Process Finished
 
 		log.Println("Starting OUT Sync")
@@ -116,6 +116,14 @@ func Start() {
 
 		}
 
+		// Uplaod RESULTS API to Mongo
+
+		// TODO: Inplement results DB Sync
+		if processErr == nil {
+
+		} else {
+
+		}
 		log.Println("Finished Sync")
 		log.Println("**************************")
 		log.Println()
