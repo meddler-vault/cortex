@@ -5,6 +5,7 @@ import (
 	"log"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/jinzhu/copier"
 )
@@ -67,6 +68,11 @@ func (current *Constants) Override(new *Constants) {
 
 	if new.System.RESULTSJSON != nil {
 		*current.System.RESULTSJSON = *new.System.RESULTSJSON
+
+		// Add extension .json
+		if !strings.HasSuffix(*current.System.RESULTSJSON, ".json") {
+			*current.System.RESULTSJSON += ".json"
+		}
 	}
 
 	if new.System.RESULTSSCHEMA != nil {
@@ -104,7 +110,7 @@ func (current *Constants) resolveRelativePaths() {
 	// Relative to Absolute Path
 	*current.System.INPUTDIR = filepath.Join(*current.System.BASEPATH, *current.System.INPUTDIR)
 	*current.System.OUTPUTDIR = filepath.Join(*current.System.BASEPATH, *current.System.OUTPUTDIR)
-	*current.System.RESULTSJSON = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSJSON+".json")
+	*current.System.RESULTSJSON = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSJSON)
 	*current.System.RESULTSSCHEMA = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSSCHEMA)
 
 }
@@ -213,7 +219,7 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 func initialize() *Constants {
 
 	reservedConstants := ReservedConstants{
-		MESSAGEQUEUE: *PopulateStr("message_queue_topic", "tasks", "Message Queue Topic"),
+		MESSAGEQUEUE: *PopulateStr("message_queue_topic", "tasks_test", "Message Queue Topic"),
 	}
 
 	systemConstants := SystemConstants{
