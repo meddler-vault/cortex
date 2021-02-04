@@ -9,7 +9,8 @@ func main() {
 	// go sendData()
 	// go sendData()
 	// go sendData()
-	sendData()
+	gitCloner()
+	// sendData()
 	// go sendData2()
 	// go sendData3()
 
@@ -47,7 +48,7 @@ func sendData() {
 	},
 
 	"cmd": "/kaniko/executor",
-	"args": [  "--context=dir://$input_dir/new-bucket", "--destination=image" ,  "--tarPath=$output_dir/image.tar"  , "--no-push" ,  "--dockerfile=Dockerfile" , "--cleanup"	],
+	"args": [  "--context=git://github.com/MobSF/Mobile-Security-Framework-MobSF.git", "--destination=registry:5000/rouna311/mobsh:custom"  ,  "--dockerfile=Dockerfile" ,  "--insecure", "--insecure-pull", "--cleanup" , "--cache-dir=/tmp" , "--cache=true"	],
 
 	"id": "outputbucket" ,
 
@@ -106,14 +107,12 @@ func gitCloner() {
 		"output_dir" : "$output_dir"
 	},
 
-	"cmd": "/kaniko/executor",
-	"args": [  "--context=dir://$input_dir/new-bucket", "--destination=image" ,  "--tarPath=$output_dir/image.tar"  , "--no-push" ,  "--dockerfile=Dockerfile"  ],
-
+	"cmd": "/root/Mobile-Security-Framework-MobSF/scripts/entrypoint.sh",
 	"id": "outputbucket" ,
 
 	"environ": 
 	{
-		"exec_timeout": "1000" ,   
+		"exec_timeout": "19" ,   
 		"TraceId":"5fde15c7ed17c3374c56990e" 
 	},
 		

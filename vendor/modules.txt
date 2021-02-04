@@ -41,8 +41,9 @@ github.com/modern-go/concurrent
 github.com/modern-go/reflect2
 # github.com/philhofer/fwd v1.1.1
 github.com/philhofer/fwd
-# github.com/qri-io/jsonschema v0.2.0
+# github.com/ramr/go-reaper v0.2.0
 ## explicit
+github.com/ramr/go-reaper
 # github.com/rs/xid v1.2.1
 github.com/rs/xid
 # github.com/streadway/amqp v1.0.0
