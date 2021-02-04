@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/fluent/fluent-logger-golang/fluent"
@@ -69,6 +70,9 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	log.Println("fluentd debug", getenvInt("fluent_port", 24224), getenvStr("fluent_host", "localhost"))
 	start := time.Now()
 	cmd := exec.Command(req.Process, req.ProcessArgs...)
+	// TODO: Review Killing all process goups
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	//
 	cmd.Env = req.Environment
 	cmd.Env = append(cmd.Env, os.Environ()...) //Load & Curren Env From Docker File via current process
 	// log.Println("EnvVaribles", cmd.Env)
@@ -78,14 +82,37 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	if f.ExecTimeout > time.Millisecond*0 {
 		timer = time.NewTimer(f.ExecTimeout)
 
+		log.Println("PM: Starting Process Killer Timeout", f.ExecTimeout)
+
 		go func() {
+			log.Println("PM: Started Process Killer Timeout", f.ExecTimeout)
+
 			<-timer.C
 
-			log.Printf("Function was killed by ExecTimeout: %s\n", f.ExecTimeout.String())
-			killErr := cmd.Process.Kill()
+			log.Printf("Function will be killed by ExecTimeout: %s\n", f.ExecTimeout.String())
+
+			pgid, err := syscall.Getpgid(cmd.Process.Pid)
+			if err != nil {
+				log.Println("Kill Signal Failed: coudnb;t get process group_id")
+				log.Println("Error", err)
+				return
+			}
+
+			// killErr := cmd.Process.Kill()
+			killErr := syscall.Kill(-pgid, syscall.SIGKILL)
 			if killErr != nil {
 				fmt.Println("Error killing function due to ExecTimeout", killErr)
 			}
+
+			log.Println("Kill Signal Sent")
+
+			killErr = cmd.Wait()
+			if killErr != nil {
+				fmt.Println("Error waiting function due to ExecTimeout", killErr)
+			}
+
+			log.Println("Successully Killed")
+
 		}()
 	}
 
