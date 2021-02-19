@@ -10,7 +10,7 @@ import (
 	reaper "github.com/ramr/go-reaper"
 )
 
-func main() {
+func __main() {
 	reap, hasReaper := os.LookupEnv("REAPER")
 	log.Println("LookupEnv REAPER", reap, hasReaper)
 	// Use an environment variable REAPER to indicate whether or not
@@ -59,12 +59,12 @@ func main() {
 		os.Exit(0)
 		return
 	}
-	_main()
+	// _main()
 
 	//  Rest of your code goes here ...
 
 } /*  End of func  main.  */
-func _main() {
+func main() {
 	log.Println("Started watchdog")
 	consumer.Start()
 }
