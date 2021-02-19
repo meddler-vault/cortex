@@ -21,8 +21,8 @@ type MessageDataSpec struct {
 //MessageSpec...
 type MessageSpec struct {
 	MessageDataSpec
-	Identifier          string            `json:"id"`                                      // For changing status, ingesting data, persisting FS on Storage (Bucket Name)
-	SystemEnviron       map[string]string `json:"system_environ"`                          // SystemEnviron. Variables to inject to Watchdog & override for a particular task
+	Identifier string `json:"id"` // For changing status, ingesting data, persisting FS on Storage (Bucket Name)
+	// SystemEnviron map[string]string `json:"system_environ"` // SystemEnviron. Variables to inject to Watchdog & override for a particular task
 	Environ             map[string]string `json:"environ"`                                 // Environ. Variables to inject / override inside the actial process
 	Entrypoint          []string          `json:"entrypoint"`                              // Override entrypoint
 	Cmd                 string            `json:"cmd" validate:"required,cmd"`             // Override CMD
@@ -31,5 +31,8 @@ type MessageSpec struct {
 	Variables           map[string]string `json:"variables"`                               // TODO: Variables: Replace placeholders with actual value
 
 	Config Constants `json:"config"` // TODO: Config:
+
+	SuccessEndpoint string `json:"success_endpoint" validate:"required,success_endpoint"` // success_endpoint
+	FailureEndpoint string `json:"failure_endpoint" validate:"required,failure_endpoint"` // success_endpoint
 
 }

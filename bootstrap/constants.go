@@ -47,6 +47,8 @@ type SystemConstants struct {
 	MAXOUTPUTFILESIZE *int    `json:"max_output_filesize"`
 	SAMPLEINPUTFILE   *string `json:"sample_inputfile"`
 	SAMPLEOUTPUTFILE  *string `json:"sample_outputfile"`
+	TRACEID           *string `json:"trace_id"`
+	EXECTIMEOUT       *string `json:"exec_timeout"`
 }
 
 // Override
@@ -103,6 +105,13 @@ func (current *Constants) Override(new *Constants) {
 		current.System.SAMPLEINPUTFILE = new.System.SAMPLEINPUTFILE
 	}
 
+	if new.System.TRACEID != nil {
+		current.System.TRACEID = new.System.TRACEID
+	}
+
+	if new.System.EXECTIMEOUT != nil {
+		current.System.EXECTIMEOUT = new.System.EXECTIMEOUT
+	}
 	current.resolveRelativePaths()
 }
 
@@ -212,6 +221,16 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 
 	}
 
+	if constants.System.TRACEID != nil {
+		dataMap["trace_id"] = *constants.System.TRACEID
+
+	}
+
+	if constants.System.EXECTIMEOUT != nil {
+		dataMap["exec_timeout"] = *constants.System.EXECTIMEOUT
+
+	}
+
 	return dataMap
 
 }
@@ -235,6 +254,7 @@ func initialize() *Constants {
 		MAXOUTPUTFILESIZE: PopulateInt("max_output_filesize", 500, "Enable Logging"),
 		SAMPLEINPUTFILE:   PopulateStr("sample_inputfile", "PopulateStr", "Enable Logging"),
 		SAMPLEOUTPUTFILE:  PopulateStr("sample_outputfile", "PopulateStr", "Enable Logging"),
+		TRACEID:           PopulateStr("trace_id", "default_trace_id", "Trace Id"),
 	}
 
 	processConstants := ProcessConstants{

@@ -2,7 +2,9 @@ package consumer
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -23,7 +25,7 @@ func Start() {
 
 	username := getenvStr("RMQ_USERNAME", "user")
 	password := getenvStr("RMQ_PASSWORD", "bitnami")
-	host := getenvStr("RMQ_HOST", "localhost")
+	host := getenvStr("RMQ_HOST", "192.168.29.9")
 	log.Println("username", username)
 	log.Println("password", password)
 	log.Println("host", host)
@@ -35,7 +37,13 @@ func Start() {
 
 	queue.Consume(func(msg string) {
 		log.Println("**************************")
-		bootstrap.PrintDir("/kaniko/fs", "PRE")
+
+		defer func() {
+			log.Println("**************************")
+			log.Println()
+		}()
+
+		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "PRE")
 
 		bootstrap.CONSTANTS.Reset()
 		data := &bootstrap.MessageSpec{}
@@ -51,6 +59,8 @@ func Start() {
 		log.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
 		log.Println("SystemConstants preProcess: INPUTDIR:", *bootstrap.CONSTANTS.System.INPUTDIR)
 		log.Println("SystemConstants preProcess: OUTPUTDIR:", *bootstrap.CONSTANTS.System.OUTPUTDIR)
+		log.Println("SystemConstants preProcess: SuccessEndpoint:", data.SuccessEndpoint)
+		log.Println("SystemConstants preProcess: FailureEndpoint:", data.FailureEndpoint)
 
 		if err = bootstrap.Bootstrap(); err != nil {
 			log.Println("Error Bootstraping")
@@ -59,7 +69,7 @@ func Start() {
 
 		}
 
-		bootstrap.PrintDir("/kaniko/fs", "Sync")
+		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Sync")
 
 		for _, dependency := range data.Dependencies {
 			bucketID := dependency.Identifier
@@ -74,12 +84,18 @@ func Start() {
 
 		}
 
-		bootstrap.PrintDir("/kaniko/fs", "Bootstrap")
+		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Bootstrap")
 
 		// FOrkng Process
 		log.Println("Starting task")
 
+		// environment := data.Environ
+
 		environment := data.Environ
+		if environment == nil {
+			environment = make(map[string]string)
+
+		}
 
 		for k, v := range bootstrap.CONSTANTS.GenerateMapForSystemEnv() {
 			environment[k] = v
@@ -102,12 +118,12 @@ func Start() {
 		}
 
 		// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
-		processErr := watchdog.Start(data.Cmd, data.Args, environment)
+		processErr := watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
 		log.Println("Finished task", "Error:", processErr)
 		// Process Finished
 
 		log.Println("Starting OUT Sync")
-		bootstrap.PrintDir("/kaniko/fs", "POST")
+		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "POST")
 
 		if err = bootstrap.SyncDirToStorage(data.Identifier, *bootstrap.CONSTANTS.System.OUTPUTDIR, false, true); err != nil {
 			log.Println("Error OUT Sync")
@@ -119,14 +135,46 @@ func Start() {
 		// Uplaod RESULTS API to Mongo
 
 		// TODO: Inplement results DB Sync
-		if processErr == nil {
+
+		endpoint := ""
+
+		headers := make(map[string]string)
+
+		if processErr != nil {
+			endpoint = data.FailureEndpoint
+			headers["status"] = "false"
+			headers["messsage"] = processErr.Error()
 
 		} else {
+			endpoint = data.SuccessEndpoint
+			headers["status"] = "true"
+			headers["messsage"] = "Successfully completed"
 
 		}
+
+		client := &http.Client{}
+		req, _ := http.NewRequest("POST", endpoint, nil)
+		for k, v := range headers {
+			req.Header.Add(k, v)
+
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		//We Read the response body on the line below.
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		//Convert the body to type string
+		sb := string(body)
+		log.Println(sb)
+
 		log.Println("Finished Sync")
-		log.Println("**************************")
-		log.Println()
 
 	})
 

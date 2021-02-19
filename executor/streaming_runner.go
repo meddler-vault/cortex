@@ -74,7 +74,7 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	//
 	cmd.Env = req.Environment
-	cmd.Env = append(cmd.Env, os.Environ()...) //Load & Curren Env From Docker File via current process
+	cmd.Env = append(os.Environ(), cmd.Env...) //Load & Curren Env From Docker File via current process
 	// log.Println("EnvVaribles", cmd.Env)
 	cmd.Dir = req.CurrentWorkingDirectory
 
