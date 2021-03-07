@@ -25,7 +25,7 @@ type MessageSpec struct {
 	// SystemEnviron map[string]string `json:"system_environ"` // SystemEnviron. Variables to inject to Watchdog & override for a particular task
 	Environ             map[string]string `json:"environ"`                                 // Environ. Variables to inject / override inside the actial process
 	Entrypoint          []string          `json:"entrypoint"`                              // Override entrypoint
-	Cmd                 string            `json:"cmd" validate:"required,cmd"`             // Override CMD
+	Cmd                 []string          `json:"cmd" validate:"required,cmd"`             // Override CMD
 	Args                []string          `json:"args" validate:"required,args"`           // Override ARGS
 	SubstituteVariables bool              `json:"substitute_var" validate:"required,args"` // Parse ARGS for variables
 	Variables           map[string]string `json:"variables"`                               // TODO: Variables: Replace placeholders with actual value

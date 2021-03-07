@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -56,9 +57,12 @@ func Start() {
 
 		bootstrap.CONSTANTS.Override(&data.Config)
 
+		resultsJsonPath := *bootstrap.CONSTANTS.System.RESULTSJSON
+
 		log.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
 		log.Println("SystemConstants preProcess: INPUTDIR:", *bootstrap.CONSTANTS.System.INPUTDIR)
 		log.Println("SystemConstants preProcess: OUTPUTDIR:", *bootstrap.CONSTANTS.System.OUTPUTDIR)
+		log.Println("SystemConstants preProcess: RESULTSJSON:", *bootstrap.CONSTANTS.System.RESULTSJSON)
 		log.Println("SystemConstants preProcess: SuccessEndpoint:", data.SuccessEndpoint)
 		log.Println("SystemConstants preProcess: FailureEndpoint:", data.FailureEndpoint)
 
@@ -88,6 +92,8 @@ func Start() {
 
 		// FOrkng Process
 		log.Println("Starting task")
+		log.Println("data.Variables", data.Variables)
+		log.Println("data.SubstituteVariables", data.SubstituteVariables)
 
 		// environment := data.Environ
 
@@ -112,9 +118,23 @@ func Start() {
 					}
 
 					data.Args[i] = strings.ReplaceAll(arg, "$"+k, v)
-					arg = data.Args[i]
+					// arg = data.Args[i]
 				}
 			}
+
+			// Replce environment variables's placeholders with values
+			for i, arg := range data.Environ {
+				for k, v := range data.Variables {
+					if strings.HasPrefix(v, "$") {
+						if val, ok := environment[v[1:]]; ok {
+							v = val
+						}
+					}
+
+					data.Environ[i] = strings.ReplaceAll(arg, "$"+k, v)
+				}
+			}
+
 		}
 
 		// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
@@ -153,7 +173,17 @@ func Start() {
 		}
 
 		client := &http.Client{}
-		req, _ := http.NewRequest("POST", endpoint, nil)
+
+		responseContent, err := ioutil.ReadFile(resultsJsonPath)
+		if err != nil {
+			log.Println("Error reading results fike", resultsJsonPath)
+			responseContent = []byte{}
+		}
+
+		content := bytes.NewBuffer(responseContent)
+
+		req, _ := http.NewRequest("POST", endpoint, content)
+
 		for k, v := range headers {
 			req.Header.Add(k, v)
 

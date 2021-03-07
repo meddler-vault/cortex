@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"io"
 	"log"
-	"os"
 	"sync"
 
 	"github.com/fluent/fluent-logger-golang/fluent"
@@ -58,8 +57,6 @@ func bindLoggingPipe(name string, tag string, pipe io.Reader, output io.Writer) 
 // bindLoggingPipe spawns a goroutine for passing through logging of the given output pipe.
 func bindFluentLoggingPipe(logger *fluent.Fluent, name string, tag string, pipe io.Reader, wg *sync.WaitGroup) {
 
-	log.Printf(os.Getenv("fluent_host"))
-	log.Printf(os.Getenv("fluent_port"))
 	log.Printf("Started logging %s from function. TAG: %s", name, tag)
 
 	scanner := bufio.NewScanner(pipe)

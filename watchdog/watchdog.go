@@ -8,7 +8,7 @@ import (
 	"github.com/meddler-io/watchdog/executor"
 )
 
-func Start(id string, cmd string, args []string, env map[string]string) error {
+func Start(id string, cmd []string, args []string, env map[string]string) error {
 
 	// environment := make(map[string]string)
 	environment := []string{}
@@ -34,9 +34,15 @@ func Start(id string, cmd string, args []string, env map[string]string) error {
 
 	// commandName = "echo"
 	// arguments = []string{"10"}
+
+	if len(cmd) > 1 {
+		args = append(cmd[1:], args...)
+	}
+
 	log.Println("Running", cmd, args)
+
 	req := executor.FunctionRequest{
-		Process:                 cmd,
+		Process:                 cmd[0],
 		ProcessArgs:             args,
 		InputReader:             os.Stdin,
 		OutputWriter:            os.Stdout,
