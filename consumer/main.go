@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"log"
+
+	"github.com/meddler-io/watchdog/logger"
+
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/meddler-io/watchdog/bootstrap"
+	"github.com/meddler-io/watchdog/producer"
 	"github.com/meddler-io/watchdog/watchdog"
 )
 
@@ -21,27 +24,34 @@ func getenvStr(key string, defaultValue string) string {
 	return v
 }
 
+func PublishEndResult(username string, password string, host string, data string) {
+	// queue := NewQueue("amqp://"+username+":"+password+"@"+host, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
+	err := producer.Produce(username, password, host, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, data)
+	logger.Println("TASK_RESULT_ERR", err)
+
+}
+
 func Start() {
 	forever := make(chan bool)
 
 	username := getenvStr("RMQ_USERNAME", "user")
 	password := getenvStr("RMQ_PASSWORD", "bitnami")
 	host := getenvStr("RMQ_HOST", "192.168.29.9")
-	log.Println("username", username)
-	log.Println("password", password)
-	log.Println("host", host)
-	log.Println("MESSAGEQUEUE", bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
+	logger.Println("username", username)
+	logger.Println("password", password)
+	logger.Println("host", host)
+	logger.Println("MESSAGEQUEUE", bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
 	// password := getenvStr("PORt", "bitnami")
 
 	queue := NewQueue("amqp://"+username+":"+password+"@"+host, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
 	defer queue.Close()
 
 	queue.Consume(func(msg string) {
-		log.Println("**************************")
+		logger.Println("**************************")
 
 		defer func() {
-			log.Println("**************************")
-			log.Println()
+			logger.Println("**************************")
+			logger.Println()
 		}()
 
 		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "PRE")
@@ -51,24 +61,47 @@ func Start() {
 
 		err := json.Unmarshal([]byte(msg), &data)
 		if err != nil {
-			log.Println(err, "Invalid data format")
+			logger.Println(err, "Invalid data format")
 			return
 		}
 
 		bootstrap.CONSTANTS.Override(&data.Config)
+		identifier := &data.Identifier
+
+		//
+
+		// Mark Initiated
+
+		taskInitiated := bootstrap.TaskResult{}
+		taskInitiated.Identifier = data.Identifier
+		taskInitiated.WatchdogVersion = "unknown"
+		taskInitiated.Status = "INITIATED"
+		taskInitiated.Message = "Task Initiated"
+
+		taskInitiatedString, err := json.Marshal(taskInitiated)
+		if err != nil {
+			logger.Println(err)
+			taskInitiatedString = []byte{}
+		}
+
+		PublishEndResult(username, password, host, string(taskInitiatedString))
+
+		//
+
+		logger.InitNewTask(*identifier)
 
 		resultsJsonPath := *bootstrap.CONSTANTS.System.RESULTSJSON
 
-		log.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
-		log.Println("SystemConstants preProcess: INPUTDIR:", *bootstrap.CONSTANTS.System.INPUTDIR)
-		log.Println("SystemConstants preProcess: OUTPUTDIR:", *bootstrap.CONSTANTS.System.OUTPUTDIR)
-		log.Println("SystemConstants preProcess: RESULTSJSON:", *bootstrap.CONSTANTS.System.RESULTSJSON)
-		log.Println("SystemConstants preProcess: SuccessEndpoint:", data.SuccessEndpoint)
-		log.Println("SystemConstants preProcess: FailureEndpoint:", data.FailureEndpoint)
+		logger.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
+		logger.Println("SystemConstants preProcess: INPUTDIR:", *bootstrap.CONSTANTS.System.INPUTDIR)
+		logger.Println("SystemConstants preProcess: OUTPUTDIR:", *bootstrap.CONSTANTS.System.OUTPUTDIR)
+		logger.Println("SystemConstants preProcess: RESULTSJSON:", *bootstrap.CONSTANTS.System.RESULTSJSON)
+		logger.Println("SystemConstants preProcess: SuccessEndpoint:", data.SuccessEndpoint)
+		logger.Println("SystemConstants preProcess: FailureEndpoint:", data.FailureEndpoint)
 
 		if err = bootstrap.Bootstrap(); err != nil {
-			log.Println("Error Bootstraping")
-			log.Println(err)
+			logger.Println("Error Bootstraping")
+			logger.Println(err)
 			return
 
 		}
@@ -78,10 +111,10 @@ func Start() {
 		for _, dependency := range data.Dependencies {
 			bucketID := dependency.Identifier
 
-			log.Println("dependency", dependency)
+			logger.Println("dependency", dependency)
 			if err = bootstrap.SyncStorageToDir(bucketID, *bootstrap.CONSTANTS.System.INPUTDIR, bucketID, false, true); err != nil {
-				log.Println("Erro INP Sync")
-				log.Println(err)
+				logger.Println("Erro INP Sync")
+				logger.Println(err)
 				return
 
 			}
@@ -91,9 +124,9 @@ func Start() {
 		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Bootstrap")
 
 		// FOrkng Process
-		log.Println("Starting task")
-		log.Println("data.Variables", data.Variables)
-		log.Println("data.SubstituteVariables", data.SubstituteVariables)
+		logger.Println("Starting task")
+		logger.Println("data.Variables", data.Variables)
+		logger.Println("data.SubstituteVariables", data.SubstituteVariables)
 
 		// environment := data.Environ
 
@@ -139,15 +172,15 @@ func Start() {
 
 		// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
 		processErr := watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
-		log.Println("Finished task", "Error:", processErr)
+		logger.Println("Finished task", "Error:", processErr)
 		// Process Finished
 
-		log.Println("Starting OUT Sync")
+		logger.Println("Starting OUT Sync")
 		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "POST")
 
 		if err = bootstrap.SyncDirToStorage(data.Identifier, *bootstrap.CONSTANTS.System.OUTPUTDIR, false, true); err != nil {
-			log.Println("Error OUT Sync")
-			log.Println(err)
+			logger.Println("Error OUT Sync")
+			logger.Println(err)
 			return
 
 		}
@@ -156,6 +189,9 @@ func Start() {
 
 		// TODO: Inplement results DB Sync
 
+		taskResult := bootstrap.TaskResult{}
+
+		taskResult.Identifier = data.Identifier
 		endpoint := ""
 
 		headers := make(map[string]string)
@@ -165,20 +201,30 @@ func Start() {
 			headers["status"] = "false"
 			headers["messsage"] = processErr.Error()
 
+			taskResult.Status = "FAILURE"
+			taskResult.Message = processErr.Error()
+
 		} else {
 			endpoint = data.SuccessEndpoint
 			headers["status"] = "true"
 			headers["messsage"] = "Successfully completed"
+
+			taskResult.Status = "SUCCESS"
+			taskResult.Message = "Successfully completed"
 
 		}
 
 		client := &http.Client{}
 
 		responseContent, err := ioutil.ReadFile(resultsJsonPath)
+
 		if err != nil {
-			log.Println("Error reading results fike", resultsJsonPath)
+			logger.Println("Error reading results fike", resultsJsonPath)
 			responseContent = []byte{}
 		}
+
+		taskResult.Response = string(responseContent)
+		taskResult.WatchdogVersion = "unknown"
 
 		content := bytes.NewBuffer(responseContent)
 
@@ -190,26 +236,37 @@ func Start() {
 		}
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			return
 		}
 
 		//We Read the response body on the line below.
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			return
 		}
 		//Convert the body to type string
 		sb := string(body)
-		log.Println(sb)
 
-		log.Println("Finished Sync")
+		taskResultString, err := json.Marshal(taskResult)
+		if err != nil {
+			logger.Println(err)
+			taskResultString = []byte{}
+		}
+
+		PublishEndResult(username, password, host, string(taskResultString))
+
+		logger.Println("Published to messag queue")
+
+		logger.Println(sb)
+
+		logger.Println("Finished Sync")
 
 	})
 
 	// queue.Consume(func(i string) {
-	// 	log.Printf("Received message with first consumer: %s", i)
+	// 	logger.Printf("Received message with first consumer: %s", i)
 	// })
 
 	<-forever

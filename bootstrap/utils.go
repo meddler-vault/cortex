@@ -3,7 +3,9 @@ package bootstrap
 import (
 	"context"
 	"flag"
-	"log"
+
+	"github.com/meddler-io/watchdog/logger"
+
 	"os"
 	"path/filepath"
 	"strconv"
@@ -43,7 +45,7 @@ func populateBoolFromEnv(key string, defaultVal bool) bool {
 	if val, ok := os.LookupEnv(key); ok {
 		v, err := strconv.ParseBool(val)
 		if err != nil {
-			log.Fatalf("LookupEnvOrInt[%s]: %v", key, err)
+			logger.Fatalln("LookupEnvOrInt[%s]: %v", key, err)
 		}
 		return v
 	}
@@ -54,7 +56,7 @@ func populateIntFromEnv(key string, defaultVal int) int {
 	if val, ok := os.LookupEnv(key); ok {
 		v, err := strconv.Atoi(val)
 		if err != nil {
-			log.Fatalf("LookupEnvOrInt[%s]: %v", key, err)
+			logger.Fatalln("LookupEnvOrInt[%s]: %v", key, err)
 		}
 		return v
 	}
@@ -125,7 +127,7 @@ func SyncDirToStorage(bucketName string, dirPath string, stopAfterError bool, re
 				opts := minio.ListObjectsOptions{Prefix: "", Recursive: true}
 				for object := range minioClient.ListObjects(context.Background(), bucketName, opts) {
 					if object.Err != nil {
-						log.Fatalln(object.Err)
+						logger.Fatalln(object.Err)
 					}
 					objectsCh <- object
 				}
@@ -160,21 +162,21 @@ func SyncDirToStorage(bucketName string, dirPath string, stopAfterError bool, re
 		if errBucketExists == nil && exists {
 			// log.Printf("We already own %s\n", bucketName)
 		} else {
-			log.Fatalln(err)
+			logger.Fatalln(err)
 			return
 		}
 	} else {
-		log.Printf("Successfully created %s\n", bucketName)
+		logger.Println("Successfully created ", bucketName)
 	}
 
 	uploadFunc := func(path string, info os.FileInfo) error {
 
 		// Upload the zip file with FPutObject
 		objPath := strings.SplitN(path, dirPath, 2)[1]
-		log.Println("Uploading", path, objPath, dirPath)
+		logger.Println("Uploading", path, objPath, dirPath)
 		_, err := minioClient.FPutObject(ctx, bucketName, objPath, path, minio.PutObjectOptions{})
 		// filename := filepath.Join(path, info.Name())
-		// log.Println("Uploading", info.Name(), err)
+		// logger.Println("Uploading", info.Name(), err)
 		if err != nil {
 			return err
 		}
@@ -248,13 +250,13 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 		})
 
 		for obj := range listObjectsChann {
-			log.Println(obj.Key)
+			logger.Println(obj.Key)
 			filePath := filepath.Join(dirPath, identifier, obj.Key)
 			err = minioClient.FGetObject(context.Background(), bucketName, obj.Key, filePath, minio.GetObjectOptions{})
 			if err != nil && stopAfterError {
 				return err
 			}
-			log.Println(err)
+			logger.Println(err)
 
 		}
 

@@ -2,7 +2,9 @@ package bootstrap
 
 import (
 	"io/ioutil"
-	"log"
+
+	"github.com/meddler-io/watchdog/logger"
+
 	"os"
 	"path/filepath"
 )
@@ -21,11 +23,11 @@ func Bootstrap() (err error) {
 
 	// outputDir := filepath.Join(*BASEPATH, *OUTPUTDIR)
 	// resultsSchema := filepath.Join(*BASEPATH, *RESULTSSCHEMA)
-	log.Println("Creating Dir Sync")
+	logger.Println("Creating Dir Sync")
 
-	log.Println("inputDir", inputDir)
-	log.Println("outputDir", outputDir)
-	log.Println("resultsSchema", resultsJson)
+	logger.Println("inputDir", inputDir)
+	logger.Println("outputDir", outputDir)
+	logger.Println("resultsSchema", resultsJson)
 
 	err = os.RemoveAll(inputDir)
 	if err != nil {
@@ -37,19 +39,19 @@ func Bootstrap() (err error) {
 	}
 
 	err = os.MkdirAll(inputDir, os.ModePerm)
-	log.Println("Creating Directory: inputDir", inputDir, err)
+	logger.Println("Creating Directory: inputDir", inputDir, err)
 	if err != nil {
 		return
 	}
 
 	err = os.MkdirAll(outputDir, os.ModePerm)
-	log.Println("Creating Directory: outputDir", outputDir, err)
+	logger.Println("Creating Directory: outputDir", outputDir, err)
 	if err != nil {
 		return
 	}
 
 	err = os.MkdirAll(filepath.Dir(resultsJson), os.ModePerm)
-	log.Println("Creating Directory: resultsSchema", resultsJson, filepath.Dir(resultsJson))
+	logger.Println("Creating Directory: resultsSchema", resultsJson, filepath.Dir(resultsJson))
 	if err != nil {
 		return
 	}
@@ -59,15 +61,15 @@ func Bootstrap() (err error) {
 }
 
 func PrintDir(root string, tag string) {
-	log.Println("************DIR:", root, tag, "************")
+	logger.Println("************DIR:", root, tag, "************")
 
 	files, err := ioutil.ReadDir(root)
 	if err != nil {
-		log.Println(err)
+		logger.Println(err)
 	}
 	for _, f := range files {
-		log.Println("DIR:", root, tag, f.Name())
+		logger.Println("DIR:", root, tag, f.Name())
 	}
-	log.Println("************DIR:", root, tag, "************")
+	logger.Println("************DIR:", root, tag, "************")
 
 }

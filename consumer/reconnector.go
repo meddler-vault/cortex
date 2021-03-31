@@ -1,7 +1,8 @@
 package consumer
 
 import (
-	"log"
+	"github.com/meddler-io/watchdog/logger"
+
 	"time"
 
 	"github.com/streadway/amqp"
@@ -47,14 +48,14 @@ func (q *queue) Send(message string) {
 }
 
 func (q *queue) Consume(consumer messageConsumer) {
-	log.Println("Registering consumer...")
+	logger.Println("Registering consumer...")
 	deliveries, err := q.registerQueueConsumer()
-	log.Println("Consumer registered! Processing messages...")
+	logger.Println("Consumer registered! Processing messages...")
 	q.executeMessageConsumer(err, consumer, deliveries, false)
 }
 
 func (q *queue) Close() {
-	log.Println("Closing connection")
+	logger.Println("Closing connection")
 	q.closed = true
 	q.channel.Close()
 	q.connection.Close()
@@ -76,14 +77,14 @@ func (q *queue) reconnector() {
 
 func (q *queue) connect() {
 	for {
-		log.Printf("Connecting to rabbitmq on %s\n", q.url)
+		logger.Println("Connecting to rabbitmq on ", q.url)
 		conn, err := amqp.Dial(q.url)
 		if err == nil {
 			q.connection = conn
 			q.errorChannel = make(chan *amqp.Error)
 			q.connection.NotifyClose(q.errorChannel)
 
-			log.Println("Connection established!")
+			logger.Println("Connection established!")
 
 			q.openChannel()
 			q.declareQueue()
@@ -145,15 +146,15 @@ func (q *queue) recoverConsumers() {
 	for i := range q.consumers {
 		var consumer = q.consumers[i]
 
-		log.Println("Recovering consumer...")
+		logger.Println("Recovering consumer...")
 		msgs, err := q.registerQueueConsumer()
-		log.Println("Consumer recovered! Continuing message processing...")
+		logger.Println("Consumer recovered! Continuing message processing...")
 		q.executeMessageConsumer(err, consumer, msgs, true)
 	}
 }
 
 func logError(message string, err error) {
 	if err != nil {
-		log.Printf("%s: %s", message, err)
+		logger.Println(message, err)
 	}
 }

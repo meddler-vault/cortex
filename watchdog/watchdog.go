@@ -1,8 +1,9 @@
 package watchdog
 
 import (
-	"log"
 	"os"
+
+	"github.com/meddler-io/watchdog/logger"
 
 	"github.com/meddler-io/watchdog/config"
 	"github.com/meddler-io/watchdog/executor"
@@ -39,7 +40,7 @@ func Start(id string, cmd []string, args []string, env map[string]string) error 
 		args = append(cmd[1:], args...)
 	}
 
-	log.Println("Running", cmd, args)
+	logger.Println("Running", cmd, args)
 
 	req := executor.FunctionRequest{
 		Process:                 cmd[0],
@@ -51,11 +52,11 @@ func Start(id string, cmd []string, args []string, env map[string]string) error 
 		CurrentWorkingDirectory: env["CWD"],
 	}
 
-	log.Println("Environment", req.Environment)
+	logger.Println("Environment", req.Environment)
 
 	err := functionInvoker.Run(req)
 	if err != nil {
-		log.Println(err)
+		logger.Println(err)
 	}
 	return err
 }

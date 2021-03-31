@@ -1,10 +1,9 @@
 package producer
 
 import (
-	"log"
 	"os"
 
-	"github.com/meddler-io/watchdog/bootstrap"
+	"github.com/meddler-io/watchdog/logger"
 	"github.com/streadway/amqp"
 )
 
@@ -17,17 +16,14 @@ func getenvStr(key string, defaultValue string) string {
 }
 func failOnError(err error, msg string) {
 	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
+		logger.Fatalln(msg, err)
 	}
 }
 
-func Produce(data string) {
+func Produce(username string, password string, host string, topic string, data string) error {
 
-	username := getenvStr("RMQ_USERNAME", "user")
-	password := getenvStr("RMQ_PASSWORD", "bitnami")
-	host := getenvStr("RMQ_HOST", "localhost")
-	// password := getenvStr("PORt", "bitnami")
-
+	logger.Println("MQ_PUBLISH_RESULT", username, password, host, topic)
+	logger.Println("MQ_PUBLISH_RESULT", data)
 	conn, err := amqp.Dial("amqp://" + username + ":" + password + "@" + host)
 
 	failOnError(err, "Failed to connect to RabbitMQ")
@@ -38,14 +34,17 @@ func Produce(data string) {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, // name
+		topic, // name
 		true,  // durable
 		false, // delete when unused
 		false, // exclusive
 		false, // no-wait
 		nil,   // arguments
 	)
-	failOnError(err, "Failed to declare a queue")
+	// failOnError(err, "Failed to declare a queue")
+	if err != nil {
+		return err
+	}
 
 	body := data
 	err = ch.Publish(
@@ -57,6 +56,8 @@ func Produce(data string) {
 			ContentType: "text/plain",
 			Body:        []byte(body),
 		})
-	failOnError(err, "Failed to publish a message")
-	// log.Printf(" [x] Sent %s", body)
+
+	return err
+	// failOnError(err, "Failed to publish a message")
+	// log.Println(" [x] Sent %s", body)
 }

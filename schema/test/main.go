@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+
+	"github.com/meddler-io/watchdog/logger"
 
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -74,11 +75,11 @@ func main() {
 	result, err := schema.Validate(documentLoader)
 
 	for errs := range result.Errors() {
-		log.Println(errs)
+		logger.Println(errs)
 	}
 
-	log.Println(result.Valid())
-	log.Println(err)
+	logger.Println(result.Valid())
+	logger.Println(err)
 	return
 
 }

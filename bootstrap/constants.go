@@ -2,7 +2,9 @@ package bootstrap
 
 import (
 	"flag"
-	"log"
+
+	"github.com/meddler-io/watchdog/logger"
+
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -15,7 +17,8 @@ type BaseConstants struct {
 
 type ReservedConstants struct {
 	BaseConstants
-	MESSAGEQUEUE string `json:"message_queue_topic"`
+	MESSAGEQUEUE        string `json:"message_queue_topic"`
+	PUBLISHMESSAGEQUEUE string `json:"publish_message_queue_topic"`
 }
 type ProcessConstants struct {
 	BaseConstants
@@ -54,7 +57,7 @@ type SystemConstants struct {
 // Override
 func (current *Constants) Override(new *Constants) {
 
-	log.Println("Override", new.System.BASEPATH)
+	logger.Println("Override", new.System.BASEPATH)
 	if new.System.BASEPATH != nil {
 
 		*current.System.BASEPATH = *new.System.BASEPATH
@@ -238,7 +241,8 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 func initialize() *Constants {
 
 	reservedConstants := ReservedConstants{
-		MESSAGEQUEUE: *PopulateStr("message_queue_topic", "tasks_test", "Message Queue Topic"),
+		MESSAGEQUEUE:        *PopulateStr("message_queue_topic", "tasks_test", "Message Queue Topic"),
+		PUBLISHMESSAGEQUEUE: *PopulateStr("publish_message_queue_topic", "tasks_publish", "Publish Message Queue Topic"),
 	}
 
 	systemConstants := SystemConstants{
