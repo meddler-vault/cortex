@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
+
+	"github.com/meddler-io/watchdog/logger"
+
 	"os"
 	"syscall"
 
@@ -12,11 +14,11 @@ import (
 
 func __main() {
 	reap, hasReaper := os.LookupEnv("REAPER")
-	log.Println("LookupEnv REAPER", reap, hasReaper)
+	logger.Println("LookupEnv REAPER", reap, hasReaper)
 	// Use an environment variable REAPER to indicate whether or not
 	// we are the child/parent.
 	if _, hasReaper = os.LookupEnv("REAPER"); !hasReaper {
-		log.Println("Started REAPER")
+		logger.Println("Started REAPER")
 
 		//  Start background reaping of orphaned child processes.
 		go reaper.Reap()
@@ -65,6 +67,6 @@ func __main() {
 
 } /*  End of func  main.  */
 func main() {
-	log.Println("Started watchdog")
+	logger.Println("Started watchdog")
 	consumer.Start()
 }

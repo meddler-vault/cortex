@@ -3,13 +3,15 @@ package executor
 import (
 	"fmt"
 	"io"
-	"log"
+
 	"os"
 	"os/exec"
 	"strconv"
 	"sync"
 	"syscall"
 	"time"
+
+	_logger "github.com/meddler-io/watchdog/logger"
 
 	"github.com/fluent/fluent-logger-golang/fluent"
 )
@@ -66,8 +68,8 @@ var logger, _ = fluent.New(fluent.Config{
 
 // Run run a fork for each invocation
 func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
-	log.Println("Running ", req.Process, req.ProcessArgs, req.Environment)
-	log.Println("fluentd debug", getenvInt("fluent_port", 24224), getenvStr("fluent_host", "localhost"))
+	_logger.Println("Running ", req.Process, req.ProcessArgs, req.Environment)
+	_logger.Println("fluentd debug", getenvInt("fluent_port", 24224), getenvStr("fluent_host", "localhost"))
 	start := time.Now()
 	cmd := exec.Command(req.Process, req.ProcessArgs...)
 	// TODO: Review Killing all process goups
@@ -75,26 +77,26 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	//
 	cmd.Env = req.Environment
 	cmd.Env = append(os.Environ(), cmd.Env...) //Load & Curren Env From Docker File via current process
-	// log.Println("EnvVaribles", cmd.Env)
+	// _logger.Println("EnvVaribles", cmd.Env)
 	cmd.Dir = req.CurrentWorkingDirectory
 
 	var timer *time.Timer
 	if f.ExecTimeout > time.Millisecond*0 {
 		timer = time.NewTimer(f.ExecTimeout)
 
-		log.Println("PM: Starting Process Killer Timeout", f.ExecTimeout)
+		_logger.Println("PM: Starting Process Killer Timeout", f.ExecTimeout)
 
 		go func() {
-			log.Println("PM: Started Process Killer Timeout", f.ExecTimeout)
+			_logger.Println("PM: Started Process Killer Timeout", f.ExecTimeout)
 
 			<-timer.C
 
-			log.Printf("Function will be killed by ExecTimeout: %s\n", f.ExecTimeout.String())
+			_logger.Println("Function will be killed by ExecTimeout:", f.ExecTimeout.String())
 
 			pgid, err := syscall.Getpgid(cmd.Process.Pid)
 			if err != nil {
-				log.Println("Kill Signal Failed: coudnb;t get process group_id")
-				log.Println("Error", err)
+				_logger.Println("Kill Signal Failed: coudnb;t get process group_id")
+				_logger.Println("Error", err)
 				return
 			}
 
@@ -104,14 +106,14 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 				fmt.Println("Error killing function due to ExecTimeout", killErr)
 			}
 
-			log.Println("Kill Signal Sent")
+			_logger.Println("Kill Signal Sent")
 
 			killErr = cmd.Wait()
 			if killErr != nil {
 				fmt.Println("Error waiting function due to ExecTimeout", killErr)
 			}
 
-			log.Println("Successully Killed")
+			_logger.Println("Successully Killed")
 
 		}()
 	}
@@ -129,7 +131,7 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	// Prints stderr to console and is picked up by container logging driver.
 	errPipe, _ := cmd.StderrPipe()
 	stdoutPipe, _ := cmd.StdoutPipe()
-	// log.Printf("TractId", req.TractID)
+	// _logger.Printf("TractId", req.TractID)
 
 	var wg sync.WaitGroup
 	bindFluentLoggingPipe(logger, "stderr", req.TractID, errPipe, &wg)
@@ -139,7 +141,7 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	wg.Wait()
 
 	if startErr != nil {
-		log.Println("Starting error", startErr)
+		_logger.Println("Starting error", startErr)
 
 		logger.Post(req.TractID, map[string]string{
 			"pipe":    "stdend",
@@ -155,7 +157,7 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 
 	waitErr := cmd.Wait()
 	done := time.Since(start)
-	log.Printf("Took %f secs", done.Seconds())
+	_logger.Println("Took ", done.Seconds(), "seconds")
 	if timer != nil {
 		timer.Stop()
 	}

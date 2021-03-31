@@ -36,3 +36,15 @@ type MessageSpec struct {
 	FailureEndpoint string `json:"failure_endpoint" validate:"required,failure_endpoint"` // success_endpoint
 
 }
+
+type TaskResultBase struct {
+	Status          string `json:"exec_status" validate:"required"`
+	Message         string `json:"message" validate:"required"`
+	WatchdogVersion string `json:"watchdog_version" validate:"required"`
+	Identifier      string `json:"identifier" validate:"required"`
+}
+
+type TaskResult struct {
+	TaskResultBase
+	Response string `json:"response" ` // success_endpoint
+}
