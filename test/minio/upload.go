@@ -5,12 +5,42 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
+	"github.com/meddler-io/watchdog/logger"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
+func populateStringFromEnv(key string, defaultVal string) string {
+	if val, ok := os.LookupEnv(key); ok {
+		return val
+	}
+	return defaultVal
+}
+
+func populateBoolFromEnv(key string, defaultVal bool) bool {
+	if val, ok := os.LookupEnv(key); ok {
+		v, err := strconv.ParseBool(val)
+		if err != nil {
+			logger.Fatalln("LookupEnvOrInt[%s]: %v", key, err)
+		}
+		return v
+	}
+	return defaultVal
+}
+
+func populateIntFromEnv(key string, defaultVal int) int {
+	if val, ok := os.LookupEnv(key); ok {
+		v, err := strconv.Atoi(val)
+		if err != nil {
+			logger.Fatalln("LookupEnvOrInt[%s]: %v", key, err)
+		}
+		return v
+	}
+	return defaultVal
+}
 func main() {
 	// err := syncDirToStorage("synctest", "/Users/meddler/Office/Workspaces/Secoflex/secoflex/modules/watchdog", false)
 	err := syncDirToStorage("synctest", "./", false, true)
@@ -27,16 +57,18 @@ func syncDirToStorage(bucketName string, dirPath string, stopAfterError bool, re
 	dirPath += "/"
 
 	ctx := context.Background()
-	// 
+	//
 	endpoint := populateStringFromEnv("MINIOURL", "localhost:9000")
 	accessKeyID := populateStringFromEnv("MINIO_ACCESSKEY", "MEDDLER")
 	secretAccessKey := populateStringFromEnv("MINIO_SECRET", "SUPERDUPERSECRET")
 
-	useSSL = populateBoolFromEnv("MINIO_SECURE", false)
-	// 
+	useSSL := populateBoolFromEnv("MINIO_SECURE", false)
+
+	region := populateStringFromEnv("MINIO_REGION", "india")
 
 	// Initialize minio client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
+		Region: region,
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
 		Secure: useSSL,
 	})

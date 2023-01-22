@@ -63,7 +63,7 @@ func populateIntFromEnv(key string, defaultVal int) int {
 	return defaultVal
 }
 
-//RemoveContents ()
+// RemoveContents ()
 func RemoveContents(dir string) error {
 	d, err := os.Open(dir)
 	if err != nil {
@@ -83,7 +83,7 @@ func RemoveContents(dir string) error {
 	return nil
 }
 
-//SyncDirToStorage ()
+// SyncDirToStorage ()
 func SyncDirToStorage(bucketName string, dirPath string, stopAfterError bool, replace bool) (err error) {
 
 	dirPath, err = filepath.Abs(dirPath)
@@ -97,11 +97,15 @@ func SyncDirToStorage(bucketName string, dirPath string, stopAfterError bool, re
 	accessKeyID := populateStringFromEnv("MINIO_ACCESSKEY", "MEDDLER")
 	secretAccessKey := populateStringFromEnv("MINIO_SECRET", "SUPERDUPERSECRET")
 
-	useSSL = populateBoolFromEnv("MINIO_SECURE", false)
+	useSSL := populateBoolFromEnv("MINIO_SECURE", false)
 
+	region := populateStringFromEnv("MINIO_REGION", "india")
+
+	logger.Println("Minio", endpoint, accessKeyID, secretAccessKey, useSSL, region)
 
 	// Initialize minio client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
+		Region: region,
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
 		Secure: useSSL,
 	})
@@ -213,9 +217,10 @@ func SyncDirToStorage(bucketName string, dirPath string, stopAfterError bool, re
 
 }
 
-//SyncStorageToDir ()
+// SyncStorageToDir ()
 func SyncStorageToDir(bucketName string, dirPath string, identifier string, stopAfterError bool, replace bool) (err error) {
 
+	logger.Println("SyncStorageToDir")
 	dirPath, err = filepath.Abs(dirPath)
 	if err != nil {
 		return err
@@ -225,12 +230,18 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 	ctx := context.Background()
 	endpoint := populateStringFromEnv("MINIOURL", "localhost:9000")
 
-	accessKeyID := "MEDDLER"
-	secretAccessKey := "SUPERDUPERSECRET"
-	useSSL := false
+	accessKeyID := populateStringFromEnv("MINIO_ACCESSKEY", "MEDDLER")
+	secretAccessKey := populateStringFromEnv("MINIO_SECRET", "SUPERDUPERSECRET")
+
+	useSSL := populateBoolFromEnv("MINIO_SECURE", false)
 
 	// Initialize minio client object.
+	region := populateStringFromEnv("MINIO_REGION", "india")
+	// Initialize minio client object.
+
+	logger.Println("Minio", endpoint, accessKeyID, secretAccessKey, useSSL, region)
 	minioClient, err := minio.New(endpoint, &minio.Options{
+		Region: region,
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
 		Secure: useSSL,
 	})
