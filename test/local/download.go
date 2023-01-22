@@ -35,10 +35,10 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 
 	ctx := context.Background()
 	endpoint := populateStringFromEnv("MINIOURL", "localhost:9000")
+	accessKeyID := populateStringFromEnv("MINIO_ACCESSKEY", "MEDDLER")
+	secretAccessKey := populateStringFromEnv("MINIO_SECRET", "SUPERDUPERSECRET")
 
-	accessKeyID := "MEDDLER"
-	secretAccessKey := "SUPERDUPERSECRET"
-	useSSL := false
+	useSSL = populateBoolFromEnv("MINIO_SECURE", false)
 
 	// Initialize minio client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
