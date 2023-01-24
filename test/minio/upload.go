@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/meddler-io/watchdog/logger"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -46,6 +48,46 @@ func main() {
 	err := syncDirToStorage("synctest", "./", false, true)
 	// err := syncDirToStorage("synctest", "./", false, false)
 	log.Println(err)
+}
+
+func cloneRepositoryAuth(url string, path string, username string, password string) {
+	_, err := git.PlainClone("/tmp/foo", false, &git.CloneOptions{
+		Auth: &http.BasicAuth{
+			Username: username,
+			Password: password,
+		},
+		URL:      "https://github.com/go-git/go-git",
+		Progress: os.Stdout,
+	})
+
+	if err == nil {
+		return
+	}
+
+}
+func cloneRepositoryToken(url string, path string, username string, token string) {
+	_, err := git.PlainClone("/tmp/foo", false, &git.CloneOptions{
+		Auth: &http.BasicAuth{
+			Username: username,
+			Password: token,
+		},
+		URL:      "https://github.com/go-git/go-git",
+		Progress: os.Stdout,
+	})
+	if err != nil {
+		return
+	}
+
+}
+
+func cloneRepository(url string, path string) {
+	_, err := git.PlainClone("/tmp/foo", false, &git.CloneOptions{
+		URL:      "https://github.com/go-git/go-git",
+		Progress: os.Stdout,
+	})
+	if err != nil {
+		return
+	}
 }
 
 func syncDirToStorage(bucketName string, dirPath string, stopAfterError bool, replace bool) (err error) {

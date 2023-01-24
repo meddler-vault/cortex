@@ -4,6 +4,9 @@ import (
 	"context"
 	"flag"
 
+	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/meddler-io/watchdog/logger"
 
 	"os"
@@ -280,4 +283,96 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 
 	return
 
+}
+
+// Git Functionality
+func cloneRepositorySSH(url string, path string, privatekey string, password string) (err error) {
+
+	print("cloneRepositorySSH", privatekey, password)
+	publicKeys, err := ssh.NewPublicKeys("git", []byte(privatekey), password)
+
+	_, err = git.PlainClone(path, false, &git.CloneOptions{
+		// The intended use of a GitHub personal access token is in replace of your password
+		// because access tokens can easily be revoked.
+		// https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+		Auth:     publicKeys,
+		URL:      url,
+		Progress: os.Stdout,
+	})
+
+	return
+
+}
+
+func cloneRepositoryAuth(url string, path string, username string, password string) (err error) {
+
+	println(path, username, password)
+	_, err = git.PlainClone(path, false, &git.CloneOptions{
+		Auth: &http.BasicAuth{
+			Username: username,
+			Password: password,
+		},
+		URL:      url,
+		Progress: os.Stdout,
+	})
+
+	return
+
+}
+
+func cloneRepositoryToken(url string, path string, username string, token string) (err error) {
+
+	if username == "" {
+		username = "dummy_username"
+	}
+	_, err = git.PlainClone(path, false, &git.CloneOptions{
+		Auth: &http.BasicAuth{
+			Username: username,
+			Password: token,
+		},
+		URL:      url,
+		Progress: os.Stdout,
+	})
+
+	return
+
+}
+
+func cloneRepository(url string, path string) (err error) {
+	_, err = git.PlainClone(path, false, &git.CloneOptions{
+		URL:      url,
+		Progress: os.Stdout,
+	})
+
+	return
+}
+
+// url: HTTPS / SSH Url
+//
+// auth_mode: no_auth, ssh, token , password
+//
+// username: Auth. username / Private Key string
+//
+// password: Auth. password / Private Key password
+func Clone(url string, path string, auth_mode string, username string, password string) (err error) {
+
+	RemoveContents(path)
+
+	if auth_mode == "no_auth" {
+		err = cloneRepository(url, path)
+
+	} else if auth_mode == "password" {
+		err = cloneRepositoryAuth(url, path, username, password)
+
+	} else if auth_mode == "token" {
+		err = cloneRepositoryToken(url, path, username, password)
+
+	} else if auth_mode == "ssh" {
+		err = cloneRepositorySSH(url, path, username, password)
+
+	} else {
+		err = nil
+	}
+
+	logger.Fatalln(err)
 }
