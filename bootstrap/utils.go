@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"flag"
+	"log"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -356,23 +357,30 @@ func cloneRepository(url string, path string) (err error) {
 // password: Auth. password / Private Key password
 func Clone(url string, path string, auth_mode string, username string, password string) (err error) {
 
+	log.Println("Clone()",
+		url,
+		path,
+		auth_mode,
+		username,
+		password,
+	)
 	RemoveContents(path)
 
-	if auth_mode == "no_auth" {
+	if auth_mode == NOAUTH {
 		err = cloneRepository(url, path)
 
-	} else if auth_mode == "password" {
+	} else if auth_mode == PASSWORD {
 		err = cloneRepositoryAuth(url, path, username, password)
 
-	} else if auth_mode == "token" {
+	} else if auth_mode == TOKEN {
 		err = cloneRepositoryToken(url, path, username, password)
 
-	} else if auth_mode == "ssh" {
+	} else if auth_mode == PRIVATEKEY {
 		err = cloneRepositorySSH(url, path, username, password)
 
 	} else {
-		err = nil
+		err = cloneRepository(url, path)
 	}
 
-	logger.Fatalln(err)
+	return err
 }

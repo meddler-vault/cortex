@@ -52,7 +52,23 @@ type SystemConstants struct {
 	SAMPLEOUTPUTFILE  *string `json:"sample_outputfile"`
 	TRACEID           *string `json:"trace_id"`
 	EXECTIMEOUT       *string `json:"exec_timeout"`
+	// Adding new configurable parameters for GIT Cloner
+	// Git Mode: true | True | TRUE | yes | 1 ; else False
+	GITMODE         *string `json:"git_mode" `
+	GITAUTHMODE     *string `json:"git_auth_mode" `
+	GITAUTHUSERNAME *string `json:"git_auth_username" `
+	GITAUTHPASSWORD *string `json:"git_auth_password" `
+	GITREMOTE       *string `json:"git_remote" `
+	GITPATH         *string `json:"git_path" `
 }
+
+// Git Constants: Auth Mode
+const (
+	NOAUTH     string = "no_auth"
+	PASSWORD   string = "password"
+	TOKEN      string = "token"
+	PRIVATEKEY string = "privatekey"
+)
 
 // Override
 func (current *Constants) Override(new *Constants) {
@@ -115,6 +131,25 @@ func (current *Constants) Override(new *Constants) {
 	if new.System.EXECTIMEOUT != nil {
 		current.System.EXECTIMEOUT = new.System.EXECTIMEOUT
 	}
+	// Git modification
+	if new.System.GITMODE != nil {
+		current.System.GITMODE = new.System.GITMODE
+	}
+	if new.System.GITAUTHMODE != nil {
+		current.System.GITAUTHMODE = new.System.GITAUTHMODE
+	}
+	if new.System.GITREMOTE != nil {
+		current.System.GITREMOTE = new.System.GITREMOTE
+	}
+	if new.System.GITPATH != nil {
+		current.System.GITPATH = new.System.GITPATH
+	}
+	if new.System.GITAUTHUSERNAME != nil {
+		current.System.GITAUTHUSERNAME = new.System.GITAUTHUSERNAME
+	}
+	if new.System.GITAUTHPASSWORD != nil {
+		current.System.GITAUTHPASSWORD = new.System.GITAUTHPASSWORD
+	}
 	current.resolveRelativePaths()
 }
 
@@ -124,6 +159,7 @@ func (current *Constants) resolveRelativePaths() {
 	*current.System.OUTPUTDIR = filepath.Join(*current.System.BASEPATH, *current.System.OUTPUTDIR)
 	*current.System.RESULTSJSON = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSJSON)
 	*current.System.RESULTSSCHEMA = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSSCHEMA)
+	*current.System.GITPATH = filepath.Join(*current.System.BASEPATH, *current.System.GITPATH)
 
 }
 
@@ -234,6 +270,31 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 
 	}
 
+	if constants.System.GITMODE != nil {
+		dataMap["git_mode"] = *constants.System.GITMODE
+
+	}
+	if constants.System.GITMODE != nil {
+		dataMap["git_auth_mode"] = *constants.System.GITAUTHMODE
+
+	}
+	if constants.System.GITMODE != nil {
+		dataMap["git_auth_username"] = *constants.System.GITAUTHUSERNAME
+
+	}
+	if constants.System.GITMODE != nil {
+		dataMap["git_auth_password"] = *constants.System.GITAUTHPASSWORD
+
+	}
+	if constants.System.GITPATH != nil {
+		dataMap["git_path"] = *constants.System.GITPATH
+
+	}
+	if constants.System.GITMODE != nil {
+		dataMap["git_remote"] = *constants.System.GITREMOTE
+
+	}
+
 	return dataMap
 
 }
@@ -246,7 +307,7 @@ func initialize() *Constants {
 	}
 
 	systemConstants := SystemConstants{
-		BASEPATH:          PopulateStr("base_path", "/Users/meddler/Office/Workspaces/Secoflex/secoflex/modules/watchdog/tmp", "Base Path"),
+		BASEPATH:          PopulateStr("base_path", "/tmp", "Base Path"),
 		INPUTDIR:          PopulateStr("input_dir", "input", "Specify output directory"),
 		OUTPUTDIR:         PopulateStr("output_dir", "output", "Specify output directory"),
 		RESULTSJSON:       PopulateStr("results_json", "results.json", "Specify output directory"),
@@ -259,6 +320,13 @@ func initialize() *Constants {
 		SAMPLEINPUTFILE:   PopulateStr("sample_inputfile", "PopulateStr", "Enable Logging"),
 		SAMPLEOUTPUTFILE:  PopulateStr("sample_outputfile", "PopulateStr", "Enable Logging"),
 		TRACEID:           PopulateStr("trace_id", "default_trace_id", "Trace Id"),
+		//
+		GITMODE:         PopulateStr("git_mode", "false", "Git Moce"),
+		GITAUTHMODE:     PopulateStr("git_auth_mode", "no_auth", "Git auth mode"),
+		GITAUTHUSERNAME: PopulateStr("git_auth_username", "", "Git Auth Username"),
+		GITAUTHPASSWORD: PopulateStr("git_auth_password", "", "Git Auth Password"),
+		GITREMOTE:       PopulateStr("git_remote", "", "Git Remote"),
+		GITPATH:         PopulateStr("git_path", "/git-repo", "Git Path"),
 	}
 
 	processConstants := ProcessConstants{
