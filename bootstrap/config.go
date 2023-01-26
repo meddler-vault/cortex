@@ -1,6 +1,6 @@
 package bootstrap
 
-//DependencySchema
+// DependencySchema
 type DependencySchema struct {
 	Identifier string `json:"id"`
 	Alias      string `json:"alias"`
@@ -18,7 +18,7 @@ type MessageDataSpec struct {
 // 	Reserved ReservedConstants `json:"reserved"`
 // }
 
-//MessageSpec...
+// MessageSpec...
 type MessageSpec struct {
 	MessageDataSpec
 	Identifier string `json:"id"` // For changing status, ingesting data, persisting FS on Storage (Bucket Name)

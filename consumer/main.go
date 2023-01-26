@@ -16,6 +16,8 @@ import (
 	"github.com/meddler-io/watchdog/watchdog"
 )
 
+var WatchdogVersion = "version"
+
 func getenvStr(key string, defaultValue string) string {
 	v := os.Getenv(key)
 	if v == "" {
@@ -36,7 +38,7 @@ func Start() {
 
 	username := getenvStr("RMQ_USERNAME", "user")
 	password := getenvStr("RMQ_PASSWORD", "bitnami")
-	host := getenvStr("RMQ_HOST", "192.168.29.9")
+	host := getenvStr("RMQ_HOST", "172.24.42.51")
 	logger.Println("username", username)
 	logger.Println("password", password)
 	logger.Println("host", host)
@@ -74,7 +76,7 @@ func Start() {
 
 		taskInitiated := bootstrap.TaskResult{}
 		taskInitiated.Identifier = data.Identifier
-		taskInitiated.WatchdogVersion = "unknown"
+		taskInitiated.WatchdogVersion = WatchdogVersion
 		taskInitiated.Status = "INITIATED"
 		taskInitiated.Message = "Task Initiated"
 
@@ -120,6 +122,32 @@ func Start() {
 			}
 
 		}
+
+		logger.Println("Sync Deps Done")
+		// Load git repo locally
+		logger.Println("Sync Initiate:  Git Repo", *bootstrap.CONSTANTS.System.GITREMOTE,
+			*bootstrap.CONSTANTS.System.GITPATH,
+			*bootstrap.CONSTANTS.System.GITAUTHMODE,
+			*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
+			*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
+		)
+
+		if strings.ToLower(*bootstrap.CONSTANTS.System.GITMODE) == "true" {
+			err = bootstrap.Clone(
+				*bootstrap.CONSTANTS.System.GITREMOTE,
+				*bootstrap.CONSTANTS.System.GITPATH,
+				*bootstrap.CONSTANTS.System.GITAUTHMODE,
+				*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
+				*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
+			)
+
+			if err != nil {
+				logger.Println("Erro Syncing Git Repo", err)
+				return
+			}
+		}
+
+		logger.Println("GIT Sync", " : ", "COMPLETED")
 
 		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Bootstrap")
 

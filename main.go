@@ -67,6 +67,6 @@ func __main() {
 
 } /*  End of func  main.  */
 func main() {
-	logger.Println("Started watchdog New")
+	logger.Println("[[Watchdog]]", consumer.WatchdogVersion)
 	consumer.Start()
 }
