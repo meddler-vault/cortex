@@ -1,1 +1,6 @@
 tmp/*
+
+
+./local-data/
+local-data/*
+
