@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
+	consumernats "github.com/meddler-io/watchdog/consumer-nats"
 	"github.com/meddler-io/watchdog/logger"
 
 	"os"
 	"syscall"
 
-	"github.com/meddler-io/watchdog/consumer"
 	reaper "github.com/ramr/go-reaper"
 )
 
@@ -67,6 +67,6 @@ func __main() {
 
 } /*  End of func  main.  */
 func main() {
-	logger.Println("[[Watchdog]]", consumer.WatchdogVersion)
-	consumer.Start()
+	logger.Println("[[Watchdog]]", consumernats.WatchdogVersion)
+	consumernats.Start()
 }

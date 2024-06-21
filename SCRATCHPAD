@@ -7,3 +7,6 @@ CMD: # Command(.. , ...)
 
 ##  Allow multiple sequential commands
 CMD = ["comm_1" , "::" , "comm_2"]
+
+
+http://172.24.42.58:4646/ui/jobs/test:6428493fa87fe51c96803bbc:64284953a87fe51c96803bbe@default/definition
