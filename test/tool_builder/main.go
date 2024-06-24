@@ -1,8 +1,6 @@
 package main
 
-import (
-	"github.com/meddler-vault/cortex/producer"
-)
+import "github.com/meddler-vault/cortex/deprecated_root_libs/producer"
 
 func main() {
 

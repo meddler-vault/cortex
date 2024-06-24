@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+
+	consumer "consumernats"
+
 	"net/http"
 	"strings"
-
-	"github.com/meddler-vault/cortex/consumer"
 )
 
 func main() {

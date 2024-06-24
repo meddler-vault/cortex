@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/meddler-vault/cortex/consumer"
+	"consumernats"
 )
 
 func main() {
 
 	// go sendData()
-	consumer.Start()
+	consumernats.Start()
 }
 
 func sendData() {
