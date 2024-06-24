@@ -3,7 +3,7 @@ package producernats
 import (
 	"time"
 
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/logger"
 	"github.com/nats-io/nats.go"
 )
 
@@ -73,11 +73,11 @@ func (q *queue) connect() {
 		logger.Println("Connecting to NATS on ", q.url)
 
 		op := &nats.Options{
-			Url:            q.url,
-			ReconnectWait:  1 * time.Second,
-			PingInterval:   5 * time.Second,
-			MaxReconnect:   1,
-			MaxPingsOut:    1,
+			Url:           q.url,
+			ReconnectWait: 1 * time.Second,
+			PingInterval:  5 * time.Second,
+			MaxReconnect:  1,
+			MaxPingsOut:   1,
 		}
 
 		conn, err := op.Connect()

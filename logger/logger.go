@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
-
+	"github.com/fatih/color"
 	"github.com/fluent/fluent-logger-golang/fluent"
 )
 
@@ -43,8 +43,11 @@ type taskId struct {
 }
 
 var TaskId *taskId
+var _logger
 
 func init() {
+	logger = NewColorLogger()
+
 	// use package init to make sure path is always instantiated
 	TaskId = new(taskId)
 }
@@ -75,7 +78,8 @@ func Println(v ...interface{}) {
 
 	logger.Post(TaskId.taskid, loggingData)
 
-	log.Println(v)
+	// log.Println(v)
+	_logger.infoLogger.Println(v)
 	// err := logger.Post("system", loggingData)
 	// log.Println(err)
 	// log.Println(logger.FluentHost)

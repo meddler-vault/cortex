@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/logger"
 
 	"github.com/xeipuuv/gojsonschema"
 )

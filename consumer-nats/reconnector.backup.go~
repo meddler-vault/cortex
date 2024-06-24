@@ -3,7 +3,7 @@ package consumernats
 import (
 	"time"
 
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/logger"
 	"github.com/nats-io/nats.go"
 )
 

@@ -3,10 +3,10 @@ package watchdog
 import (
 	"os"
 
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/logger"
 
-	"github.com/meddler-io/watchdog/config"
-	"github.com/meddler-io/watchdog/executor"
+	"github.com/meddler-vault/cortex/config"
+	"github.com/meddler-vault/cortex/executor"
 )
 
 func Start(id string, cmd []string, args []string, env map[string]string) error {

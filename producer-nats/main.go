@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/meddler-io/watchdog/bootstrap"
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/bootstrap"
+	"github.com/meddler-vault/cortex/logger"
 )
 
 func getenvStr(key string, defaultValue string) string {
@@ -25,24 +25,24 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func Produce(username string, password string, host string, topic string, data string) (err error )  {
+func Produce(username string, password string, host string, topic string, data string) (err error) {
 
 	encodedUser := url.QueryEscape(username)
 	encodedPassword := url.QueryEscape(password)
 
-	connectionString := fmt.Sprintf("wss://%s:%s@%s", encodedUser, encodedPassword , host)
+	connectionString := fmt.Sprintf("wss://%s:%s@%s", encodedUser, encodedPassword, host)
 
-	queue  := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
+	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
 	// if(err != nil){
 	// 	return err
 	// }
 	log.Println("Queue ceated")
 	err = queue.Send(data)
-	if(err != nil){
+	if err != nil {
 		return err
 	}
 
-	ctx , _ := context.WithTimeout(context.Background(), 1 * time.Second  )
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
 
 	queue.connection.FlushWithContext(
 		ctx,

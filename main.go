@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	consumernats "github.com/meddler-io/watchdog/consumer-nats"
-	"github.com/meddler-io/watchdog/logger"
+	consumernats "github.com/meddler-vault/cortex/consumer-nats"
+	"github.com/meddler-vault/cortex/logger"
 
 	"os"
 	"syscall"

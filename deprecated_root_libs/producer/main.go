@@ -3,7 +3,7 @@ package producer
 import (
 	"os"
 
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/logger"
 	"github.com/streadway/amqp"
 )
 

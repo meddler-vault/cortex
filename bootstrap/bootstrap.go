@@ -3,13 +3,12 @@ package bootstrap
 import (
 	"io/ioutil"
 
-	"github.com/meddler-io/watchdog/logger"
-
 	"os"
 	"path/filepath"
+
+	"github.com/meddler-vault/cortex/logger"
 )
 
-//
 func setupFileSystem() {
 
 }

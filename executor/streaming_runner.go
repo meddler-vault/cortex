@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	_logger "github.com/meddler-io/watchdog/logger"
+	_logger "github.com/meddler-vault/cortex/logger"
 
 	"github.com/fluent/fluent-logger-golang/fluent"
 )

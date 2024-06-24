@@ -1,7 +1,7 @@
 package producer
 
 import (
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/logger"
 
 	"time"
 
