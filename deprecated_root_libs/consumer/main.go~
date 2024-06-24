@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/meddler-vault/cortex/deprecated_root_libs/producer"
 	"github.com/meddler-vault/cortex/logger"
 
 	"net/http"
@@ -12,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/meddler-vault/cortex/bootstrap"
-	"github.com/meddler-vault/cortex/producer"
+
 	"github.com/meddler-vault/cortex/watchdog"
 )
 

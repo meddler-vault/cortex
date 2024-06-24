@@ -2,11 +2,10 @@ package logger
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"sync"
-	"github.com/fatih/color"
+
 	"github.com/fluent/fluent-logger-golang/fluent"
 )
 
@@ -43,10 +42,10 @@ type taskId struct {
 }
 
 var TaskId *taskId
-var _logger
+var _logger *ColorLogger
 
 func init() {
-	logger = NewColorLogger()
+	_logger = NewColorLogger()
 
 	// use package init to make sure path is always instantiated
 	TaskId = new(taskId)
