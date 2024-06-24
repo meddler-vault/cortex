@@ -1,6 +1,6 @@
 package main
 
-import "github.com/meddler-io/watchdog/logger"
+import "github.com/meddler-vault/cortex/logger"
 
 func main() {
 	logger.Println("hello")

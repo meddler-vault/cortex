@@ -6,9 +6,11 @@ import (
 	"log"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/logger"
 
 	"os"
 	"path/filepath"
@@ -287,12 +289,12 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 }
 
 // Git Functionality
-func cloneRepositorySSH(url string, path string, privatekey string, password string) (err error) {
+func cloneRepositorySSH(url string, path string, privatekey string, password string) (repository *git.Repository, err error) {
 
 	print("cloneRepositorySSH", privatekey, password)
 	publicKeys, err := ssh.NewPublicKeys("git", []byte(privatekey), password)
 
-	_, err = git.PlainClone(path, false, &git.CloneOptions{
+	repository, err = git.PlainClone(path, false, &git.CloneOptions{
 		// The intended use of a GitHub personal access token is in replace of your password
 		// because access tokens can easily be revoked.
 		// https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
@@ -305,10 +307,10 @@ func cloneRepositorySSH(url string, path string, privatekey string, password str
 
 }
 
-func cloneRepositoryAuth(url string, path string, username string, password string) (err error) {
+func cloneRepositoryAuth(url string, path string, username string, password string) (repository *git.Repository, err error) {
 
 	println(path, username, password)
-	_, err = git.PlainClone(path, false, &git.CloneOptions{
+	repository, err = git.PlainClone(path, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
 			Username: username,
 			Password: password,
@@ -321,12 +323,12 @@ func cloneRepositoryAuth(url string, path string, username string, password stri
 
 }
 
-func cloneRepositoryToken(url string, path string, username string, token string) (err error) {
+func cloneRepositoryToken(url string, path string, username string, token string) (repository *git.Repository, err error) {
 
 	if username == "" {
 		username = "dummy_username"
 	}
-	_, err = git.PlainClone(path, false, &git.CloneOptions{
+	repository, err = git.PlainClone(path, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
 			Username: username,
 			Password: token,
@@ -339,10 +341,14 @@ func cloneRepositoryToken(url string, path string, username string, token string
 
 }
 
-func cloneRepository(url string, path string) (err error) {
-	_, err = git.PlainClone(path, false, &git.CloneOptions{
-		URL:      url,
-		Progress: os.Stdout,
+func cloneRepository(url string, path string, ref string, auth *transport.AuthMethod) (repository *git.Repository, err error) {
+	repository, err = git.PlainClone(path, false, &git.CloneOptions{
+		URL:           url,
+		Progress:      os.Stdout,
+		Depth:         1,
+		SingleBranch:  (len(ref)) > 0,
+		ReferenceName: plumbing.ReferenceName(ref), // Assuming startCommitID is a tag
+		Auth:          *auth,
 	})
 
 	return
@@ -355,7 +361,7 @@ func cloneRepository(url string, path string) (err error) {
 // username: Auth. username / Private Key string
 //
 // password: Auth. password / Private Key password
-func Clone(url string, path string, auth_mode string, username string, password string) (err error) {
+func Clone(url string, path string, auth_mode string, username string, password string, gitref string, gitdepth int) (repository *git.Repository, err error) {
 
 	log.Println("Clone()",
 		url,
@@ -366,21 +372,45 @@ func Clone(url string, path string, auth_mode string, username string, password 
 	)
 	RemoveContents(path)
 
-	if auth_mode == NOAUTH {
-		err = cloneRepository(url, path)
+	var auth transport.AuthMethod = nil
 
-	} else if auth_mode == PASSWORD {
-		err = cloneRepositoryAuth(url, path, username, password)
+	if auth_mode == NOAUTH {
+
+	} else if auth_mode == BASICAUTH {
+		auth = &http.BasicAuth{
+			Username: username,
+			Password: password,
+		}
+		// repository, err = cloneRepositoryAuth(url, path, username, password)
 
 	} else if auth_mode == TOKEN {
-		err = cloneRepositoryToken(url, path, username, password)
+		auth = &http.TokenAuth{
+			Token: password,
+		}
+		// repository, err = cloneRepositoryToken(url, path, username, password)
 
 	} else if auth_mode == PRIVATEKEY {
-		err = cloneRepositorySSH(url, path, username, password)
+		auth, err = ssh.NewPublicKeys("git", []byte(password), password)
+
+		if err != nil {
+			RemoveContents(path)
+
+			return
+		}
+		// repository, err = cloneRepositorySSH(url, path, username, password)
 
 	} else {
-		err = cloneRepository(url, path)
+		// repository, err = cloneRepository(url, path)
 	}
 
-	return err
+	repository, err = cloneRepository(url, path, gitref, &auth)
+
+	// if err != nil, perform further operations
+
+	if err != nil {
+		RemoveContents(path)
+
+		return
+	}
+	return
 }

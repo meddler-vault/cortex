@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/meddler-io/watchdog/consumer"
+	"github.com/meddler-vault/cortex/consumer"
 )
 
 func main() {

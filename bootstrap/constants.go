@@ -3,7 +3,7 @@ package bootstrap
 import (
 	"flag"
 
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/logger"
 
 	"path/filepath"
 	"strconv"
@@ -19,6 +19,7 @@ type ReservedConstants struct {
 	BaseConstants
 	MESSAGEQUEUE        string `json:"message_queue_topic"`
 	PUBLISHMESSAGEQUEUE string `json:"publish_message_queue_topic"`
+	MOCKMESSAGE         string `json:"mock_message"`
 }
 type ProcessConstants struct {
 	BaseConstants
@@ -54,18 +55,25 @@ type SystemConstants struct {
 	EXECTIMEOUT       *string `json:"exec_timeout"`
 	// Adding new configurable parameters for GIT Cloner
 	// Git Mode: true | True | TRUE | yes | 1 ; else False
-	GITMODE         *string `json:"git_mode" `
-	GITAUTHMODE     *string `json:"git_auth_mode" `
-	GITAUTHUSERNAME *string `json:"git_auth_username" `
-	GITAUTHPASSWORD *string `json:"git_auth_password" `
-	GITREMOTE       *string `json:"git_remote" `
-	GITPATH         *string `json:"git_path" `
+	GITMODE           *string `json:"git_mode" `
+	GITAUTHMODE       *string `json:"git_auth_mode" `
+	GITAUTHUSERNAME   *string `json:"git_auth_username" `
+	GITAUTHPASSWORD   *string `json:"git_auth_password" `
+	GITREMOTE         *string `json:"git_remote" `
+	GITPATH           *string `json:"git_path" ` // Output path for git-repo
+	GITREF            *string `json:"git_ref" `  // Output path for git-repo
+	GITBASECOMMITID   *string `json:"git_base_commit_id"`
+	GITTARGETCOMMITID *string `json:"git_target_commit_id"`
+	GITDEPTH          *int    `json:"git_depth"`
+
+	// Job Output result publishing
+	JOBMODE *string `json:"git_mode" `
 }
 
 // Git Constants: Auth Mode
 const (
-	NOAUTH     string = "no_auth"
-	PASSWORD   string = "password"
+	NOAUTH     string = "none"
+	BASICAUTH  string = "basicauth"
 	TOKEN      string = "token"
 	PRIVATEKEY string = "privatekey"
 )
@@ -149,6 +157,18 @@ func (current *Constants) Override(new *Constants) {
 	}
 	if new.System.GITAUTHPASSWORD != nil {
 		current.System.GITAUTHPASSWORD = new.System.GITAUTHPASSWORD
+	}
+	if new.System.GITREF != nil {
+		current.System.GITREF = new.System.GITREF
+	}
+	if new.System.GITBASECOMMITID != nil {
+		current.System.GITBASECOMMITID = new.System.GITBASECOMMITID
+	}
+	if new.System.GITTARGETCOMMITID != nil {
+		current.System.GITTARGETCOMMITID = new.System.GITTARGETCOMMITID
+	}
+	if new.System.GITDEPTH != nil {
+		current.System.GITDEPTH = new.System.GITDEPTH
 	}
 	current.resolveRelativePaths()
 }
@@ -274,15 +294,15 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 		dataMap["git_mode"] = *constants.System.GITMODE
 
 	}
-	if constants.System.GITMODE != nil {
+	if constants.System.GITAUTHMODE != nil {
 		dataMap["git_auth_mode"] = *constants.System.GITAUTHMODE
 
 	}
-	if constants.System.GITMODE != nil {
+	if constants.System.GITAUTHUSERNAME != nil {
 		dataMap["git_auth_username"] = *constants.System.GITAUTHUSERNAME
 
 	}
-	if constants.System.GITMODE != nil {
+	if constants.System.GITAUTHPASSWORD != nil {
 		dataMap["git_auth_password"] = *constants.System.GITAUTHPASSWORD
 
 	}
@@ -290,8 +310,20 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 		dataMap["git_path"] = *constants.System.GITPATH
 
 	}
-	if constants.System.GITMODE != nil {
-		dataMap["git_remote"] = *constants.System.GITREMOTE
+	if constants.System.GITREF != nil {
+		dataMap["git_ref"] = *constants.System.GITREF
+
+	}
+	if constants.System.GITBASECOMMITID != nil {
+		dataMap["git_base_commit_id"] = *constants.System.GITBASECOMMITID
+
+	}
+	if constants.System.GITTARGETCOMMITID != nil {
+		dataMap["git_target_commit_id"] = *constants.System.GITTARGETCOMMITID
+
+	}
+	if constants.System.GITDEPTH != nil {
+		dataMap["git_depth"] = strconv.Itoa(*constants.System.GITDEPTH)
 
 	}
 
@@ -304,6 +336,7 @@ func initialize() *Constants {
 	reservedConstants := ReservedConstants{
 		MESSAGEQUEUE:        *PopulateStr("message_queue_topic", "tasks_test", "Message Queue Topic"),
 		PUBLISHMESSAGEQUEUE: *PopulateStr("publish_message_queue_topic", "tasks_publish", "Publish Message Queue Topic"),
+		MOCKMESSAGE:         *PopulateStr("mock_message", "", "Test message to mock on init."),
 	}
 
 	systemConstants := SystemConstants{
@@ -320,13 +353,17 @@ func initialize() *Constants {
 		SAMPLEINPUTFILE:   PopulateStr("sample_inputfile", "PopulateStr", "Enable Logging"),
 		SAMPLEOUTPUTFILE:  PopulateStr("sample_outputfile", "PopulateStr", "Enable Logging"),
 		TRACEID:           PopulateStr("trace_id", "default_trace_id", "Trace Id"),
-		//
-		GITMODE:         PopulateStr("git_mode", "false", "Git Moce"),
-		GITAUTHMODE:     PopulateStr("git_auth_mode", "no_auth", "Git auth mode"),
-		GITAUTHUSERNAME: PopulateStr("git_auth_username", "", "Git Auth Username"),
-		GITAUTHPASSWORD: PopulateStr("git_auth_password", "", "Git Auth Password"),
-		GITREMOTE:       PopulateStr("git_remote", "", "Git Remote"),
-		GITPATH:         PopulateStr("git_path", "/git-repo", "Git Path"),
+		// Git Operations
+		GITMODE:           PopulateStr("git_mode", "false", "Git Moce"),
+		GITAUTHMODE:       PopulateStr("git_auth_mode", "no_auth", "Git auth mode"),
+		GITAUTHUSERNAME:   PopulateStr("git_auth_username", "", "Git Auth Username"),
+		GITAUTHPASSWORD:   PopulateStr("git_auth_password", "", "Git Auth Password"),
+		GITREMOTE:         PopulateStr("git_remote", "", "Git Remote"),
+		GITPATH:           PopulateStr("git_path", "/git-repo", "Git Path"),
+		GITDEPTH:          PopulateInt("git_depth", 0, "Git depth while cloning"),
+		GITREF:            PopulateStr("git_ref", "", "Git ref (tag/ branch). Use fully qualified git refernece"),
+		GITBASECOMMITID:   PopulateStr("git_base_commit_id", "", "Git based commit id. (top / latest)"),
+		GITTARGETCOMMITID: PopulateStr("git_target_commit_id", "", "Git historcal commit it to recurse to!"),
 	}
 
 	processConstants := ProcessConstants{

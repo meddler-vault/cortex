@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/meddler-io/watchdog/producer"
+	"github.com/meddler-vault/cortex/producer"
 )
 
 func main() {

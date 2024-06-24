@@ -1,9 +1,8 @@
 package main
 
-import consumernats "github.com/meddler-io/watchdog/consumer-nats"
+import consumernats "github.com/meddler-vault/cortex/consumer-nats"
 
-
-func main(){
+func main() {
 
 	consumernats.Start()
 }

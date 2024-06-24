@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/meddler-io/watchdog/bootstrap"
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/bootstrap"
+	"github.com/meddler-vault/cortex/logger"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )

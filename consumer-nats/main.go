@@ -2,20 +2,22 @@ package consumernats
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
+	"time"
 
-	"github.com/meddler-io/watchdog/logger"
-	producernats "github.com/meddler-io/watchdog/producer-nats"
+	"github.com/meddler-vault/cortex/logger"
 
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 
-	"github.com/meddler-io/watchdog/bootstrap"
-	"github.com/meddler-io/watchdog/watchdog"
+	"github.com/meddler-vault/cortex/bootstrap"
+	"github.com/meddler-vault/cortex/watchdog"
 )
 
 var WatchdogVersion = "version"
@@ -28,10 +30,49 @@ func getenvStr(key string, defaultValue string) string {
 	return v
 }
 
-func PublishEndResult(username string, password string, host string, data string) {
-	// queue := NewQueue("amqp://"+username+":"+password+"@"+host, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
-	err := producernats.Produce(username, password, host, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, data)
-	logger.Println("TASK_RESULT_ERR", err)
+func PublishEndResult(connectionString, message string) (err error) {
+
+	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE)
+
+	err = queue.Send(message)
+	if err != nil {
+		return err
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+
+	err = queue.connection.FlushWithContext(
+		ctx,
+	)
+	if err != nil {
+		return err
+	}
+
+	return
+
+}
+
+func PublishMockMessage(connectionString string, message string) (err error) {
+
+	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
+
+	err = queue.Send(message)
+	if err != nil {
+		return err
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+
+	err = queue.connection.FlushWithContext(
+		ctx,
+	)
+	if err != nil {
+		return err
+	}
+
+	// queue.connection.Close()
+
+	return
 
 }
 
@@ -40,24 +81,34 @@ func Start() {
 
 	username := getenvStr("RMQ_USERNAME", "whitehat")
 	password := getenvStr("RMQ_PASSWORD", "4Jy6P)$Ep@c^SenL")
+	username = url.QueryEscape(username)
+	password = url.QueryEscape(password)
 	host := getenvStr("RMQ_HOST", "rmq.meddler.io:443")
 	logger.Println("username", username)
 	logger.Println("password", password)
 	logger.Println("host", host)
 	logger.Println("MESSAGEQUEUE", bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
 
+	connectionString := fmt.Sprintf("wss://%s:%s@%s", username, password, host)
 
+	if bootstrap.CONSTANTS.Reserved.MOCKMESSAGE != "" {
 
-	encodedUser := url.QueryEscape(username)
-	encodedPassword := url.QueryEscape(password)
+		logger.Println("MOCKMESSAGE", bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
+		err := PublishMockMessage(connectionString, bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
+		if err != nil {
 
-
-	connectionString := fmt.Sprintf("wss://%s:%s@%s", encodedUser, encodedPassword , host)
+			log.Println("MOCK Mode is turned on, but coudn;t publish the message. Returning to genesis", "ERror: ", err)
+			return
+		}
+	}
 
 	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
+
 	defer queue.Close()
 
 	queue.Consume(func(msg string) {
+		logger.Println("**************************")
+		// logger.Println(msg)
 		logger.Println("**************************")
 
 		defer func() {
@@ -95,7 +146,7 @@ func Start() {
 			taskInitiatedString = []byte{}
 		}
 
-		PublishEndResult(username, password, host, string(taskInitiatedString))
+		PublishEndResult(connectionString, string(taskInitiatedString))
 
 		//
 
@@ -142,12 +193,14 @@ func Start() {
 		)
 
 		if strings.ToLower(*bootstrap.CONSTANTS.System.GITMODE) == "true" {
-			err = bootstrap.Clone(
+			_, err := bootstrap.Clone(
 				*bootstrap.CONSTANTS.System.GITREMOTE,
 				*bootstrap.CONSTANTS.System.GITPATH,
 				*bootstrap.CONSTANTS.System.GITAUTHMODE,
 				*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
 				*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
+				*bootstrap.CONSTANTS.System.GITREF,
+				*bootstrap.CONSTANTS.System.GITDEPTH,
 			)
 
 			if err != nil {
@@ -179,6 +232,36 @@ func Start() {
 
 		// Replace variables & placeholders
 		if data.SubstituteVariables {
+
+			// Placoholder replacment for entrypoint
+			for i, arg := range data.Entrypoint {
+				for k, v := range data.Variables {
+					if strings.HasPrefix(v, "$") {
+						if val, ok := environment[v[1:]]; ok {
+							v = val
+						}
+					}
+
+					data.Entrypoint[i] = strings.ReplaceAll(arg, "$"+k, v)
+					// arg = data.Args[i]
+				}
+			}
+
+			// Placoholder replacment for cmd
+			for i, arg := range data.Cmd {
+				for k, v := range data.Variables {
+					if strings.HasPrefix(v, "$") {
+						if val, ok := environment[v[1:]]; ok {
+							v = val
+						}
+					}
+
+					data.Cmd[i] = strings.ReplaceAll(arg, "$"+k, v)
+					// arg = data.Args[i]
+				}
+			}
+
+			// Placeholder replacement for args
 			for i, arg := range data.Args {
 				for k, v := range data.Variables {
 					if strings.HasPrefix(v, "$") {
@@ -206,6 +289,8 @@ func Start() {
 			}
 
 		}
+
+		data.Cmd = append(data.Entrypoint, data.Cmd...)
 
 		// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
 		processErr := watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
@@ -292,7 +377,7 @@ func Start() {
 			taskResultString = []byte{}
 		}
 
-		PublishEndResult(username, password, host, string(taskResultString))
+		PublishEndResult(connectionString, string(taskResultString))
 
 		logger.Println("Published to messag queue")
 

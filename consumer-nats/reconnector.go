@@ -1,9 +1,10 @@
 package consumernats
 
 import (
+	"log"
 	"time"
 
-	"github.com/meddler-io/watchdog/logger"
+	"github.com/meddler-vault/cortex/logger"
 	"github.com/nats-io/nats.go"
 )
 
@@ -12,6 +13,7 @@ type queue struct {
 	name string
 
 	connection   *nats.Conn
+	js           nats.JetStreamContext
 	subscription *nats.Subscription
 	closed       bool
 
@@ -20,20 +22,22 @@ type queue struct {
 
 type messageConsumer func(string)
 
-func NewQueue(url string, qName string ) *queue {
+func NewQueue(url string, qName string) *queue {
 	q := new(queue)
 	q.url = url
 	q.name = qName
 
 	q.connect()
+	log.Println("Connect", qName)
 	go q.reconnector()
 
 	return q
 }
 
-func (q *queue) Send(message string) {
-	err := q.connection.Publish(q.name, []byte(message))
+func (q *queue) Send(message string) (err error) {
+	_, err = q.js.Publish(q.name, []byte(message))
 	logError("Sending message to queue failed", err)
+	return
 }
 
 func (q *queue) Consume(consumer messageConsumer) {
@@ -72,16 +76,36 @@ func (q *queue) connect() {
 		logger.Println("Connecting to NATS on ", q.url)
 
 		op := &nats.Options{
-			Url:            q.url,
-			ReconnectWait:  1 * time.Second,
-			PingInterval:   5 * time.Second,
-			MaxReconnect:   1,
-			MaxPingsOut:    1,
+			Url:           q.url,
+			ReconnectWait: 1 * time.Second,
+			PingInterval:  5 * time.Second,
+			MaxReconnect:  1,
+			MaxPingsOut:   1,
 		}
 
 		conn, err := op.Connect()
 		if err == nil {
 			q.connection = conn
+
+			// Set up JetStream context
+			js, err := q.connection.JetStream()
+			if err != nil {
+				logError("Error getting JetStream context", err)
+				return
+			}
+			q.js = js
+
+			// Ensure the stream is durable
+			_, err = q.js.AddStream(&nats.StreamConfig{
+				Name:     q.name,
+				Subjects: []string{q.name},
+				Storage:  nats.FileStorage,
+			})
+			if err != nil {
+				logError("Error adding stream", err)
+				return
+			}
+
 			logger.Println("Connection established!")
 			return
 		}
@@ -97,9 +121,9 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 		q.subscription.Unsubscribe()
 	}
 
-	sub, err := q.connection.Subscribe(q.name, func(msg *nats.Msg) {
+	sub, err := q.js.Subscribe(q.name, func(msg *nats.Msg) {
 		consumer(string(msg.Data))
-	})
+	}, nats.Durable("durable-consumer"))
 	if err == nil {
 		q.subscription = sub
 		q.currentConsumer = consumer
