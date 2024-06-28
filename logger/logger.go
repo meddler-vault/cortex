@@ -59,7 +59,7 @@ func InitNewTask(tag string) {
 
 }
 
-func Println(v ...interface{}) {
+func Logln(v ...interface{}) {
 
 	// loggingData["message"] = scanner.Text()
 	// logger.Post(tag, loggingData
@@ -78,7 +78,34 @@ func Println(v ...interface{}) {
 	logger.Post(TaskId.taskid, loggingData)
 
 	// log.Println(v)
-	_logger.infoLogger.Println(v)
+	// _logger.warningLogger.Println(v)
+	_logger.Warning(v...)
+	// err := logger.Post("system", loggingData)
+	// log.Println(err)
+	// log.Println(logger.FluentHost)
+	// log.Println(logger.FluentPort)
+}
+
+func Println(v ...interface{}) {
+
+	// loggingData["message"] = scanner.Text()
+	// logger.Post(tag, loggingData
+	_logger.Info(v...)
+
+	message := ""
+	for _, msg := range v {
+		pMsg := fmt.Sprintf("%v ", msg)
+		message += pMsg
+	}
+
+	loggingData := map[string]string{
+		"metadata": "golang-fluentd",
+		"message":  message,
+	}
+
+	logger.Post(TaskId.taskid, loggingData)
+
+	// log.Println(v)
 	// err := logger.Post("system", loggingData)
 	// log.Println(err)
 	// log.Println(logger.FluentHost)
