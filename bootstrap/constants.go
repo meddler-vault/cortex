@@ -68,6 +68,15 @@ type SystemConstants struct {
 
 	// Job Output result publishing
 	JOBMODE *string `json:"job_mode" `
+
+	// Result sync params
+
+	RESULT_FILE_PATH      *string `json:"result_file_path" `      // Path to file containing the result. TODO: If pattern .*.json , etc...parse all json files
+	RESULT_PARSER_TYPE    *string `json:"result_parser_type" `    // common dojo parsers
+	RESULT_PARSER_NAME    *string `json:"result_parser_name" `    // dojo sbom etc
+	RESULT_TYPE           *string `json:"result_type" `           // Output result type
+	RESULT_SYNC_DIRECTORY *string `json:"result_sync_directory" ` // Sync result directory to minio storage
+	RESULT_PARSE          *bool   `json:"result_parse" `          // true , false : Needs parsing: Yes / no..if no...storage mounted directory files will be listed, else parsing results will b e
 }
 
 // Git Constants: Auth Mode
@@ -180,6 +189,7 @@ func (current *Constants) resolveRelativePaths() {
 	*current.System.RESULTSJSON = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSJSON)
 	*current.System.RESULTSSCHEMA = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSSCHEMA)
 	*current.System.GITPATH = filepath.Join(*current.System.BASEPATH, *current.System.GITPATH)
+	*current.System.RESULT_FILE_PATH = filepath.Join(*current.System.OUTPUTDIR, *current.System.RESULT_FILE_PATH)
 
 }
 
@@ -364,6 +374,14 @@ func initialize() *Constants {
 		GITREF:            PopulateStr("git_ref", "", "Git ref (tag/ branch). Use fully qualified git refernece"),
 		GITBASECOMMITID:   PopulateStr("git_base_commit_id", "", "Git based commit id. (top / latest)"),
 		GITTARGETCOMMITID: PopulateStr("git_target_commit_id", "", "Git historcal commit it to recurse to!"),
+
+		// RESULT params
+		RESULT_FILE_PATH:      PopulateStr("result_file_path", "", "Path to file containing the result. TODO: If pattern .*.json , etc...parse all json !"),
+		RESULT_PARSER_TYPE:    PopulateStr("result_parser_type", "", "common dojo parsers!"),
+		RESULT_PARSER_NAME:    PopulateStr("result_parser_name", "", "dojo sbom etc!"),
+		RESULT_TYPE:           PopulateStr("result_type", "", "Result Type!"),
+		RESULT_SYNC_DIRECTORY: PopulateStr("result_sync_directory", "", "To Sync  results directory to minio or not!"),
+		RESULT_PARSE:          PopulateBool("result_parse", false, "To parse results or not!"),
 	}
 
 	processConstants := ProcessConstants{

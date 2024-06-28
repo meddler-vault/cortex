@@ -355,7 +355,7 @@ func Start() {
 		logger.Println("Starting OUT Sync")
 		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "POST")
 
-		if err = bootstrap.SyncDirToStorage(data.Identifier, *bootstrap.CONSTANTS.System.OUTPUTDIR, false, true); err != nil {
+		if err = bootstrap.SyncDirToStorage(data.Identifier, *bootstrap.CONSTANTS.System.OUTPUTDIR, "test-folder", false, true); err != nil {
 			logger.Println("Error OUT Sync")
 			logger.Println(err)
 			return

@@ -114,7 +114,7 @@ func SyncDirToStorage(bucketName string, folder string, dirPath string, stopAfte
 	endpoint := populateStringFromEnv("MINIOURL", "localhost:9000")
 	accessKeyID := populateStringFromEnv("MINIO_ACCESSKEY", "MEDDLER")
 	secretAccessKey := populateStringFromEnv("MINIO_SECRET", "SUPERDUPERSECRET")
-	useSSL := populateBoolFromEnv("MINIO_SECURE", false)
+	useSSL := populateBoolFromEnv("MINIO_SECURE", true)
 	region := populateStringFromEnv("MINIO_REGION", "india")
 
 	logger := log.New(os.Stdout, "INFO: ", log.LstdFlags)
@@ -224,7 +224,7 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 	accessKeyID := populateStringFromEnv("MINIO_ACCESSKEY", "MEDDLER")
 	secretAccessKey := populateStringFromEnv("MINIO_SECRET", "SUPERDUPERSECRET")
 
-	useSSL := populateBoolFromEnv("MINIO_SECURE", false)
+	useSSL := populateBoolFromEnv("MINIO_SECURE", true)
 
 	// Initialize minio client object.
 	region := populateStringFromEnv("MINIO_REGION", "india")
