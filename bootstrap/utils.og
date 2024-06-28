@@ -1,0 +1,458 @@
+package bootstrap
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"log"
+	"strings"
+
+	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/meddler-vault/cortex/logger"
+
+	"os"
+	"path/filepath"
+	"strconv"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+)
+
+func init() {
+}
+
+// PopulateStr Populates from flag + env
+func PopulateStr(key string, defaultValue string, description string) *string {
+	return flag.String(key, populateStringFromEnv(key, defaultValue), description)
+}
+
+// PopulateBool Populates from flag + env
+func PopulateBool(key string, defaultValue bool, description string) *bool {
+	return flag.Bool(key, populateBoolFromEnv(key, defaultValue), description)
+}
+
+// PopulateInt Populates from flag + env
+func PopulateInt(key string, defaultValue int, description string) *int {
+	return flag.Int(key, populateIntFromEnv(key, defaultValue), description)
+
+}
+
+func populateStringFromEnv(key string, defaultVal string) string {
+	if val, ok := os.LookupEnv(key); ok {
+		return val
+	}
+	return defaultVal
+}
+
+func populateBoolFromEnv(key string, defaultVal bool) bool {
+	if val, ok := os.LookupEnv(key); ok {
+		v, err := strconv.ParseBool(val)
+		if err != nil {
+			logger.Fatalln("LookupEnvOrInt[%s]: %v", key, err)
+		}
+		return v
+	}
+	return defaultVal
+}
+
+func populateIntFromEnv(key string, defaultVal int) int {
+	if val, ok := os.LookupEnv(key); ok {
+		v, err := strconv.Atoi(val)
+		if err != nil {
+			logger.Fatalln("LookupEnvOrInt[%s]: %v", key, err)
+		}
+		return v
+	}
+	return defaultVal
+}
+
+// RemoveContents ()
+func RemoveContents(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DeleteMinIOFolder checks if a folder (prefix) exists in MinIO and deletes it fully if it does.
+func DeleteMinIOFolder(ctx context.Context, client *minio.Client, bucketName, folderPath string) error {
+	// Normalize folderPath (ensure it ends with "/")
+	if !strings.HasSuffix(folderPath, "/") {
+		folderPath += "/"
+	}
+
+	// List objects with the specified prefix
+	objectsCh := client.ListObjects(ctx, bucketName, minio.ListObjectsOptions{
+		Prefix:    folderPath,
+		Recursive: true,
+	})
+
+	// Iterate through objects and delete them
+	for object := range objectsCh {
+		if object.Err != nil {
+			return object.Err
+		}
+
+		// Delete object
+		err := client.RemoveObject(ctx, bucketName, object.Key, minio.RemoveObjectOptions{})
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Deleted object: %s\n", object.Key)
+	}
+
+	// Optionally, remove the folder itself if it's a prefix
+	if strings.HasSuffix(folderPath, "/") {
+		// Remove trailing "/"
+		// folderPath = strings.TrimSuffix(folderPath, "/")
+
+		// Delete folder marker (empty object to delete prefix)
+		err := client.RemoveObject(ctx, bucketName, folderPath, minio.RemoveObjectOptions{})
+
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Deleted folder prefix: %s\n", folderPath)
+	}
+
+	return nil
+}
+
+// / SyncDirToStorage syncs the given directory to the specified MinIO bucket and folder.
+func SyncDirToStorage(bucketName string, folder string, dirPath string, stopAfterError bool, replace bool) (err error) {
+
+	dirPath, err = filepath.Abs(dirPath)
+	if err != nil {
+		return err
+	}
+	dirPath += "/"
+
+	ctx := context.Background()
+	endpoint := populateStringFromEnv("MINIOURL", "localhost:9000")
+	accessKeyID := populateStringFromEnv("MINIO_ACCESSKEY", "MEDDLER")
+	secretAccessKey := populateStringFromEnv("MINIO_SECRET", "SUPERDUPERSECRET")
+	useSSL := populateBoolFromEnv("MINIO_SECURE", false)
+	region := populateStringFromEnv("MINIO_REGION", "india")
+
+	logger := log.New(os.Stdout, "INFO: ", log.LstdFlags)
+	logger.Println("Minio", endpoint, accessKeyID, secretAccessKey, useSSL, region)
+
+	// Initialize MinIO client object.
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Region: region,
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		return err
+	}
+
+	exists, errBucketExists := minioClient.BucketExists(ctx, bucketName)
+	if errBucketExists != nil {
+		return errBucketExists
+	}
+
+	if exists {
+
+	} else {
+		if err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
+			return err
+		}
+	}
+
+	// Delete whole folder
+	if replace {
+		err = DeleteMinIOFolder(ctx, minioClient, bucketName, folder)
+		log.Println("Deletion of folder", folder, err)
+	}
+
+	uploadFunc := func(path string, info os.FileInfo) error {
+		// Calculate relative path from dirPath to the current file
+		relPath, err := filepath.Rel(dirPath, path)
+		// if err != nil {
+		// 	return err
+		// }
+
+		// Construct object path within the bucket
+		objectName := filepath.Join(folder, relPath)
+
+		// Generate the relative path for the object name
+
+		objectName = strings.TrimPrefix(objectName, string(filepath.Separator))
+
+		// Ensure all parent folders of objPath exist
+		// if strings.Contains(objPath, "/") {
+		if 1 == 2 {
+			// Split objPath into folder components
+			folders := strings.Split(objectName, "/")
+			currentPath := ""
+
+			// Iterate through each folder component to ensure existence
+			for _, _folder := range folders[:len(folders)-1] {
+				currentPath += _folder + "/"
+				// Check if currentPath exists
+				_, err := minioClient.StatObject(ctx, bucketName, currentPath, minio.StatObjectOptions{})
+				if err != nil {
+					if minio.ToErrorResponse(err).Code == "NoSuchKey" {
+
+						// Create folder if it doesn't exist
+						logger.Println("Creating folder", bucketName, currentPath)
+						_, err := minioClient.PutObject(ctx, bucketName, currentPath, strings.NewReader(""), 0, minio.PutObjectOptions{})
+						if err != nil {
+							logger.Println("Error Creating folder", bucketName, currentPath, err)
+
+							return err
+						}
+					} else {
+						return err
+					}
+				}
+			}
+		}
+
+		// Upload the file
+		logger.Println("Uploading", bucketName, objectName, path)
+		_, err = minioClient.FPutObject(ctx, bucketName, objectName, path, minio.PutObjectOptions{})
+		if err != nil {
+			log.Println("Error", err)
+			return err
+		}
+
+		return nil
+	}
+
+	onWalkFunc := func(path string, info os.FileInfo, err error) error {
+
+		// Skip hidden files and directories
+		if strings.HasPrefix(info.Name(), ".") {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			if uploadErr := uploadFunc(path, info); uploadErr != nil {
+				if stopAfterError {
+					return uploadErr
+				}
+			}
+		}
+		return nil
+	}
+
+	err = filepath.Walk(dirPath, onWalkFunc)
+	return err
+}
+
+// SyncStorageToDir ()
+func SyncStorageToDir(bucketName string, dirPath string, identifier string, stopAfterError bool, replace bool) (err error) {
+
+	logger.Println("SyncStorageToDir")
+	dirPath, err = filepath.Abs(dirPath)
+	if err != nil {
+		return err
+	}
+	dirPath += "/"
+
+	ctx := context.Background()
+	endpoint := populateStringFromEnv("MINIOURL", "localhost:9000")
+
+	accessKeyID := populateStringFromEnv("MINIO_ACCESSKEY", "MEDDLER")
+	secretAccessKey := populateStringFromEnv("MINIO_SECRET", "SUPERDUPERSECRET")
+
+	useSSL := populateBoolFromEnv("MINIO_SECURE", false)
+
+	// Initialize minio client object.
+	region := populateStringFromEnv("MINIO_REGION", "india")
+	// Initialize minio client object.
+
+	logger.Println("Minio", endpoint, accessKeyID, secretAccessKey, useSSL, region)
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Region: region,
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		return
+	}
+	//
+	exists, errBucketExists := minioClient.BucketExists(ctx, bucketName)
+
+	if errBucketExists != nil {
+		return errBucketExists
+	}
+
+	if exists {
+
+		listObjectsChann := minioClient.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+			Recursive: true,
+			Prefix:    "/",
+		})
+
+		for obj := range listObjectsChann {
+			logger.Println(obj.Key)
+			filePath := filepath.Join(dirPath, identifier, obj.Key)
+			err = minioClient.FGetObject(context.Background(), bucketName, obj.Key, filePath, minio.GetObjectOptions{})
+			if err != nil && stopAfterError {
+				return err
+			}
+			logger.Println(err)
+
+		}
+
+		// errorCh := minioClient.FGetObject(context.Background(), bucketName, objectsCh, minio.RemoveObjectsOptions{})
+
+		return
+	}
+
+	return
+
+}
+
+// Git Functionality
+func cloneRepositorySSH(url string, path string, privatekey string, password string) (repository *git.Repository, err error) {
+
+	print("cloneRepositorySSH", privatekey, password)
+	publicKeys, err := ssh.NewPublicKeys("git", []byte(privatekey), password)
+
+	repository, err = git.PlainClone(path, false, &git.CloneOptions{
+		// The intended use of a GitHub personal access token is in replace of your password
+		// because access tokens can easily be revoked.
+		// https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+		Auth:     publicKeys,
+		URL:      url,
+		Progress: os.Stdout,
+	})
+
+	return
+
+}
+
+func cloneRepositoryAuth(url string, path string, username string, password string) (repository *git.Repository, err error) {
+
+	println(path, username, password)
+	repository, err = git.PlainClone(path, false, &git.CloneOptions{
+		Auth: &http.BasicAuth{
+			Username: username,
+			Password: password,
+		},
+		URL:      url,
+		Progress: os.Stdout,
+	})
+
+	return
+
+}
+
+func cloneRepositoryToken(url string, path string, username string, token string) (repository *git.Repository, err error) {
+
+	if username == "" {
+		username = "dummy_username"
+	}
+	repository, err = git.PlainClone(path, false, &git.CloneOptions{
+		Auth: &http.BasicAuth{
+			Username: username,
+			Password: token,
+		},
+		URL:      url,
+		Progress: os.Stdout,
+	})
+
+	return
+
+}
+
+func cloneRepository(url string, path string, ref string, auth *transport.AuthMethod) (repository *git.Repository, err error) {
+	repository, err = git.PlainClone(path, false, &git.CloneOptions{
+		URL:           url,
+		Progress:      os.Stdout,
+		Depth:         1,
+		SingleBranch:  (len(ref)) > 0,
+		ReferenceName: plumbing.ReferenceName(ref), // Assuming startCommitID is a tag
+		Auth:          *auth,
+	})
+
+	return
+}
+
+// url: HTTPS / SSH Url
+//
+// auth_mode: no_auth, ssh, token , password
+//
+// username: Auth. username / Private Key string
+//
+// password: Auth. password / Private Key password
+func Clone(url string, path string, auth_mode string, username string, password string, gitref string, gitdepth int) (repository *git.Repository, err error) {
+
+	log.Println("Clone()",
+		url,
+		path,
+		auth_mode,
+		username,
+		password,
+	)
+	RemoveContents(path)
+
+	var auth transport.AuthMethod = nil
+
+	if auth_mode == NOAUTH {
+
+	} else if auth_mode == BASICAUTH {
+		auth = &http.BasicAuth{
+			Username: username,
+			Password: password,
+		}
+		// repository, err = cloneRepositoryAuth(url, path, username, password)
+
+	} else if auth_mode == TOKEN {
+		auth = &http.TokenAuth{
+			Token: password,
+		}
+		// repository, err = cloneRepositoryToken(url, path, username, password)
+
+	} else if auth_mode == PRIVATEKEY {
+		auth, err = ssh.NewPublicKeys("git", []byte(password), password)
+
+		if err != nil {
+			RemoveContents(path)
+
+			return
+		}
+		// repository, err = cloneRepositorySSH(url, path, username, password)
+
+	} else {
+		// repository, err = cloneRepository(url, path)
+	}
+
+	repository, err = cloneRepository(url, path, gitref, &auth)
+
+	// if err != nil, perform further operations
+
+	if err != nil {
+		RemoveContents(path)
+
+		return
+	}
+	return
+}

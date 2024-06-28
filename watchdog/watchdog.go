@@ -40,7 +40,7 @@ func Start(id string, cmd []string, args []string, env map[string]string) error 
 		args = append(cmd[1:], args...)
 	}
 
-	logger.Println("Running", cmd, args)
+	logger.Logln("Running", cmd, args)
 
 	req := executor.FunctionRequest{
 		Process:                 cmd[0],

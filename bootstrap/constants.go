@@ -67,7 +67,7 @@ type SystemConstants struct {
 	GITDEPTH          *int    `json:"git_depth"`
 
 	// Job Output result publishing
-	JOBMODE *string `json:"git_mode" `
+	JOBMODE *string `json:"job_mode" `
 }
 
 // Git Constants: Auth Mode
@@ -354,7 +354,7 @@ func initialize() *Constants {
 		SAMPLEOUTPUTFILE:  PopulateStr("sample_outputfile", "PopulateStr", "Enable Logging"),
 		TRACEID:           PopulateStr("trace_id", "default_trace_id", "Trace Id"),
 		// Git Operations
-		GITMODE:           PopulateStr("git_mode", "false", "Git Moce"),
+		GITMODE:           PopulateStr("git_mode", "false", "Git Mode"),
 		GITAUTHMODE:       PopulateStr("git_auth_mode", "no_auth", "Git auth mode"),
 		GITAUTHUSERNAME:   PopulateStr("git_auth_username", "", "Git Auth Username"),
 		GITAUTHPASSWORD:   PopulateStr("git_auth_password", "", "Git Auth Password"),

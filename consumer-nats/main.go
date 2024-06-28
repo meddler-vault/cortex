@@ -183,41 +183,6 @@ func Start() {
 
 		}
 
-		logger.Println("Sync Deps Done")
-		// Load git repo locally
-		logger.Println("Sync Initiate:  Git Repo", *bootstrap.CONSTANTS.System.GITREMOTE,
-			*bootstrap.CONSTANTS.System.GITPATH,
-			*bootstrap.CONSTANTS.System.GITAUTHMODE,
-			*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
-			*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
-		)
-
-		if strings.ToLower(*bootstrap.CONSTANTS.System.GITMODE) == "true" {
-			_, err := bootstrap.Clone(
-				*bootstrap.CONSTANTS.System.GITREMOTE,
-				*bootstrap.CONSTANTS.System.GITPATH,
-				*bootstrap.CONSTANTS.System.GITAUTHMODE,
-				*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
-				*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
-				*bootstrap.CONSTANTS.System.GITREF,
-				*bootstrap.CONSTANTS.System.GITDEPTH,
-			)
-
-			if err != nil {
-				logger.Println("Erro Syncing Git Repo", err)
-				return
-			}
-		}
-
-		logger.Println("GIT Sync", " : ", "COMPLETED")
-
-		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Bootstrap")
-
-		// FOrkng Process
-		logger.Println("Starting task")
-		logger.Println("data.Variables", data.Variables)
-		logger.Println("data.SubstituteVariables", data.SubstituteVariables)
-
 		// environment := data.Environ
 
 		environment := data.Environ
@@ -230,8 +195,31 @@ func Start() {
 			environment[k] = v
 		}
 
+		logger.Println("**environment.environment**", environment)
 		// Replace variables & placeholders
 		if data.SubstituteVariables {
+
+			// Replce environment variables's placeholders with values
+			logger.Println("**SubstituteVariables**", "Environ", "before", data.Environ)
+
+			for i, arg := range data.Environ {
+				for k, v := range data.Variables {
+					if strings.HasPrefix(v, "$") {
+						if val, ok := environment[v[1:]]; ok {
+							v = val
+						}
+					}
+
+					arg = strings.ReplaceAll(arg, "$"+k, v)
+
+					data.Environ[i] = arg
+				}
+			}
+
+			logger.Println("**SubstituteVariables**", "Environ", "after", data.Environ)
+
+			logger.Println("**SubstituteVariables**")
+			logger.Println("**SubstituteVariables**", "Entrypoint", "before", data.Entrypoint)
 
 			// Placoholder replacment for entrypoint
 			for i, arg := range data.Entrypoint {
@@ -242,12 +230,16 @@ func Start() {
 						}
 					}
 
-					data.Entrypoint[i] = strings.ReplaceAll(arg, "$"+k, v)
+					arg = strings.ReplaceAll(arg, "$"+k, v)
+					data.Entrypoint[i] = arg
 					// arg = data.Args[i]
 				}
 			}
+			logger.Println("**SubstituteVariables**", "Entrypoint", "after", data.Entrypoint)
 
 			// Placoholder replacment for cmd
+			logger.Println("**SubstituteVariables**", "Cmd", "before", data.Cmd)
+
 			for i, arg := range data.Cmd {
 				for k, v := range data.Variables {
 					if strings.HasPrefix(v, "$") {
@@ -256,41 +248,104 @@ func Start() {
 						}
 					}
 
-					data.Cmd[i] = strings.ReplaceAll(arg, "$"+k, v)
+					arg = strings.ReplaceAll(arg, "$"+k, v)
+					data.Cmd[i] = arg
 					// arg = data.Args[i]
 				}
 			}
+			logger.Println("**SubstituteVariables**", "Cmd", "after", data.Cmd)
 
 			// Placeholder replacement for args
+
+			logger.Println("**SubstituteVariables**", "Args", "before", data.Args, "environment", environment, "Variables", data.Variables)
+
+			logger.Println("")
+			logger.Println("")
+			logger.Println("")
 			for i, arg := range data.Args {
+				logger.Println("Arg", i, arg)
 				for k, v := range data.Variables {
+					logger.Println("-> Variable", k, v)
+
 					if strings.HasPrefix(v, "$") {
+
 						if val, ok := environment[v[1:]]; ok {
+
+							logger.Println("--> Variable : HasPrefix", val)
+
 							v = val
 						}
 					}
 
-					data.Args[i] = strings.ReplaceAll(arg, "$"+k, v)
+					arg = strings.ReplaceAll(arg, "$"+k, v)
+					data.Args[i] = arg
+
+					logger.Println("==> Arg : HasPrefix", arg, "$"+k, v, data.Args[i])
 					// arg = data.Args[i]
 				}
 			}
+			logger.Println("")
+			logger.Println("")
+			logger.Println("")
 
-			// Replce environment variables's placeholders with values
-			for i, arg := range data.Environ {
-				for k, v := range data.Variables {
-					if strings.HasPrefix(v, "$") {
-						if val, ok := environment[v[1:]]; ok {
-							v = val
-						}
-					}
-
-					data.Environ[i] = strings.ReplaceAll(arg, "$"+k, v)
-				}
-			}
+			logger.Println("**SubstituteVariables**", "Args", "after", data.Args)
 
 		}
 
 		data.Cmd = append(data.Entrypoint, data.Cmd...)
+
+		logger.Println("Sync Deps Done")
+		// Load git repo locally
+		logger.Println("Sync Initiate::  Git Repo",
+			*bootstrap.CONSTANTS.System.GITMODE,
+			*bootstrap.CONSTANTS.System.GITREMOTE,
+			*bootstrap.CONSTANTS.System.GITPATH,
+			*bootstrap.CONSTANTS.System.GITAUTHMODE,
+			*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
+			*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
+			*bootstrap.CONSTANTS.System.GITREF,
+			*bootstrap.CONSTANTS.System.GITDEPTH,
+		)
+
+		if strings.ToLower(*bootstrap.CONSTANTS.System.GITMODE) == "true" {
+
+			logger.Println("Sync Initiate::  Git Repo", *bootstrap.CONSTANTS.System.GITREMOTE,
+				*bootstrap.CONSTANTS.System.GITPATH,
+				*bootstrap.CONSTANTS.System.GITAUTHMODE,
+				*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
+				*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
+				*bootstrap.CONSTANTS.System.GITREF,
+				*bootstrap.CONSTANTS.System.GITDEPTH,
+			)
+
+			repository, err := bootstrap.Clone(
+				*bootstrap.CONSTANTS.System.GITREMOTE,
+				*bootstrap.CONSTANTS.System.GITPATH,
+				*bootstrap.CONSTANTS.System.GITAUTHMODE,
+				*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
+				*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
+				*bootstrap.CONSTANTS.System.GITREF,
+				*bootstrap.CONSTANTS.System.GITDEPTH,
+			)
+
+			if err != nil {
+				logger.Println("Erro Syncing Git Repo", err)
+				return
+			} else {
+				logger.Println("Finished Syncing Git Repo", repository)
+
+			}
+		}
+
+		logger.Println("GIT Sync", " : ", "COMPLETED")
+
+		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Bootstrap")
+
+		// FOrkng Process
+		logger.Println("Starting task")
+		logger.Println("data.Variables", data.Variables)
+		logger.Println("data.SubstituteVariables", data.SubstituteVariables)
+		logger.Println("Reaper", data.Identifier, data.Cmd, data.Args, environment)
 
 		// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
 		processErr := watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)

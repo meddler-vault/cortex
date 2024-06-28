@@ -3,7 +3,9 @@ package bootstrap
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
+	"strings"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -15,7 +17,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -89,8 +90,19 @@ func RemoveContents(dir string) error {
 	return nil
 }
 
-// SyncDirToStorage ()
-func SyncDirToStorage(bucketName string, dirPath string, stopAfterError bool, replace bool) (err error) {
+// DeleteMinIOFolder checks if a folder (prefix) exists in MinIO and deletes it fully if it does.
+func DeleteMinIOFolder(ctx context.Context, client *minio.Client, bucketName, folderPath string) error {
+
+	err := client.RemoveObject(ctx, bucketName, folderPath, minio.RemoveObjectOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// / SyncDirToStorage syncs the given directory to the specified MinIO bucket and folder.
+func SyncDirToStorage(bucketName string, folder string, dirPath string, stopAfterError bool, replace bool) (err error) {
 
 	dirPath, err = filepath.Abs(dirPath)
 	if err != nil {
@@ -102,125 +114,98 @@ func SyncDirToStorage(bucketName string, dirPath string, stopAfterError bool, re
 	endpoint := populateStringFromEnv("MINIOURL", "localhost:9000")
 	accessKeyID := populateStringFromEnv("MINIO_ACCESSKEY", "MEDDLER")
 	secretAccessKey := populateStringFromEnv("MINIO_SECRET", "SUPERDUPERSECRET")
-
 	useSSL := populateBoolFromEnv("MINIO_SECURE", false)
-
 	region := populateStringFromEnv("MINIO_REGION", "india")
 
+	logger := log.New(os.Stdout, "INFO: ", log.LstdFlags)
 	logger.Println("Minio", endpoint, accessKeyID, secretAccessKey, useSSL, region)
 
-	// Initialize minio client object.
+	// Initialize MinIO client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Region: region,
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
 		Secure: useSSL,
 	})
 	if err != nil {
-		return
+		return err
 	}
-	//
-	exists, errBucketExists := minioClient.BucketExists(ctx, bucketName)
 
+	policy, err := minioClient.GetBucketPolicy(context.Background(), bucketName)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Print the retrieved policy
+	fmt.Println("Bucket Policy:", policy, err)
+
+	exists, errBucketExists := minioClient.BucketExists(ctx, bucketName)
 	if errBucketExists != nil {
 		return errBucketExists
 	}
 
 	if exists {
-		// log.Printf("We already own %s\n", bucketName)
-		if replace {
 
-			objectsCh := make(chan minio.ObjectInfo)
-
-			// Send object names that are needed to be removed to objectsCh
-			// Send object names that are needed to be removed to objectsCh
-			go func() {
-				defer close(objectsCh)
-				// List all objects from a bucket-name with a matching prefix.
-				opts := minio.ListObjectsOptions{Prefix: "", Recursive: true}
-				for object := range minioClient.ListObjects(context.Background(), bucketName, opts) {
-					if object.Err != nil {
-						logger.Fatalln(object.Err)
-					}
-					objectsCh <- object
-				}
-			}()
-
-			// Call RemoveObjects API
-			errorCh := minioClient.RemoveObjects(context.Background(), bucketName, objectsCh, minio.RemoveObjectsOptions{})
-
-			// Print errors received from RemoveObjects API
-			for e := range errorCh {
-				return e.Err
-			}
-
-			if err = minioClient.RemoveBucket(ctx, bucketName); err != nil {
-				return err
-			}
-
-			if err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
-				return err
-			}
-		}
 	} else {
 		if err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
 			return err
 		}
 	}
-	//
-	err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
-	if err != nil {
-		// Check to see if we already own this bucket (which happens if you run this twice)
-		exists, errBucketExists := minioClient.BucketExists(ctx, bucketName)
-		if errBucketExists == nil && exists {
-			// log.Printf("We already own %s\n", bucketName)
-		} else {
-			logger.Fatalln(err)
-			return
-		}
-	} else {
-		logger.Println("Successfully created ", bucketName)
+
+	// Delete whole folder
+	if replace {
+		err = DeleteMinIOFolder(ctx, minioClient, bucketName, folder)
+		log.Println("Deletion of folder", folder, err)
 	}
 
 	uploadFunc := func(path string, info os.FileInfo) error {
+		// Calculate relative path from dirPath to the current file
+		relPath, err := filepath.Rel(dirPath, path)
+		// if err != nil {
+		// 	return err
+		// }
 
-		// Upload the zip file with FPutObject
-		objPath := strings.SplitN(path, dirPath, 2)[1]
-		logger.Println("Uploading", path, objPath, dirPath)
-		_, err := minioClient.FPutObject(ctx, bucketName, objPath, path, minio.PutObjectOptions{})
-		// filename := filepath.Join(path, info.Name())
-		// logger.Println("Uploading", info.Name(), err)
+		// Construct object path within the bucket
+		objectName := filepath.Join(folder, relPath)
+
+		// Generate the relative path for the object name
+
+		objectName = strings.TrimPrefix(objectName, string(filepath.Separator))
+
+		// Upload the file
+		logger.Println("Uploading", bucketName, objectName, path)
+		_, err = minioClient.FPutObject(ctx, bucketName, objectName, path, minio.PutObjectOptions{})
 		if err != nil {
+			log.Println("Error", err)
 			return err
 		}
 
 		return nil
-
 	}
 
 	onWalkFunc := func(path string, info os.FileInfo, err error) error {
 
+		// Skip hidden files and directories
+		if strings.HasPrefix(info.Name(), ".") {
+			if info.IsDir() {
+				// return filepath.SkipDir
+			}
+			// return nil
+		}
 		if err != nil {
 			return err
 		}
-
 		if !info.IsDir() {
-			// rel, _ := filepath.Rel(path, "a/c/t/file")
 			if uploadErr := uploadFunc(path, info); uploadErr != nil {
 				if stopAfterError {
 					return uploadErr
-				} else {
-					return nil
 				}
 			}
-
 		}
 		return nil
 	}
 
 	err = filepath.Walk(dirPath, onWalkFunc)
-
-	return
-
+	return err
 }
 
 // SyncStorageToDir ()
