@@ -20,6 +20,20 @@ func Bootstrap() (err error) {
 	outputDir := *CONSTANTS.System.OUTPUTDIR
 	resultsJson := *CONSTANTS.System.RESULTSJSON
 
+	if *CONSTANTS.System.MOUNT_VOLUME {
+		volumeMount := *CONSTANTS.System.MOUNT_VOLUME_PATH
+
+		err = os.RemoveAll(volumeMount)
+		if err != nil {
+			return
+		}
+		err = os.MkdirAll(filepath.Dir(volumeMount), os.ModePerm)
+		logger.Println("Creating Directory: volumeMount", volumeMount)
+		if err != nil {
+			return
+		}
+	}
+
 	// outputDir := filepath.Join(*BASEPATH, *OUTPUTDIR)
 	// resultsSchema := filepath.Join(*BASEPATH, *RESULTSSCHEMA)
 	logger.Println("Creating Dir Sync")

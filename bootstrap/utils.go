@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -132,7 +133,9 @@ func SyncDirToStorage(bucketName string, folder string, dirPath string, stopAfte
 
 	policy, err := minioClient.GetBucketPolicy(context.Background(), bucketName)
 	if err != nil {
-		log.Fatalln(err)
+
+		return err
+
 	}
 
 	// Print the retrieved policy
@@ -270,6 +273,166 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 	}
 
 	return
+
+}
+
+func isFile(path string) bool {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+
+	info, err := os.Stat(absPath)
+	if os.IsNotExist(err) {
+		return false
+	} else if err != nil {
+		return false
+	}
+
+	return !info.IsDir()
+}
+func isDir(path string) bool {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+
+	info, err := os.Stat(absPath)
+	if os.IsNotExist(err) {
+		return false
+	} else if err != nil {
+		return false
+	}
+
+	return info.IsDir()
+}
+func relativePath(p1, p2 string) (string, bool, error) {
+	// Get the absolute paths of p1 and p2
+	absP1, err := filepath.Abs(p1)
+	if err != nil {
+		return "", false, err
+	}
+
+	absP2, err := filepath.Abs(p2)
+	if err != nil {
+		return "", false, err
+	}
+
+	// Check if the absolute paths are the same
+	if absP1 == absP2 {
+		// Return the base name of the path (the filename)
+		return filepath.Base(p1), true, nil
+	}
+	// Get the relative path of p1 with respect to p2
+	relPath, err := filepath.Rel(absP2, absP1)
+	if err != nil {
+		return "", false, err
+	}
+
+	return relPath, false, nil
+}
+
+// SyncStorageToDir ()
+func SyncMountVolumedToHost(
+	host string,
+	accesskey string,
+	secretkey string,
+	secureConnection bool,
+	region string,
+	volumeMountPath string,
+	bucketName string, dirPath string, objectPath string, stopAfterError bool, replace bool) (folderMountPoint string, fileMountPoint string, err error) {
+
+	// if dirPath == "" {
+	// 	if objectPath == "" {
+	// 		return "", "", errors.New("invalid file for volume mount")
+	// 	} else {
+	// 		dirPath = objectPath
+	// 	}
+	// } else {
+	// 	if objectPath == "" {
+	// 		// Do nothing
+	// 	} else {
+	// 		dirPath = filepath.Join(dirPath, objectPath)
+	// 	}
+	// }
+
+	dirPath = filepath.Join(dirPath, objectPath)
+	logger.Println("DirPath:", dirPath)
+	// dirPath = strings.Trim(dirPath, " ")
+	// objectPath = strings.Trim(objectPath, " ")
+
+	logger.Println("SyncStorageToDir", volumeMountPath, dirPath, objectPath)
+
+	if err != nil {
+		return
+	}
+
+	ctx := context.Background()
+
+	// Initialize minio client object.
+
+	// Initialize minio client object.
+
+	logger.Println("minio-config", bucketName, host, accesskey, secretkey, secureConnection, region, dirPath, objectPath)
+	minioClient, err := minio.New(host, &minio.Options{
+		Region: region,
+		Creds:  credentials.NewStaticV4(accesskey, secretkey, ""),
+		Secure: secureConnection,
+	})
+
+	// minioClient.TraceOn(os.Stdout)
+
+	if err != nil {
+
+		return
+	}
+
+	//
+	exists, err := minioClient.BucketExists(ctx, bucketName)
+
+	if err != nil {
+		return
+	}
+
+	if exists {
+
+		listObjectsChann := minioClient.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
+			Recursive: true,
+			Prefix:    dirPath,
+		})
+
+		for obj := range listObjectsChann {
+
+			var relPath string
+			var isFile bool
+			relPath, isFile, err = relativePath(obj.Key, dirPath)
+			if err != nil {
+				return
+			}
+
+			filePath := filepath.Join(volumeMountPath, relPath)
+
+			logger.Println("Listing-path", dirPath, relPath, filePath)
+			logger.Println("Listing", volumeMountPath, bucketName, obj.Key, filePath)
+			err = minioClient.FGetObject(context.Background(), bucketName, obj.Key, filePath, minio.GetObjectOptions{})
+			if err != nil && stopAfterError {
+				return
+			}
+
+			if isFile {
+				return volumeMountPath, filePath, nil
+			}
+
+		}
+
+		return volumeMountPath, "", nil
+
+		// errorCh := minioClient.FGetObject(context.Background(), bucketName, objectsCh, minio.RemoveObjectsOptions{})
+
+	} else {
+		err = errors.New("bucket does not exists")
+		return
+	}
 
 }
 
