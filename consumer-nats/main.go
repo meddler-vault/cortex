@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/meddler-vault/cortex/logger"
@@ -14,7 +15,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/meddler-vault/cortex/bootstrap"
 	"github.com/meddler-vault/cortex/watchdog"
@@ -88,6 +88,8 @@ func Start() {
 	logger.Println("password", password)
 	logger.Println("host", host)
 	logger.Println("MESSAGEQUEUE", bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
+
+	logger.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
 
 	connectionString := fmt.Sprintf("wss://%s:%s@%s", username, password, host)
 
@@ -182,6 +184,97 @@ func Start() {
 			}
 
 		}
+
+		data.Cmd = append(data.Entrypoint, data.Cmd...)
+
+		logger.Println("Sync Deps Done")
+		// Load git repo locally
+		logger.Println("Sync Initiate::  Git Repo",
+			*bootstrap.CONSTANTS.System.GITMODE,
+			*bootstrap.CONSTANTS.System.GITREMOTE,
+			*bootstrap.CONSTANTS.System.GITPATH,
+			*bootstrap.CONSTANTS.System.GITAUTHMODE,
+			*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
+			*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
+			*bootstrap.CONSTANTS.System.GITREF,
+			*bootstrap.CONSTANTS.System.GITDEPTH,
+		)
+
+		// Check and populate git volume
+		if *bootstrap.CONSTANTS.System.GITMODE {
+
+			logger.Println("Sync Initiate::  Git Repo", *bootstrap.CONSTANTS.System.GITREMOTE,
+				*bootstrap.CONSTANTS.System.GITPATH,
+				*bootstrap.CONSTANTS.System.GITAUTHMODE,
+				*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
+				*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
+				*bootstrap.CONSTANTS.System.GITREF,
+				*bootstrap.CONSTANTS.System.GITDEPTH,
+			)
+
+			repository, err := bootstrap.Clone(
+				*bootstrap.CONSTANTS.System.GITREMOTE,
+				*bootstrap.CONSTANTS.System.GITPATH,
+				*bootstrap.CONSTANTS.System.GITAUTHMODE,
+				*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
+				*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
+				*bootstrap.CONSTANTS.System.GITREF,
+				*bootstrap.CONSTANTS.System.GITDEPTH,
+			)
+
+			if err != nil {
+				logger.Println("Erro Syncing Git Repo", err)
+				return
+			} else {
+				logger.Println("Finished Syncing Git Repo", repository)
+
+			}
+		}
+
+		// Check and populate minio volume
+		logger.Println("Sync minio-mount")
+		if *bootstrap.CONSTANTS.System.MOUNT_VOLUME {
+
+			logger.Println("Sync Initiate::  Mount Minio Volume", *bootstrap.CONSTANTS.System.MOUNT_VOLUME,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_BUCKET,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_FOLDER_PATH,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_OBJECT_PATH,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_PATH,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_ACCESS_KEY,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_SECRET_KEY,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_HOST,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_SECURE,
+			)
+
+			folderPath, filePath, err := bootstrap.SyncMountVolumedToHost(
+
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_HOST,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_ACCESS_KEY,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_SECRET_KEY,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_SECURE,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_REGION,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_PATH,
+
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_BUCKET,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_FOLDER_PATH,
+				*bootstrap.CONSTANTS.System.MOUNT_VOLUME_OBJECT_PATH,
+				true,
+				true,
+			)
+
+			if err != nil {
+				logger.Println("Erro Syncing Minio Volume", err)
+				return
+			} else {
+				logger.Println("minio-mount:success", "folderPath->", folderPath, "filePath->", filePath)
+				bootstrap.CONSTANTS.System.MOUNT_VOLUME_FOLDER_PATH = &folderPath
+				bootstrap.CONSTANTS.System.MOUNT_VOLUME_OBJECT_PATH = &filePath
+
+			}
+
+		}
+
+		logger.Println("GIT Sync", " : ", "COMPLETED")
 
 		// environment := data.Environ
 
@@ -292,53 +385,6 @@ func Start() {
 
 		}
 
-		data.Cmd = append(data.Entrypoint, data.Cmd...)
-
-		logger.Println("Sync Deps Done")
-		// Load git repo locally
-		logger.Println("Sync Initiate::  Git Repo",
-			*bootstrap.CONSTANTS.System.GITMODE,
-			*bootstrap.CONSTANTS.System.GITREMOTE,
-			*bootstrap.CONSTANTS.System.GITPATH,
-			*bootstrap.CONSTANTS.System.GITAUTHMODE,
-			*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
-			*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
-			*bootstrap.CONSTANTS.System.GITREF,
-			*bootstrap.CONSTANTS.System.GITDEPTH,
-		)
-
-		if strings.ToLower(*bootstrap.CONSTANTS.System.GITMODE) == "true" {
-
-			logger.Println("Sync Initiate::  Git Repo", *bootstrap.CONSTANTS.System.GITREMOTE,
-				*bootstrap.CONSTANTS.System.GITPATH,
-				*bootstrap.CONSTANTS.System.GITAUTHMODE,
-				*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
-				*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
-				*bootstrap.CONSTANTS.System.GITREF,
-				*bootstrap.CONSTANTS.System.GITDEPTH,
-			)
-
-			repository, err := bootstrap.Clone(
-				*bootstrap.CONSTANTS.System.GITREMOTE,
-				*bootstrap.CONSTANTS.System.GITPATH,
-				*bootstrap.CONSTANTS.System.GITAUTHMODE,
-				*bootstrap.CONSTANTS.System.GITAUTHUSERNAME,
-				*bootstrap.CONSTANTS.System.GITAUTHPASSWORD,
-				*bootstrap.CONSTANTS.System.GITREF,
-				*bootstrap.CONSTANTS.System.GITDEPTH,
-			)
-
-			if err != nil {
-				logger.Println("Erro Syncing Git Repo", err)
-				return
-			} else {
-				logger.Println("Finished Syncing Git Repo", repository)
-
-			}
-		}
-
-		logger.Println("GIT Sync", " : ", "COMPLETED")
-
 		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Bootstrap")
 
 		// FOrkng Process
@@ -405,7 +451,11 @@ func Start() {
 
 		content := bytes.NewBuffer(responseContent)
 
-		req, _ := http.NewRequest("POST", endpoint, content)
+		req, err := http.NewRequest("POST", endpoint, content)
+		if err != nil {
+			logger.Println(err)
+			return
+		}
 
 		for k, v := range headers {
 			req.Header.Add(k, v)
@@ -432,7 +482,11 @@ func Start() {
 			taskResultString = []byte{}
 		}
 
-		PublishEndResult(connectionString, string(taskResultString))
+		err = PublishEndResult(connectionString, string(taskResultString))
+		if err != nil {
+			logger.Println(err)
+			return
+		}
 
 		logger.Println("Published to messag queue")
 

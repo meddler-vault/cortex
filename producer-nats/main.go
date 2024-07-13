@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/meddler-vault/cortex/bootstrap"
 	"github.com/meddler-vault/cortex/logger"
 )
 
@@ -32,11 +31,11 @@ func Produce(username string, password string, host string, topic string, data s
 
 	connectionString := fmt.Sprintf("wss://%s:%s@%s", encodedUser, encodedPassword, host)
 
-	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
+	queue := NewQueue(connectionString, topic)
 	// if(err != nil){
 	// 	return err
 	// }
-	log.Println("Queue ceated")
+	log.Println("Queue ceated", topic)
 	err = queue.Send(data)
 	if err != nil {
 		return err

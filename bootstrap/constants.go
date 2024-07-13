@@ -55,7 +55,7 @@ type SystemConstants struct {
 	EXECTIMEOUT       *string `json:"exec_timeout"`
 	// Adding new configurable parameters for GIT Cloner
 	// Git Mode: true | True | TRUE | yes | 1 ; else False
-	GITMODE           *string `json:"git_mode" `
+	GITMODE           *bool   `json:"git_mode" `
 	GITAUTHMODE       *string `json:"git_auth_mode" `
 	GITAUTHUSERNAME   *string `json:"git_auth_username" `
 	GITAUTHPASSWORD   *string `json:"git_auth_password" `
@@ -77,6 +77,18 @@ type SystemConstants struct {
 	RESULT_TYPE           *string `json:"result_type" `           // Output result type
 	RESULT_SYNC_DIRECTORY *string `json:"result_sync_directory" ` // Sync result directory to minio storage
 	RESULT_PARSE          *bool   `json:"result_parse" `          // true , false : Needs parsing: Yes / no..if no...storage mounted directory files will be listed, else parsing results will b e
+
+	// Read only volume mount from minio / s3
+	MOUNT_VOLUME               *bool   `json:"mount_volume" `                // To mount the volume path or not. It is mandatoru to successfuly mount if true else the process fails
+	MOUNT_VOLUME_PATH          *string `json:"mount_volume_path" `           // Relative volume mount point on base_path
+	MOUNT_VOLUME_FOLDER_PATH   *string `json:"mount_volume_s3_folder_path" ` // if empty..go to object path to sunc the file
+	MOUNT_VOLUME_OBJECT_PATH   *string `json:"mount_volume_s3_object_path" ` // if empty..the folder is synced else the object is synced
+	MOUNT_VOLUME_S3_ACCESS_KEY *string `json:"mount_volume_s3_access_key" `
+	MOUNT_VOLUME_BUCKET        *string `json:"mount_volume_s3_bucket" `
+	MOUNT_VOLUME_S3_SECRET_KEY *string `json:"mount_volume_s3_secret_key" `
+	MOUNT_VOLUME_S3_SECURE     *bool   `json:"mount_volume_s3_secure" ` // To mount the volume path or not. It is mandatoru to successfuly mount if true else the process fails
+	MOUNT_VOLUME_S3_HOST       *string `json:"mount_volume_s3_host" `
+	MOUNT_VOLUME_S3_REGION     *string `json:"mount_volume_s3_region" `
 }
 
 // Git Constants: Auth Mode
@@ -179,6 +191,33 @@ func (current *Constants) Override(new *Constants) {
 	if new.System.GITDEPTH != nil {
 		current.System.GITDEPTH = new.System.GITDEPTH
 	}
+
+	// Mount volume configs
+	if new.System.MOUNT_VOLUME != nil {
+		current.System.MOUNT_VOLUME = new.System.MOUNT_VOLUME
+	}
+	if new.System.MOUNT_VOLUME_PATH != nil {
+		current.System.MOUNT_VOLUME_PATH = new.System.MOUNT_VOLUME_PATH
+	}
+	if new.System.MOUNT_VOLUME_BUCKET != nil {
+		current.System.MOUNT_VOLUME_BUCKET = new.System.MOUNT_VOLUME_BUCKET
+	}
+	if new.System.MOUNT_VOLUME_OBJECT_PATH != nil {
+		current.System.MOUNT_VOLUME_OBJECT_PATH = new.System.MOUNT_VOLUME_OBJECT_PATH
+	}
+	if new.System.MOUNT_VOLUME_FOLDER_PATH != nil {
+		current.System.MOUNT_VOLUME_FOLDER_PATH = new.System.MOUNT_VOLUME_FOLDER_PATH
+	}
+	if new.System.MOUNT_VOLUME_S3_ACCESS_KEY != nil {
+		current.System.MOUNT_VOLUME_S3_ACCESS_KEY = new.System.MOUNT_VOLUME_S3_ACCESS_KEY
+	}
+	if new.System.MOUNT_VOLUME_S3_SECRET_KEY != nil {
+		current.System.MOUNT_VOLUME_S3_SECRET_KEY = new.System.MOUNT_VOLUME_S3_SECRET_KEY
+	}
+	if new.System.MOUNT_VOLUME_S3_HOST != nil {
+		current.System.MOUNT_VOLUME_S3_HOST = new.System.MOUNT_VOLUME_S3_HOST
+	}
+
 	current.resolveRelativePaths()
 }
 
@@ -190,6 +229,9 @@ func (current *Constants) resolveRelativePaths() {
 	*current.System.RESULTSSCHEMA = filepath.Join(*current.System.BASEPATH, *current.System.RESULTSSCHEMA)
 	*current.System.GITPATH = filepath.Join(*current.System.BASEPATH, *current.System.GITPATH)
 	*current.System.RESULT_FILE_PATH = filepath.Join(*current.System.OUTPUTDIR, *current.System.RESULT_FILE_PATH)
+
+	// Volume mount path
+	*current.System.MOUNT_VOLUME_PATH = filepath.Join(*current.System.BASEPATH, *current.System.MOUNT_VOLUME_PATH)
 
 }
 
@@ -300,10 +342,6 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 
 	}
 
-	if constants.System.GITMODE != nil {
-		dataMap["git_mode"] = *constants.System.GITMODE
-
-	}
 	if constants.System.GITAUTHMODE != nil {
 		dataMap["git_auth_mode"] = *constants.System.GITAUTHMODE
 
@@ -337,6 +375,17 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 
 	}
 
+	// For minio
+	if constants.System.MOUNT_VOLUME_FOLDER_PATH != nil {
+		dataMap["mount_volume_s3_folder_path"] = *constants.System.MOUNT_VOLUME_FOLDER_PATH
+
+	}
+
+	if constants.System.MOUNT_VOLUME_OBJECT_PATH != nil {
+		dataMap["mount_volume_s3_object_path"] = *constants.System.MOUNT_VOLUME_OBJECT_PATH
+
+	}
+
 	return dataMap
 
 }
@@ -364,7 +413,7 @@ func initialize() *Constants {
 		SAMPLEOUTPUTFILE:  PopulateStr("sample_outputfile", "PopulateStr", "Enable Logging"),
 		TRACEID:           PopulateStr("trace_id", "default_trace_id", "Trace Id"),
 		// Git Operations
-		GITMODE:           PopulateStr("git_mode", "false", "Git Mode"),
+		GITMODE:           PopulateBool("git_mode", false, "Enable GIT Mounting"),
 		GITAUTHMODE:       PopulateStr("git_auth_mode", "no_auth", "Git auth mode"),
 		GITAUTHUSERNAME:   PopulateStr("git_auth_username", "", "Git Auth Username"),
 		GITAUTHPASSWORD:   PopulateStr("git_auth_password", "", "Git Auth Password"),
@@ -382,6 +431,18 @@ func initialize() *Constants {
 		RESULT_TYPE:           PopulateStr("result_type", "", "Result Type!"),
 		RESULT_SYNC_DIRECTORY: PopulateStr("result_sync_directory", "", "To Sync  results directory to minio or not!"),
 		RESULT_PARSE:          PopulateBool("result_parse", false, "To parse results or not!"),
+
+		// Mount volume constants
+		MOUNT_VOLUME:               PopulateBool("mount_volume", false, "To mount the volume"),
+		MOUNT_VOLUME_PATH:          PopulateStr("mount_volume_path", "mount", "Result Type!"),
+		MOUNT_VOLUME_BUCKET:        PopulateStr("mount_volume_s3_bucket", "", "Result Type!"),
+		MOUNT_VOLUME_OBJECT_PATH:   PopulateStr("mount_volume_s3_object_path", "", "Result Type!"),
+		MOUNT_VOLUME_FOLDER_PATH:   PopulateStr("mount_volume_s3_folder_path", "", "Result Type!"),
+		MOUNT_VOLUME_S3_ACCESS_KEY: PopulateStr("mount_volume_s3_access_key", "", "Result Type!"),
+		MOUNT_VOLUME_S3_SECRET_KEY: PopulateStr("mount_volume_s3_secret_key", "", "Result Type!"),
+		MOUNT_VOLUME_S3_SECURE:     PopulateBool("mount_volume_s3_secure", true, "To mount the volume"),
+		MOUNT_VOLUME_S3_HOST:       PopulateStr("mount_volume_s3_host", "", "Result Type!"),
+		MOUNT_VOLUME_S3_REGION:     PopulateStr("mount_volume_s3_region", "auto", "Region!"),
 	}
 
 	processConstants := ProcessConstants{

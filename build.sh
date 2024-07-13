@@ -1,8 +1,14 @@
 # Set timezone and build the Go project
 TZ=Asia/Calcutta
 
-# Build the Go project with specific OS and architecture settings
-GOOS=linux GOARCH=amd64 go build -ldflags "-X github.com/meddler-vault/cortex/consumer.WatchdogVersion=`date +%Y.%m.%d.%H.%M.%S`" -o ./artifacts/watchdog 
+# Assign the version to a variable
+WATCHDOG_VERSION=$(date +%Y.%m.%d.%H.%M.%S)
+
+# Build the Go project with the specified OS and architecture settings
+GOOS=linux GOARCH=amd64 go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o ./artifacts/watchdog
+
+# Echo the watchdog version
+echo "Watchdog version: $WATCHDOG_VERSION"
 
 # Change to the artifacts directory
 pushd ./artifacts
