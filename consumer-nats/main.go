@@ -30,11 +30,10 @@ func getenvStr(key string, defaultValue string) string {
 	return v
 }
 
-func PublishEndResult(connectionString, message string) (err error) {
+func SendMessage(queue *queue, topic string, message string) (err error) {
 
-	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE)
-
-	err = queue.Send(message)
+	logger.Println("Sending message", topic, message)
+	err = queue.SendToTopic(topic, message)
 	if err != nil {
 		return err
 	}
@@ -49,31 +48,6 @@ func PublishEndResult(connectionString, message string) (err error) {
 	}
 
 	return
-
-}
-
-func PublishMockMessage(connectionString string, message string) (err error) {
-
-	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
-
-	err = queue.Send(message)
-	if err != nil {
-		return err
-	}
-
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-
-	err = queue.connection.FlushWithContext(
-		ctx,
-	)
-	if err != nil {
-		return err
-	}
-
-	// queue.connection.Close()
-
-	return
-
 }
 
 func Start() {
@@ -92,19 +66,21 @@ func Start() {
 	logger.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
 
 	connectionString := fmt.Sprintf("wss://%s:%s@%s", username, password, host)
+	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
 
 	if bootstrap.CONSTANTS.Reserved.MOCKMESSAGE != "" {
 
-		logger.Println("MOCKMESSAGE", bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
-		err := PublishMockMessage(connectionString, bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
+		logger.Println("Publishing", "mock-message", bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
+
+		// err := PublishMockMessage(connectionString, bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
+		err := SendMessage(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, string(bootstrap.CONSTANTS.Reserved.MOCKMESSAGE))
+
 		if err != nil {
 
 			log.Println("MOCK Mode is turned on, but coudn;t publish the message. Returning to genesis", "ERror: ", err)
 			return
 		}
 	}
-
-	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
 
 	defer queue.Close()
 
@@ -114,25 +90,29 @@ func Start() {
 		logger.Println("**************************")
 
 		defer func() {
+			if r := recover(); r != nil {
+				logger.Println("Recovered from panic due to unhandled exception:", r)
+			}
 			logger.Println("**************************")
 			logger.Println()
+
 		}()
 
 		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "PRE")
 
+		// For each new message, reset the env state
 		bootstrap.CONSTANTS.Reset()
 		data := &bootstrap.MessageSpec{}
 
 		err := json.Unmarshal([]byte(msg), &data)
 		if err != nil {
-			logger.Println(err, "Invalid data format")
+			logger.Println(err, "Invalid data format:  task-deferred", msg)
 			return
 		}
 
+		// Override the constants with message-spec
 		bootstrap.CONSTANTS.Override(&data.Config)
 		identifier := &data.Identifier
-
-		//
 
 		// Mark Initiated
 
@@ -148,8 +128,8 @@ func Start() {
 			taskInitiatedString = []byte{}
 		}
 
-		PublishEndResult(connectionString, string(taskInitiatedString))
-
+		// PublishEndResult(connectionString, string(taskInitiatedString))
+		SendMessage(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, string(taskInitiatedString))
 		//
 
 		logger.InitNewTask(*identifier)
@@ -172,6 +152,7 @@ func Start() {
 
 		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Sync")
 
+		// Mount all dependencies. Move it minio mounting later
 		for _, dependency := range data.Dependencies {
 			bucketID := dependency.Identifier
 
@@ -482,7 +463,9 @@ func Start() {
 			taskResultString = []byte{}
 		}
 
-		err = PublishEndResult(connectionString, string(taskResultString))
+		// err = PublishEndResult(connectionString, string(taskResultString))
+		err = SendMessage(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, string(taskResultString))
+
 		if err != nil {
 			logger.Println(err)
 			return
