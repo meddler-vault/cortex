@@ -1,5 +1,10 @@
 package bootstrap
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // DependencySchema
 type DependencySchema struct {
 	Identifier string `json:"id"`
@@ -18,12 +23,43 @@ type MessageDataSpec struct {
 // 	Reserved ReservedConstants `json:"reserved"`
 // }
 
+// EnvironMap is a custom type for handling environment variables
+type EnvironMap map[string]string
+
+// UnmarshalJSON custom unmarshaler for EnvironMap
+func (e *EnvironMap) UnmarshalJSON(data []byte) error {
+	var tempMap map[string]interface{}
+	if err := json.Unmarshal(data, &tempMap); err != nil {
+		return err
+	}
+
+	result := make(map[string]string)
+	for key, value := range tempMap {
+		switch v := value.(type) {
+		case bool:
+			result[key] = fmt.Sprintf("%v", v)
+		case string:
+			result[key] = v
+		case float64:
+			result[key] = fmt.Sprintf("%f", v)
+		case int:
+			result[key] = fmt.Sprintf("%d", v)
+		default:
+			result[key] = fmt.Sprintf("%v", v)
+		}
+	}
+
+	*e = result
+	return nil
+}
+
 // MessageSpec...
 type MessageSpec struct {
 	MessageDataSpec
 	Identifier string `json:"id"` // For changing status, ingesting data, persisting FS on Storage (Bucket Name)
 	// SystemEnviron map[string]string `json:"system_environ"` // SystemEnviron. Variables to inject to Watchdog & override for a particular task
-	Environ             map[string]string `json:"environ"`                                 // Environ. Variables to inject / override inside the actial process
+	// Environ             map[string]string `json:"environ"`                                 // Environ. Variables to inject / override inside the actial process
+	Environ             EnvironMap        `json:"environ"`
 	Entrypoint          []string          `json:"entrypoint"`                              // Override entrypoint
 	Cmd                 []string          `json:"cmd" validate:"required,cmd"`             // Override CMD
 	Args                []string          `json:"args" validate:"required,args"`           // Override ARGS

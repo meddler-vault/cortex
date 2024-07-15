@@ -40,6 +40,12 @@ func (q *queue) Send(message string) (err error) {
 	return
 }
 
+func (q *queue) SendToTopic(topic string, message string) (err error) {
+	_, err = q.js.Publish(topic, []byte(message))
+	logError("Sending message to queue failed", err)
+	return
+}
+
 func (q *queue) Consume(consumer messageConsumer) {
 	logger.Println("Registering consumer...")
 	err := q.registerQueueConsumer(consumer)
