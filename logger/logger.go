@@ -45,10 +45,17 @@ var TaskId *taskId
 var _logger *ColorLogger
 
 func init() {
+
+	TaskId = new(taskId)
+
+	InitNewTask("cortx.nucleus")
+
 	_logger = NewColorLogger()
 
+	err := Println("cortex", "hello-world")
+
+	_logger.infoLogger.Print("logger-fluentd", logger.FluentHost, "  ", err)
 	// use package init to make sure path is always instantiated
-	TaskId = new(taskId)
 }
 
 func InitNewTask(tag string) {
@@ -86,7 +93,7 @@ func Logln(v ...interface{}) {
 	// log.Println(logger.FluentPort)
 }
 
-func Println(v ...interface{}) {
+func Println(v ...interface{}) error {
 
 	// loggingData["message"] = scanner.Text()
 	// logger.Post(tag, loggingData
@@ -103,7 +110,9 @@ func Println(v ...interface{}) {
 		"message":  message,
 	}
 
-	logger.Post(TaskId.taskid, loggingData)
+	_logger.Info("logging:", TaskId.taskid, loggingData)
+
+	return logger.Post(TaskId.taskid, loggingData)
 
 	// log.Println(v)
 	// err := logger.Post("system", loggingData)
