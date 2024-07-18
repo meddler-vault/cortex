@@ -5,7 +5,8 @@ TZ=Asia/Calcutta
 WATCHDOG_VERSION=$(date +%Y.%m.%d.%H.%M.%S)
 
 # Build the Go project with the specified OS and architecture settings
-GOOS=linux GOARCH=amd64 go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o ./artifacts/watchdog
+#GOOS=linux GOARCH=amd64 
+go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o ./artifacts/watchdog
 
 # Echo the watchdog version
 echo "Watchdog version: $WATCHDOG_VERSION"
