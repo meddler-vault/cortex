@@ -15,8 +15,9 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 
-	"net/http"
+	httpSSL "net/http"
 
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/meddler-vault/cortex/logger"
 
@@ -107,13 +108,13 @@ func DeleteMinIOFolder(ctx context.Context, client *minio.Client, bucketName, fo
 	return nil
 }
 
-func skipMinioSSL() http.RoundTripper {
+func skipMinioSSL() httpSSL.RoundTripper {
 	// Keep TLS config.
 	tlsConfig := &tls.Config{}
 
 	tlsConfig.InsecureSkipVerify = true
-	var transport http.RoundTripper = &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
+	var transport httpSSL.RoundTripper = &httpSSL.Transport{
+		Proxy: httpSSL.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
