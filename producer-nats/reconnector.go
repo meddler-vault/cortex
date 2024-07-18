@@ -1,6 +1,7 @@
 package producernats
 
 import (
+	"crypto/tls"
 	"time"
 
 	"github.com/meddler-vault/cortex/logger"
@@ -72,12 +73,17 @@ func (q *queue) connect() {
 	for {
 		logger.Println("Connecting to NATS on ", q.url)
 
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true, // Skip certificate verification
+		}
 		op := &nats.Options{
 			Url:           q.url,
 			ReconnectWait: 1 * time.Second,
 			PingInterval:  5 * time.Second,
 			MaxReconnect:  1,
 			MaxPingsOut:   1,
+			Secure:        true,      // Enable TLS
+			TLSConfig:     tlsConfig, // Custom TLS settings
 		}
 
 		conn, err := op.Connect()
