@@ -2,16 +2,21 @@ package bootstrap
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"strings"
+	"time"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
+
+	"net/http"
+
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/meddler-vault/cortex/logger"
 
@@ -102,6 +107,34 @@ func DeleteMinIOFolder(ctx context.Context, client *minio.Client, bucketName, fo
 	return nil
 }
 
+func skipMinioSSL() http.RoundTripper {
+	// Keep TLS config.
+	tlsConfig := &tls.Config{}
+
+	tlsConfig.InsecureSkipVerify = true
+	var transport http.RoundTripper = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		TLSClientConfig:       tlsConfig,
+		// Set this value so that the underlying transport round-tripper
+		// doesn't try to auto decode the body of objects with
+		// content-encoding set to `gzip`.
+		//
+		// Refer:
+		//    https://golang.org/src/net/http/transport.go?h=roundTrip#L1843
+		DisableCompression: true,
+	}
+	return transport
+
+}
+
 // / SyncDirToStorage syncs the given directory to the specified MinIO bucket and folder.
 func SyncDirToStorage(bucketName string, folder string, dirPath string, stopAfterError bool, replace bool) (err error) {
 
@@ -123,9 +156,10 @@ func SyncDirToStorage(bucketName string, folder string, dirPath string, stopAfte
 
 	// Initialize MinIO client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Region: region,
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: useSSL,
+		Region:    region,
+		Creds:     credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure:    useSSL,
+		Transport: skipMinioSSL(),
 	})
 	if err != nil {
 		return err
@@ -235,9 +269,10 @@ func SyncStorageToDir(bucketName string, dirPath string, identifier string, stop
 
 	logger.Println("Minio", endpoint, accessKeyID, secretAccessKey, useSSL, region)
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Region: region,
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: useSSL,
+		Region:    region,
+		Creds:     credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure:    useSSL,
+		Transport: skipMinioSSL(),
 	})
 	if err != nil {
 		return
@@ -375,9 +410,10 @@ func SyncMountVolumedToHost(
 
 	logger.Println("minio-config", bucketName, host, accesskey, secretkey, secureConnection, region, dirPath, objectPath)
 	minioClient, err := minio.New(host, &minio.Options{
-		Region: region,
-		Creds:  credentials.NewStaticV4(accesskey, secretkey, ""),
-		Secure: secureConnection,
+		Region:    region,
+		Creds:     credentials.NewStaticV4(accesskey, secretkey, ""),
+		Secure:    secureConnection,
+		Transport: skipMinioSSL(),
 	})
 
 	// minioClient.TraceOn(os.Stdout)
