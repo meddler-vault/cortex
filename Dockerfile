@@ -27,7 +27,7 @@ RUN echo "Built: Watchdog version: $WATCHDOG_VERSION"
 
 FROM scratch
 
-COPY --from=build /opt/watchdog /go/src/github.com/meddler-vault/cortex/watchdog.bin
+COPY --from=build /opt/watchdog /opt/watchdog
 
 
 
