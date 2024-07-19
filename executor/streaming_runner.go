@@ -141,7 +141,7 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	wg.Wait()
 
 	if startErr != nil {
-		_logger.Println("Starting error", startErr)
+		_logger.Println("Starting error", startErr, "path", cmd.Path, "lookPathErr")
 
 		logger.Post(req.TractID, map[string]string{
 			"pipe":    "stdend",
