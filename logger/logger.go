@@ -110,7 +110,7 @@ func Println(v ...interface{}) error {
 		"message":  message,
 	}
 
-	_logger.Info("logging:", TaskId.taskid, loggingData)
+	// _logger.Info("logging:", TaskId.taskid, loggingData)
 
 	return logger.Post(TaskId.taskid, loggingData)
 
