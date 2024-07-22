@@ -382,10 +382,42 @@ func Start() {
 		logger.Println("Starting OUT Sync")
 		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "POST")
 
-		if err = bootstrap.SyncDirToStorage(data.Identifier, *bootstrap.CONSTANTS.System.OUTPUTDIR, "test-folder", false, true); err != nil {
-			logger.Println("Error OUT Sync")
-			logger.Println(err)
-			return
+		logger.Println("Sync minio-export")
+		if *bootstrap.CONSTANTS.System.EXPORT_VOLUME {
+
+			logger.Println("Sync Initiate::  Mount Minio Volume", *bootstrap.CONSTANTS.System.EXPORT_VOLUME,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_BUCKET,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_FOLDER_PATH,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_OBJECT_PATH,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_PATH,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_S3_ACCESS_KEY,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_S3_SECRET_KEY,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_S3_HOST,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_S3_SECURE,
+			)
+
+			err := bootstrap.ExportDirToStorage(
+
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_S3_HOST,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_S3_ACCESS_KEY,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_S3_SECRET_KEY,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_S3_SECURE,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_S3_REGION,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_PATH,
+
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_BUCKET,
+				*bootstrap.CONSTANTS.System.EXPORT_VOLUME_FOLDER_PATH,
+				true,
+				true,
+			)
+
+			if err != nil {
+				logger.Println("Erro Exporting Minio Volume", err)
+				return
+			} else {
+				logger.Println("minio-export:success")
+
+			}
 
 		}
 

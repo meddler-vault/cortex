@@ -247,6 +247,95 @@ func SyncDirToStorage(bucketName string, folder string, dirPath string, stopAfte
 }
 
 // SyncStorageToDir ()
+func ExportDirToStorage(
+	host string,
+	accesskey string,
+	secretkey string,
+	secureConnection bool,
+	region string,
+	volumeMountPath string,
+	bucketName string, dirPath string, stopAfterError bool, replace bool) (err error) {
+
+	// Initialize minio client object.
+
+	logger.Println("minio-config", bucketName, host, accesskey, secretkey, secureConnection, region, dirPath)
+	minioClient, err := minio.New(host, &minio.Options{
+		Region:    region,
+		Creds:     credentials.NewStaticV4(accesskey, secretkey, ""),
+		Secure:    secureConnection,
+		Transport: skipMinioSSL(),
+	})
+	if err != nil {
+
+		return
+	}
+	//
+
+	ctx := context.Background()
+
+	exists, err := minioClient.BucketExists(ctx, bucketName)
+
+	if err != nil {
+		return
+	}
+	if !exists {
+		return errors.New("Invalid bucket name")
+	}
+
+	uploadFunc := func(path string, info os.FileInfo) error {
+		// Calculate relative path from dirPath to the current file
+		relPath, err := filepath.Rel(dirPath, path)
+		// if err != nil {
+		// 	return err
+		// }
+
+		// Construct object path within the bucket
+		objectName := filepath.Join(volumeMountPath, relPath)
+
+		// Generate the relative path for the object name
+
+		objectName = strings.TrimPrefix(objectName, string(filepath.Separator))
+
+		// Upload the file
+		logger.Println("Uploading", bucketName, objectName, path)
+		_, err = minioClient.FPutObject(ctx, bucketName, objectName, path, minio.PutObjectOptions{})
+		if err != nil {
+			log.Println("Error", err)
+			return err
+		}
+
+		return nil
+	}
+
+	onWalkFunc := func(path string, info os.FileInfo, err error) error {
+
+		// Skip hidden files and directories
+		if strings.HasPrefix(info.Name(), ".") {
+			if info.IsDir() {
+				// return filepath.SkipDir
+			}
+			// return nil
+		}
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			if uploadErr := uploadFunc(path, info); uploadErr != nil {
+				if stopAfterError {
+					return uploadErr
+				}
+			}
+		}
+		return nil
+	}
+
+	log.Println("walking path", dirPath)
+	err = filepath.Walk(dirPath, onWalkFunc)
+	return err
+
+}
+
+// SyncStorageToDir ()
 func SyncStorageToDir(bucketName string, dirPath string, identifier string, stopAfterError bool, replace bool) (err error) {
 
 	logger.Println("SyncStorageToDir")
