@@ -271,6 +271,8 @@ func (current *Constants) resolveRelativePaths() {
 
 	// Volume mount path
 	*current.System.MOUNT_VOLUME_PATH = filepath.Join(*current.System.BASEPATH, *current.System.MOUNT_VOLUME_PATH)
+	// Export volume path
+	*current.System.EXPORT_VOLUME_PATH = filepath.Join(*current.System.BASEPATH, *current.System.EXPORT_VOLUME_PATH)
 
 }
 
