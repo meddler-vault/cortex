@@ -290,9 +290,7 @@ func ExportDirToStorage(
 		// }
 
 		// Construct object path within the bucket
-		// objectName := filepath.Join(volumeMountPath, relPath)
-
-		objectName := relPath
+		objectName := filepath.Join(volumeMountPath, relPath)
 
 		// Generate the relative path for the object name
 
