@@ -89,6 +89,18 @@ type SystemConstants struct {
 	MOUNT_VOLUME_S3_SECURE     *bool   `json:"mount_volume_s3_secure" ` // To mount the volume path or not. It is mandatoru to successfuly mount if true else the process fails
 	MOUNT_VOLUME_S3_HOST       *string `json:"mount_volume_s3_host" `
 	MOUNT_VOLUME_S3_REGION     *string `json:"mount_volume_s3_region" `
+
+	// Write only volume mount to minio / s3
+	EXPORT_VOLUME               *bool   `json:"export_volume" `                // To mount the volume path or not. It is mandatoru to successfuly mount if true else the process fails
+	EXPORT_VOLUME_PATH          *string `json:"export_volume_path" `           // Relative volume mount point on base_path
+	EXPORT_VOLUME_FOLDER_PATH   *string `json:"export_volume_s3_folder_path" ` // if empty..go to object path to sunc the file
+	EXPORT_VOLUME_OBJECT_PATH   *string `json:"export_volume_s3_object_path" ` // if empty..the folder is synced else the object is synced
+	EXPORT_VOLUME_S3_ACCESS_KEY *string `json:"export_volume_s3_access_key" `
+	EXPORT_VOLUME_BUCKET        *string `json:"export_volume_s3_bucket" `
+	EXPORT_VOLUME_S3_SECRET_KEY *string `json:"export_volume_s3_secret_key" `
+	EXPORT_VOLUME_S3_SECURE     *bool   `json:"export_volume_s3_secure" ` // To mount the volume path or not. It is mandatoru to successfuly mount if true else the process fails
+	EXPORT_VOLUME_S3_HOST       *string `json:"export_volume_s3_host" `
+	EXPORT_VOLUME_S3_REGION     *string `json:"export_volume_s3_region" `
 }
 
 // Git Constants: Auth Mode
@@ -216,6 +228,33 @@ func (current *Constants) Override(new *Constants) {
 	}
 	if new.System.MOUNT_VOLUME_S3_HOST != nil {
 		current.System.MOUNT_VOLUME_S3_HOST = new.System.MOUNT_VOLUME_S3_HOST
+	}
+
+	// Export volume to  configs
+	if new.System.EXPORT_VOLUME != nil {
+		current.System.EXPORT_VOLUME = new.System.EXPORT_VOLUME
+	}
+	if new.System.EXPORT_VOLUME_PATH != nil {
+		current.System.EXPORT_VOLUME_PATH = new.System.EXPORT_VOLUME_PATH
+	}
+	if new.System.EXPORT_VOLUME_FOLDER_PATH != nil {
+		current.System.EXPORT_VOLUME_FOLDER_PATH = new.System.EXPORT_VOLUME_FOLDER_PATH
+	}
+	if new.System.EXPORT_VOLUME_OBJECT_PATH != nil {
+		current.System.EXPORT_VOLUME_OBJECT_PATH = new.System.EXPORT_VOLUME_OBJECT_PATH
+	}
+	if new.System.EXPORT_VOLUME_S3_ACCESS_KEY != nil {
+		current.System.EXPORT_VOLUME_S3_ACCESS_KEY = new.System.EXPORT_VOLUME_S3_ACCESS_KEY
+	}
+	if new.System.EXPORT_VOLUME_BUCKET != nil {
+		current.System.EXPORT_VOLUME_BUCKET = new.System.EXPORT_VOLUME_BUCKET
+	}
+	if new.System.EXPORT_VOLUME_S3_SECRET_KEY != nil {
+		current.System.EXPORT_VOLUME_S3_SECRET_KEY = new.System.EXPORT_VOLUME_S3_SECRET_KEY
+	}
+
+	if new.System.EXPORT_VOLUME_S3_HOST != nil {
+		current.System.EXPORT_VOLUME_S3_HOST = new.System.EXPORT_VOLUME_S3_HOST
 	}
 
 	current.resolveRelativePaths()
@@ -443,6 +482,18 @@ func initialize() *Constants {
 		MOUNT_VOLUME_S3_SECURE:     PopulateBool("mount_volume_s3_secure", true, "To mount the volume"),
 		MOUNT_VOLUME_S3_HOST:       PopulateStr("mount_volume_s3_host", "", "Result Type!"),
 		MOUNT_VOLUME_S3_REGION:     PopulateStr("mount_volume_s3_region", "auto", "Region!"),
+
+		// Export to minio constants
+		EXPORT_VOLUME:               PopulateBool("export_volume", false, "To mount the volume"),
+		EXPORT_VOLUME_PATH:          PopulateStr("export_volume_path", "mount", "Result Type!"),
+		EXPORT_VOLUME_BUCKET:        PopulateStr("export_volume_s3_bucket", "", "Result Type!"),
+		EXPORT_VOLUME_OBJECT_PATH:   PopulateStr("export_volume_s3_object_path", "", "Result Type!"),
+		EXPORT_VOLUME_FOLDER_PATH:   PopulateStr("export_volume_s3_folder_path", "", "Result Type!"),
+		EXPORT_VOLUME_S3_ACCESS_KEY: PopulateStr("export_volume_s3_access_key", "", "Result Type!"),
+		EXPORT_VOLUME_S3_SECRET_KEY: PopulateStr("export_volume_s3_secret_key", "", "Result Type!"),
+		EXPORT_VOLUME_S3_SECURE:     PopulateBool("export_volume_s3_secure", true, "To mount the volume"),
+		EXPORT_VOLUME_S3_HOST:       PopulateStr("export_volume_s3_host", "", "Result Type!"),
+		EXPORT_VOLUME_S3_REGION:     PopulateStr("export_volume_s3_region", "auto", "Region!"),
 	}
 
 	processConstants := ProcessConstants{
