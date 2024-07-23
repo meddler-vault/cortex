@@ -266,7 +266,7 @@ func ExportDirToStorage(
 		Transport: skipMinioSSL(),
 	})
 
-	logger.Println("minioClient", minioClient, err)
+	logger.Println("minioClient", err)
 	if err != nil {
 
 		log.Println("Error", err)
@@ -275,20 +275,21 @@ func ExportDirToStorage(
 	//
 
 	ctx := context.Background()
+	logger.Println("minioClient", "ctx", ctx)
 
 	exists, err := minioClient.BucketExists(ctx, bucketName)
 
 	if err != nil {
-		log.Println("Error", err)
+		logger.Println("Error", err)
 		return
 	}
 	if !exists {
-		return errors.New("Invalid bucket name")
+		return errors.New("invalid bucket name")
 	}
 
 	uploadFunc := func(path string, info os.FileInfo) error {
 		// Calculate relative path from dirPath to the current file
-		log.Println("uploadfn")
+		logger.Println("uploadfn")
 		relPath, err := filepath.Rel(dirPath, path)
 		// if err != nil {
 		// 	return err
@@ -313,7 +314,7 @@ func ExportDirToStorage(
 	}
 
 	onWalkFunc := func(path string, info os.FileInfo, err error) error {
-		log.Println("onWalkFunc")
+		logger.Println("onWalkFunc")
 
 		// Skip hidden files and directories
 		if strings.HasPrefix(info.Name(), ".") {
