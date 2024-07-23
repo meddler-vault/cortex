@@ -15,13 +15,15 @@ COPY . .
 
 # Build the Go app
 RUN TZ=Asia/Calcutta
-RUN WATCHDOG_VERSION=$(date +%Y.%m.%d.%H.%M.%S)
+
+# Define a build argument for the version
+ARG WATCHDOG_VERSION
+ENV WATCHDOG_VERSION=${WATCHDOG_VERSION}
+
 RUN echo "Building: Watchdog version: $WATCHDOG_VERSION"
 
 
-RUN WATCHDOG_VERSION=$(date +%Y.%m.%d.%H.%M.%S) && \
-    echo "Building: Watchdog version: $WATCHDOG_VERSION" && \
-    go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o /opt/watchdog
+RUN go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o /opt/watchdog
 
 
 RUN echo "Built: Watchdog version: $WATCHDOG_VERSION"
