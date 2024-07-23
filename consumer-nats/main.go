@@ -86,6 +86,8 @@ func Start() {
 
 	queue.Consume(func(msg string) {
 		logger.Println("**************************")
+		logger.Println("[[Watchdog]]", WatchdogVersion)
+
 		// logger.Println(msg)
 		logger.Println("**************************")
 
@@ -460,7 +462,7 @@ func Start() {
 		}
 
 		taskResult.Response = string(responseContent)
-		taskResult.WatchdogVersion = "unknown"
+		taskResult.WatchdogVersion = WatchdogVersion
 
 		content := bytes.NewBuffer(responseContent)
 
