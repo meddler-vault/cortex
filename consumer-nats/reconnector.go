@@ -2,7 +2,9 @@ package consumernats
 
 import (
 	"crypto/tls"
+	"errors"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/meddler-vault/cortex/logger"
@@ -19,6 +21,8 @@ type queue struct {
 	closed       bool
 
 	currentConsumer messageConsumer
+
+	mu sync.Mutex
 }
 
 type messageConsumer func(string)
@@ -68,7 +72,7 @@ func (q *queue) Close() {
 func (q *queue) reconnector() {
 	for {
 		if q.connection.IsClosed() && !q.closed {
-			logError("Reconnecting after connection closed", nil)
+			logError("Reconnecting after connection closed", errors.New("connection closed"))
 			q.connect()
 			q.recoverConsumer()
 		} else if q.closed {
@@ -79,6 +83,8 @@ func (q *queue) reconnector() {
 }
 
 func (q *queue) connect() {
+	q.mu.Lock()
+	defer q.mu.Unlock()
 	for {
 		logger.Println("Connecting to NATS on ", q.url)
 
@@ -130,6 +136,9 @@ func (q *queue) connect() {
 
 func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 	// Unsubscribe the existing consumer if it exists
+
+	q.mu.Lock()
+	defer q.mu.Unlock()
 	if q.subscription != nil {
 
 		if err := q.subscription.Unsubscribe(); err != nil {
@@ -141,7 +150,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 	sub, err := q.js.Subscribe(q.name, func(msg *nats.Msg) {
 		consumer(string(msg.Data))
-	}, nats.Durable("durable-consumer"))
+	}, nats.Durable(q.name+"durable-consumer"))
 	if err == nil {
 		q.subscription = sub
 		q.currentConsumer = consumer
