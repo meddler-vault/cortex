@@ -417,6 +417,11 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 	}
 
 	// For minio
+	if constants.System.MOUNT_VOLUME_PATH != nil {
+		dataMap["mount_volume_path"] = *constants.System.MOUNT_VOLUME_PATH
+
+	}
+
 	if constants.System.MOUNT_VOLUME_FOLDER_PATH != nil {
 		dataMap["mount_volume_s3_folder_path"] = *constants.System.MOUNT_VOLUME_FOLDER_PATH
 
@@ -424,6 +429,22 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 
 	if constants.System.MOUNT_VOLUME_OBJECT_PATH != nil {
 		dataMap["mount_volume_s3_object_path"] = *constants.System.MOUNT_VOLUME_OBJECT_PATH
+
+	}
+
+	// For export
+
+	if constants.System.EXPORT_VOLUME_PATH != nil {
+		dataMap["export_volume_path"] = *constants.System.EXPORT_VOLUME_PATH
+	}
+
+	if constants.System.EXPORT_VOLUME_FOLDER_PATH != nil {
+		dataMap["export_volume_s3_folder_path"] = *constants.System.EXPORT_VOLUME_FOLDER_PATH
+
+	}
+
+	if constants.System.EXPORT_VOLUME_OBJECT_PATH != nil {
+		dataMap["export_volume_s3_object_path"] = *constants.System.EXPORT_VOLUME_OBJECT_PATH
 
 	}
 
