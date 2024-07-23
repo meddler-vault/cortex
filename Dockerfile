@@ -33,5 +33,7 @@ FROM scratch
 COPY --from=build /opt/watchdog /opt/watchdog
 
 
+RUN & echo "Build complete. Contents of /opt:" && ls -l /opt/
+
 
 
