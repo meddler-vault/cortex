@@ -63,7 +63,9 @@ func Bootstrap() (err error) {
 		if err != nil {
 			return
 		}
-		err = os.MkdirAll(filepath.Dir(volumeMount), os.ModePerm)
+
+		err = os.MkdirAll(volumeMount, os.ModePerm)
+
 		logger.Println("Creating Directory: volumeMount", volumeMount, err)
 		if err != nil {
 			return
@@ -78,7 +80,7 @@ func Bootstrap() (err error) {
 		if err != nil {
 			return
 		}
-		err = os.MkdirAll(filepath.Dir(volumeMount), os.ModePerm)
+		err = os.MkdirAll(volumeMount, os.ModePerm)
 		logger.Println("Creating Directory: volumeExport", volumeMount, err)
 		if err != nil {
 			return
