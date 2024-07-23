@@ -258,7 +258,7 @@ func ExportDirToStorage(
 
 	// Initialize minio client object.
 
-	logger.Println("minio-config", bucketName, host, accesskey, secretkey, secureConnection, region, dirPath)
+	logger.Println("minio-config ExportDirToStorage", bucketName, host, accesskey, secretkey, secureConnection, region, dirPath)
 	minioClient, err := minio.New(host, &minio.Options{
 		Region:    region,
 		Creds:     credentials.NewStaticV4(accesskey, secretkey, ""),
@@ -286,6 +286,7 @@ func ExportDirToStorage(
 
 	uploadFunc := func(path string, info os.FileInfo) error {
 		// Calculate relative path from dirPath to the current file
+		log.Println("uploadfn")
 		relPath, err := filepath.Rel(dirPath, path)
 		// if err != nil {
 		// 	return err
@@ -310,6 +311,7 @@ func ExportDirToStorage(
 	}
 
 	onWalkFunc := func(path string, info os.FileInfo, err error) error {
+		log.Println("onWalkFunc")
 
 		// Skip hidden files and directories
 		if strings.HasPrefix(info.Name(), ".") {
