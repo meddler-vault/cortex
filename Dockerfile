@@ -20,7 +20,6 @@ RUN TZ=Asia/Calcutta
 ARG WATCHDOG_VERSION
 ENV WATCHDOG_VERSION=${WATCHDOG_VERSION}
 
-RUN echo "Building: Watchdog version: $WATCHDOG_VERSION"
 
 
 RUN go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o /opt/watchdog
