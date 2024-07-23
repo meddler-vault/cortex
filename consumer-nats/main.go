@@ -369,7 +369,7 @@ func Start() {
 
 		}
 
-		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Bootstrap")
+		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.BASEPATH, "Basepath Bootstrap Print")
 
 		// FOrkng Process
 		logger.Println("Starting task")
