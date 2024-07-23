@@ -316,6 +316,9 @@ func ExportDirToStorage(
 	onWalkFunc := func(path string, info os.FileInfo, err error) error {
 		logger.Println("onWalkFunc", "path", path, "info", info)
 
+		if info == nil {
+			return errors.New("No such path found to export")
+		}
 		// Skip hidden files and directories
 		if strings.HasPrefix(info.Name(), ".") {
 			if info.IsDir() {
@@ -336,8 +339,8 @@ func ExportDirToStorage(
 		return nil
 	}
 
-	log.Println("walking path", dirPath)
-	err = filepath.Walk(dirPath, onWalkFunc)
+	log.Println("walking path", volumeMountPath)
+	err = filepath.Walk(volumeMountPath, onWalkFunc)
 	return err
 
 }
