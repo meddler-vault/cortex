@@ -314,7 +314,7 @@ func ExportDirToStorage(
 	}
 
 	onWalkFunc := func(path string, info os.FileInfo, err error) error {
-		logger.Println("onWalkFunc")
+		logger.Println("onWalkFunc", "path", path, "info", info)
 
 		// Skip hidden files and directories
 		if strings.HasPrefix(info.Name(), ".") {
