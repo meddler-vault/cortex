@@ -131,7 +131,12 @@ func (q *queue) connect() {
 func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 	// Unsubscribe the existing consumer if it exists
 	if q.subscription != nil {
-		q.subscription.Unsubscribe()
+
+		if err := q.subscription.Unsubscribe(); err != nil {
+			logError("Error unsubscribing existing consumer", err)
+			return err
+		}
+		q.subscription = nil
 	}
 
 	sub, err := q.js.Subscribe(q.name, func(msg *nats.Msg) {
@@ -147,6 +152,15 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 func (q *queue) recoverConsumer() {
 	if q.currentConsumer != nil {
 		logger.Println("Recovering consumer...")
+
+		if q.subscription != nil {
+			if err := q.subscription.Unsubscribe(); err != nil {
+				logError("Error unsubscribing existing consumer during recovery", err)
+				return
+			}
+			q.subscription = nil
+		}
+
 		err := q.registerQueueConsumer(q.currentConsumer)
 		if err != nil {
 			logError("Error in recovering consumer", err)
