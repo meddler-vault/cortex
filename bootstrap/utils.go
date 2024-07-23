@@ -267,6 +267,7 @@ func ExportDirToStorage(
 	})
 	if err != nil {
 
+		log.Println("Error", err)
 		return
 	}
 	//
