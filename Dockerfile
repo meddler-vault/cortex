@@ -19,7 +19,9 @@ RUN WATCHDOG_VERSION=$(date +%Y.%m.%d.%H.%M.%S)
 RUN echo "Building: Watchdog version: $WATCHDOG_VERSION"
 
 
-RUN go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o /opt/watchdog
+RUN WATCHDOG_VERSION=$(date +%Y.%m.%d.%H.%M.%S) && \
+    echo "Building: Watchdog version: $WATCHDOG_VERSION" && \
+    go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o /opt/watchdog
 
 
 RUN echo "Built: Watchdog version: $WATCHDOG_VERSION"
