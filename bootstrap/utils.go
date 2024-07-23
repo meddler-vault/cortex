@@ -265,6 +265,8 @@ func ExportDirToStorage(
 		Secure:    secureConnection,
 		Transport: skipMinioSSL(),
 	})
+
+	logger.Println("minioClient", minioClient, err)
 	if err != nil {
 
 		log.Println("Error", err)
