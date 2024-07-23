@@ -28,12 +28,14 @@ RUN go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.Watchdog
 RUN echo "Built: Watchdog version: $WATCHDOG_VERSION"
 
 
-FROM scratch
+FROM bash
 
 COPY --from=build /opt/watchdog /opt/watchdog
 
+RUN  echo "Build complete. Contents of /opt:" && ls -l /opt/
 
-RUN & echo "Build complete. Contents of /opt:" && ls -l /opt/
+
+
 
 
 
