@@ -277,6 +277,7 @@ func ExportDirToStorage(
 	exists, err := minioClient.BucketExists(ctx, bucketName)
 
 	if err != nil {
+		log.Println("Error", err)
 		return
 	}
 	if !exists {
