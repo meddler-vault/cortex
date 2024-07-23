@@ -86,7 +86,6 @@ func Start() {
 
 	queue.Consume(func(msg string) {
 		logger.Println("**************************")
-		logger.Println("[[Watchdog]]", WatchdogVersion)
 
 		// logger.Println(msg)
 		logger.Println("**************************")
@@ -137,6 +136,8 @@ func Start() {
 		logger.InitNewTask(*identifier)
 
 		resultsJsonPath := *bootstrap.CONSTANTS.System.RESULTSJSON
+
+		logger.Println("[[Watchdog]]", WatchdogVersion)
 
 		logger.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
 		logger.Println("SystemConstants preProcess: INPUTDIR:", *bootstrap.CONSTANTS.System.INPUTDIR)
