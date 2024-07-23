@@ -22,7 +22,7 @@ ENV WATCHDOG_VERSION=${WATCHDOG_VERSION}
 
 
 
-RUN go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o /opt/watchdog && echo "Build complete. Contents of /opt:" && ls -l /opt/
+RUN CGO_ENABLED=0  go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o /opt/watchdog && echo "Build complete. Contents of /opt:" && ls -l /opt/
 
 
 RUN echo "Built: Watchdog version: $WATCHDOG_VERSION"
