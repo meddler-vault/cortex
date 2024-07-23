@@ -153,7 +153,7 @@ func Start() {
 
 		}
 
-		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.INPUTDIR, "Sync")
+		bootstrap.PrintDir(*bootstrap.CONSTANTS.System.BASEPATH, "Sync")
 
 		// Mount all dependencies. Move it minio mounting later
 		for _, dependency := range data.Dependencies {
