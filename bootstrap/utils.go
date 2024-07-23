@@ -289,11 +289,11 @@ func ExportDirToStorage(
 
 	uploadFunc := func(path string, info os.FileInfo) error {
 		// Calculate relative path from dirPath to the current file
-		logger.Println("uploadfn")
-		relPath, err := filepath.Rel(dirPath, path)
-		// if err != nil {
-		// 	return err
-		// }
+
+		relPath, err := filepath.Rel(volumeMountPath, path)
+		if err != nil {
+			return err
+		}
 
 		// Construct object path within the bucket
 		objectName := filepath.Join(volumeMountPath, relPath)
