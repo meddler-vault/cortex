@@ -17,7 +17,7 @@ const message = `
         "output_dir":  "/output",
         "git_path": "/output/git-path",
         "results_json":  "/outputs/results_json/results.json",
-        "git_remote": "https://github.com/studiogangster/sensibull-realtime-options-api-ingestor.git",
+        "git_remote": "https://github.com/meddler-vault/cortex.git",
         "git_mode": false,
 
         "mount_volume": true,

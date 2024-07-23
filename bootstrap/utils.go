@@ -625,11 +625,11 @@ func cloneRepositoryToken(url string, path string, username string, token string
 
 }
 
-func cloneRepository(url string, path string, ref string, auth *transport.AuthMethod) (repository *git.Repository, err error) {
+func cloneRepository(url string, path string, ref string, auth *transport.AuthMethod, gitdepth int) (repository *git.Repository, err error) {
 	repository, err = git.PlainClone(path, false, &git.CloneOptions{
 		URL:           url,
 		Progress:      os.Stdout,
-		Depth:         1,
+		Depth:         gitdepth,
 		SingleBranch:  (len(ref)) > 0,
 		ReferenceName: plumbing.ReferenceName(ref), // Assuming startCommitID is a tag
 		Auth:          *auth,
@@ -687,7 +687,7 @@ func Clone(url string, path string, auth_mode string, username string, password 
 		// repository, err = cloneRepository(url, path)
 	}
 
-	repository, err = cloneRepository(url, path, gitref, &auth)
+	repository, err = cloneRepository(url, path, gitref, &auth, gitdepth)
 
 	// if err != nil, perform further operations
 
