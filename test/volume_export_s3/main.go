@@ -16,7 +16,7 @@ func main() {
 		"auto",
 		"volume_export_test/hello",
 
-		"minio-vapt", "/tmp/test", true, true)
+		"minio-vapt", "/tmp/test/3232/3232", true, true)
 	{
 		log.Println(result)
 	}
