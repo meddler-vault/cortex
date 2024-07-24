@@ -39,6 +39,9 @@ type ConfigConstants struct {
 // SystemConstants
 type SystemConstants struct {
 	BaseConstants
+
+	CORTEXID *string `json:"cortex_id"`
+
 	BASEPATH          *string `json:"base_path"`
 	INPUTDIR          *string `json:"input_dir"`
 	OUTPUTDIR         *string `json:"output_dir"`

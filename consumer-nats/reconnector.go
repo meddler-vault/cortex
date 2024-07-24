@@ -12,8 +12,9 @@ import (
 )
 
 type queue struct {
-	url  string
-	name string
+	url        string
+	name       string
+	consumerId string
 
 	connection   *nats.Conn
 	js           nats.JetStreamContext
@@ -27,10 +28,11 @@ type queue struct {
 
 type messageConsumer func(string)
 
-func NewQueue(url string, qName string) *queue {
+func NewQueue(url string, qName string, consumerId string) *queue {
 	q := new(queue)
 	q.url = url
 	q.name = qName
+	q.consumerId = consumerId
 
 	q.connect()
 	log.Println("Connect", qName)
@@ -150,7 +152,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 	sub, err := q.js.Subscribe(q.name, func(msg *nats.Msg) {
 		consumer(string(msg.Data))
-	}, nats.Durable(q.name+"durable-consumer"))
+	}, nats.Durable(q.consumerId+"durable-consumer"), nats.ManualAck())
 	if err == nil {
 		q.subscription = sub
 		q.currentConsumer = consumer
@@ -165,14 +167,14 @@ func (q *queue) recoverConsumer() {
 		if q.subscription != nil {
 			if err := q.subscription.Unsubscribe(); err != nil {
 				logError("Error unsubscribing existing consumer during recovery", err)
-				return
+				// return
 			}
 			q.subscription = nil
 		}
 
 		err := q.registerQueueConsumer(q.currentConsumer)
 		if err != nil {
-			logError("Error in recovering consumer", err)
+			logger.Println("Error in recovering consumer", err)
 		} else {
 			logger.Println("Consumer recovered! Continuing message processing...")
 		}

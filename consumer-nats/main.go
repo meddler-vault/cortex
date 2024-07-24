@@ -55,6 +55,9 @@ func Start() {
 
 	username := getenvStr("RMQ_USERNAME", "whitehat")
 	password := getenvStr("RMQ_PASSWORD", "4Jy6P)$Ep@c^SenL")
+
+	uuid := getenvStr("uuid", "uuid")
+
 	username = url.QueryEscape(username)
 	password = url.QueryEscape(password)
 	host := getenvStr("RMQ_HOST", "rmq.meddler.io:443")
@@ -66,7 +69,7 @@ func Start() {
 	logger.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
 
 	connectionString := fmt.Sprintf("wss://%s:%s@%s", username, password, host)
-	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
+	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, uuid)
 
 	if bootstrap.CONSTANTS.Reserved.MOCKMESSAGE != "" {
 
