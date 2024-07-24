@@ -61,6 +61,7 @@ func Start() {
 	username = url.QueryEscape(username)
 	password = url.QueryEscape(password)
 	host := getenvStr("RMQ_HOST", "rmq.meddler.io:443")
+	logger.Println("uuid", uuid)
 	logger.Println("username", username)
 	logger.Println("password", password)
 	logger.Println("host", host)
