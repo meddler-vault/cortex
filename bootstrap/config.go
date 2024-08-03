@@ -6,10 +6,24 @@ import (
 )
 
 // DependencySchema
+type DependencySchemaDeprecated struct {
+	// Identifier string `json:"id"`
+	// Alias      string `json:"alias"`
+	// Type       string `json:"asset"`
+}
+
+// DependencySchema
 type DependencySchema struct {
-	Identifier string `json:"id"`
-	Alias      string `json:"alias"`
-	Type       string `json:"asset"`
+	MOUNT_VOLUME_VARIABLE      *string `json:"mount_volume_variable" `       // To mount the volume path or not. It is mandatoru to successfuly mount if true else the process fails
+	MOUNT_VOLUME_PATH          *string `json:"mount_volume_path" `           // Relative volume mount point on base_path
+	MOUNT_VOLUME_FOLDER_PATH   *string `json:"mount_volume_s3_folder_path" ` // if empty..go to object path to sunc the file
+	MOUNT_VOLUME_OBJECT_PATH   *string `json:"mount_volume_s3_object_path" ` // if empty..the folder is synced else the object is synced
+	MOUNT_VOLUME_S3_ACCESS_KEY *string `json:"mount_volume_s3_access_key" `
+	MOUNT_VOLUME_BUCKET        *string `json:"mount_volume_s3_bucket" `
+	MOUNT_VOLUME_S3_SECRET_KEY *string `json:"mount_volume_s3_secret_key" `
+	MOUNT_VOLUME_S3_SECURE     *bool   `json:"mount_volume_s3_secure" ` // To mount the volume path or not. It is mandatoru to successfuly mount if true else the process fails
+	MOUNT_VOLUME_S3_HOST       *string `json:"mount_volume_s3_host" `
+	MOUNT_VOLUME_S3_REGION     *string `json:"mount_volume_s3_region" `
 }
 
 // MessageDataSpec
@@ -73,14 +87,24 @@ type MessageSpec struct {
 
 }
 
-type TaskResultBase struct {
-	Status          string `json:"exec_status" validate:"required"`
-	Message         string `json:"message" validate:"required"`
-	WatchdogVersion string `json:"watchdog_version" validate:"required"`
-	Identifier      string `json:"identifier" validate:"required"`
-}
+// Define the custom type for Status
+type TaskStatus string
+
+const (
+	ENQUEUED  TaskStatus = "ENQUEUED"
+	INITIATED TaskStatus = "INITIATED"
+	COMPLETED TaskStatus = "COMPLETED"
+	TIMEOUT   TaskStatus = "TIMEOUT"
+	SUCCESS   TaskStatus = "SUCCESS"
+	FAILURE   TaskStatus = "FAILURE"
+	UNKNOWN   TaskStatus = "UNKNOWN"
+)
 
 type TaskResult struct {
-	TaskResultBase
+	TaskStatus      TaskStatus `json:"exec_status" validate:"required"`
+	Message         string     `json:"message" validate:"required"`
+	WatchdogVersion string     `json:"watchdog_version" validate:"required"`
+	Identifier      string     `json:"identifier" validate:"required"`
+
 	Response string `json:"response" ` // success_endpoint
 }

@@ -1,18 +1,15 @@
 package consumernats
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/meddler-vault/cortex/logger"
 
-	"net/http"
 	"net/url"
 	"os"
 
@@ -47,6 +44,23 @@ func SendMessage(queue *queue, topic string, message string) (err error) {
 		return err
 	}
 
+	return
+}
+
+func SendTaskUpdate(queue *queue, topic string, taskResult bootstrap.TaskResult) (err error) {
+
+	message, err := json.Marshal(taskResult)
+	if err != nil {
+		logger.Println(err)
+		message = []byte{}
+
+	}
+
+	logger.Println("Sending message", topic, string(message))
+	err = SendMessage(queue, topic, string(message))
+	if err != nil {
+		log.Println("Error: ", "SendTaskUpdate", err)
+	}
 	return
 }
 
@@ -120,26 +134,14 @@ func Start() {
 		identifier := &data.Identifier
 
 		// Mark Initiated
-
-		taskInitiated := bootstrap.TaskResult{}
-		taskInitiated.Identifier = data.Identifier
-		taskInitiated.WatchdogVersion = WatchdogVersion
-		taskInitiated.Status = "INITIATED"
-		taskInitiated.Message = "Task Initiated"
-
-		taskInitiatedString, err := json.Marshal(taskInitiated)
-		if err != nil {
-			logger.Println(err)
-			taskInitiatedString = []byte{}
-		}
-
-		// PublishEndResult(connectionString, string(taskInitiatedString))
-		SendMessage(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, string(taskInitiatedString))
-		//
+		SendTaskUpdate(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, bootstrap.TaskResult{
+			Identifier:      data.Identifier,
+			TaskStatus:      bootstrap.INITIATED,
+			Message:         "Task Initiated",
+			WatchdogVersion: WatchdogVersion,
+		})
 
 		logger.InitNewTask(*identifier)
-
-		resultsJsonPath := *bootstrap.CONSTANTS.System.RESULTSJSON
 
 		logger.Println("[[Watchdog]]", WatchdogVersion)
 
@@ -163,15 +165,36 @@ func Start() {
 
 		// Mount all dependencies. Move it minio mounting later
 		for _, dependency := range data.Dependencies {
-			bucketID := dependency.Identifier
+			// bucketID := dependency.Identifier
 
-			logger.Println("dependency", dependency)
-			if err = bootstrap.SyncStorageToDir(bucketID, *bootstrap.CONSTANTS.System.INPUTDIR, bucketID, false, true); err != nil {
-				logger.Println("Erro INP Sync")
-				logger.Println(err)
+			dependency.ResolveRelativePathsInDependencies(*bootstrap.CONSTANTS.System.BASEPATH)
+
+			log.Println("Dependency-test", *dependency.MOUNT_VOLUME_PATH)
+			// _, _, _ :=
+			fp, fileP, err := bootstrap.SyncMountVolumedToHost(
+
+				*dependency.MOUNT_VOLUME_S3_HOST,
+				*dependency.MOUNT_VOLUME_S3_ACCESS_KEY,
+				*dependency.MOUNT_VOLUME_S3_SECRET_KEY,
+				*dependency.MOUNT_VOLUME_S3_SECURE,
+				*dependency.MOUNT_VOLUME_S3_REGION,
+				*dependency.MOUNT_VOLUME_PATH,
+
+				*dependency.MOUNT_VOLUME_BUCKET,
+				*dependency.MOUNT_VOLUME_FOLDER_PATH,
+				*dependency.MOUNT_VOLUME_OBJECT_PATH,
+				true,
+				true,
+			)
+
+			if err != nil {
 				return
-
 			}
+
+			data.Variables[*dependency.MOUNT_VOLUME_VARIABLE] = "$" + *dependency.MOUNT_VOLUME_VARIABLE
+			data.Environ[*dependency.MOUNT_VOLUME_VARIABLE] = fp
+
+			logger.Println("dependency-data", fp, fileP, err)
 
 		}
 
@@ -434,87 +457,39 @@ func Start() {
 
 		// TODO: Inplement results DB Sync
 
-		taskResult := bootstrap.TaskResult{}
-
-		taskResult.Identifier = data.Identifier
-		endpoint := ""
-
-		headers := make(map[string]string)
-
 		if processErr != nil {
-			endpoint = data.FailureEndpoint
-			headers["status"] = "false"
-			headers["messsage"] = processErr.Error()
-
-			taskResult.Status = "FAILURE"
-			taskResult.Message = processErr.Error()
+			// Mark Finished failure
+			SendTaskUpdate(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, bootstrap.TaskResult{
+				Identifier:      data.Identifier,
+				TaskStatus:      bootstrap.FAILURE,
+				Message:         processErr.Error(),
+				WatchdogVersion: WatchdogVersion,
+			})
 
 		} else {
-			endpoint = data.SuccessEndpoint
-			headers["status"] = "true"
-			headers["messsage"] = "Successfully completed"
+			// Mark Finished success
+			SendTaskUpdate(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, bootstrap.TaskResult{
+				Identifier:      data.Identifier,
+				TaskStatus:      bootstrap.SUCCESS,
+				Message:         "Task completed successfully",
+				WatchdogVersion: WatchdogVersion,
+			})
 
-			taskResult.Status = "SUCCESS"
-			taskResult.Message = "Successfully completed"
-
-		}
-
-		client := &http.Client{}
-
-		responseContent, err := os.ReadFile(resultsJsonPath)
-
-		if err != nil {
-			logger.Println("Error reading results fike", resultsJsonPath)
-			responseContent = []byte{}
-		}
-
-		taskResult.Response = string(responseContent)
-		taskResult.WatchdogVersion = WatchdogVersion
-
-		content := bytes.NewBuffer(responseContent)
-
-		req, err := http.NewRequest("POST", endpoint, content)
-		if err != nil {
-			logger.Println(err)
-			return
-		}
-
-		for k, v := range headers {
-			req.Header.Add(k, v)
-
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			logger.Println(err)
-			return
-		}
-
-		//We Read the response body on the line below.
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Println(err)
-			return
-		}
-		//Convert the body to type string
-		sb := string(body)
-
-		taskResultString, err := json.Marshal(taskResult)
-		if err != nil {
-			logger.Println(err)
-			taskResultString = []byte{}
 		}
 
 		// err = PublishEndResult(connectionString, string(taskResultString))
-		err = SendMessage(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, string(taskResultString))
+		// err = SendMessage(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, string(taskResultString))
 
-		if err != nil {
-			logger.Println(err)
-			return
-		}
+		// Mark Finished
+		SendTaskUpdate(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, bootstrap.TaskResult{
+			Identifier:      data.Identifier,
+			TaskStatus:      bootstrap.SUCCESS,
+			Message:         "Task Success",
+			WatchdogVersion: WatchdogVersion,
+		})
+		//
 
 		logger.Println("Published to messag queue")
-
-		logger.Println(sb)
 
 		logger.Println("Finished Sync")
 
