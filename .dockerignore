@@ -4,4 +4,3 @@ vendor
 ./local-data/
 local-data/*
 
-.env
