@@ -113,8 +113,8 @@ func Println(v ...interface{}) error {
 	// _logger.Info("logging:", TaskId.taskid, loggingData)
 
 	return logger.Post(TaskId.taskid, loggingData)
+	// log.Println(loggingData)
 
-	// log.Println(v)
 	// err := logger.Post("system", loggingData)
 	// log.Println(err)
 	// log.Println(logger.FluentHost)

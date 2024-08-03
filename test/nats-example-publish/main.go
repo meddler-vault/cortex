@@ -290,11 +290,112 @@ const noop_msg = `
 `
 const noop_topic = "tasks_test"
 
+// dependency_test msg
+const dependency_test_msg = `
+{ 
+
+"config": {
+
+    "system": {
+        "base_path": "/tmp/watchdog-test",
+        "input_dir":  "/input",
+        "output_dir":  "/output",
+        "git_path": "/output/git-path",
+        "results_json":  "/outputs/results_json/results.json",
+        "git_remote": "https://github.com/studiogangster/sensibull-realtime-options-api-ingestor.git",
+        "git_mode": false,
+
+        "mount_volume": false,
+        "mount_volume_path": "minio-volume",
+        "mount_volume_s3_folder_path": "purger/nested 1/",
+        "mount_volume_s3_object_path": "./nested-2/",
+
+        "mount_volume_s3_access_key": "uaaGAF0jnXVHa7KV5eOa",
+        "mount_volume_s3_secret_key": "kiwty0-Xigruc-zyfnyj",
+        "mount_volume_s3_bucket": "minio-vapt",
+        "mount_volume_s3_host": "s3.meddler.io",
+        "mount_volume_s3_secure": true
+
+    } ,
+
+    "process": {
+        "test": "variable"
+    }
+
+},
+
+"substitute_var": true,
+"variables": {
+    "input_dir" : "$input_dir",
+    "output_dir" : "$output_dir",
+    "git_path" : "$git_path",
+    "mount_volume_s3_folder_path": "$mount_volume_s3_folder_path",
+    "mount_volume_s3_object_path": "$mount_volume_s3_object_path"
+
+
+    
+},
+
+"cmd": [
+  "echo noop-performing ; env ; echo beat-change $boom-variable "
+
+],
+"args": [  ],
+"entrypoint": [ 
+    "/bin/bash", "-c" ],
+
+"id": "outputbucket" ,
+
+"environ": 
+{
+    "exec_timeout": "1000" ,   
+    "TraceId":"5fde15c7ed17c3374c56990e" 
+},
+    
+"dependencies": [
+
+  {
+
+        "mount_volume_variable": "boom-variable",
+        "mount_volume_path": "minio-volume-dependency",
+        "mount_volume_s3_folder_path": "",
+        "mount_volume_s3_object_path": "purger/",
+
+        "mount_volume_s3_access_key": "uaaGAF0jnXVHa7KV5eOa",
+        "mount_volume_s3_secret_key": "kiwty0-Xigruc-zyfnyj",
+        "mount_volume_s3_bucket": "minio-vapt",
+        "mount_volume_s3_host": "s3.meddler.io",
+        "mount_volume_s3_region": "auto",
+        "mount_volume_s3_secure": true
+  }
+        ,
+          {
+
+
+        "mount_volume_variable": "noob-variable",
+        "mount_volume_path": "minio-volume-dependency-2",
+        "mount_volume_s3_folder_path": "",
+        "mount_volume_s3_object_path": "purger/nested 1/report-6.pdf",
+
+        "mount_volume_s3_access_key": "uaaGAF0jnXVHa7KV5eOa",
+        "mount_volume_s3_secret_key": "kiwty0-Xigruc-zyfnyj",
+        "mount_volume_s3_bucket": "minio-vapt",
+        "mount_volume_s3_host": "s3.meddler.io",
+        "mount_volume_s3_region": "auto",
+        "mount_volume_s3_secure": true
+  }
+
+]
+}
+
+`
+const dependency_test_topic = "tasks_test"
+
 func main() {
 
-	er := producernats.Produce("whitehat", "4Jy6P)$Ep@c^SenL", "rmq.meddler.io:443", noop_topic, noop_msg)
-	producernats.Produce("whitehat", "4Jy6P)$Ep@c^SenL", "rmq.meddler.io:443", noop_topic, noop_msg)
-	producernats.Produce("whitehat", "4Jy6P)$Ep@c^SenL", "rmq.meddler.io:443", noop_topic, noop_msg)
-	producernats.Produce("whitehat", "4Jy6P)$Ep@c^SenL", "rmq.meddler.io:443", noop_topic, noop_msg)
+	er := producernats.Produce("whitehat", "4Jy6P)$Ep@c^SenL", "rmq.meddler.io:443", dependency_test_topic, dependency_test_msg)
+	// producernats.Produce("whitehat", "4Jy6P)$Ep@c^SenL", "rmq.meddler.io:443", noop_topic, noop_msg)
+	// producernats.Produce("whitehat", "4Jy6P)$Ep@c^SenL", "rmq.meddler.io:443", noop_topic, noop_msg)
+	// producernats.Produce("whitehat", "4Jy6P)$Ep@c^SenL", "rmq.meddler.io:443", noop_topic, noop_msg)
 	log.Println("Error", er)
 }

@@ -104,6 +104,8 @@ type SystemConstants struct {
 	EXPORT_VOLUME_S3_SECURE     *bool   `json:"export_volume_s3_secure" ` // To mount the volume path or not. It is mandatoru to successfuly mount if true else the process fails
 	EXPORT_VOLUME_S3_HOST       *string `json:"export_volume_s3_host" `
 	EXPORT_VOLUME_S3_REGION     *string `json:"export_volume_s3_region" `
+
+	// secoflex specific constants
 }
 
 // Git Constants: Auth Mode
@@ -261,6 +263,11 @@ func (current *Constants) Override(new *Constants) {
 	}
 
 	current.resolveRelativePaths()
+}
+
+func (dependencySchema *DependencySchema) ResolveRelativePathsInDependencies(basePath string) {
+	// Relative to Absolute Path
+	*dependencySchema.MOUNT_VOLUME_PATH = filepath.Join(basePath, *dependencySchema.MOUNT_VOLUME_PATH)
 }
 
 func (current *Constants) resolveRelativePaths() {
