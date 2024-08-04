@@ -3,6 +3,7 @@ package consumernats
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -112,7 +113,8 @@ func Start() {
 			logger.Println("********** Closed Connection****************")
 
 		}()
-		queue.Consume(func(msg string, subject string) {
+
+		msgHandler := func(msg string, subject string) (err error) {
 			logger.Println("**************************")
 
 			// logger.Println(msg)
@@ -124,6 +126,7 @@ func Start() {
 				}
 				logger.Println("**************************")
 				logger.Println()
+				err = errors.New("error due to panic")
 
 			}()
 
@@ -133,7 +136,7 @@ func Start() {
 			bootstrap.CONSTANTS.Reset()
 			data := &bootstrap.MessageSpec{}
 
-			err := json.Unmarshal([]byte(msg), &data)
+			err = json.Unmarshal([]byte(msg), &data)
 			if err != nil {
 				logger.Println(err, "Invalid data format:  task-deferred", msg)
 				return
@@ -198,7 +201,7 @@ func Start() {
 				)
 
 				if err != nil {
-					return
+					return err
 				}
 
 				data.Variables[*dependency.MOUNT_VOLUME_VARIABLE] = "$" + *dependency.MOUNT_VOLUME_VARIABLE
@@ -247,7 +250,7 @@ func Start() {
 
 				if err != nil {
 					logger.Println("Erro Syncing Git Repo", err)
-					return
+					return err
 				} else {
 					logger.Println("Finished Syncing Git Repo", repository)
 
@@ -269,7 +272,8 @@ func Start() {
 					*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_SECURE,
 				)
 
-				folderPath, filePath, err := bootstrap.SyncMountVolumedToHost(
+				var folderPath, filePath string
+				folderPath, filePath, err = bootstrap.SyncMountVolumedToHost(
 
 					*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_HOST,
 					*bootstrap.CONSTANTS.System.MOUNT_VOLUME_S3_ACCESS_KEY,
@@ -455,7 +459,7 @@ func Start() {
 
 				if err != nil {
 					logger.Println("Erro Exporting Minio Volume", err)
-					return
+					return err
 				} else {
 					logger.Println("minio-export:success")
 
@@ -503,14 +507,18 @@ func Start() {
 
 			logger.Println("Finished Sync")
 
-		})
+			return err
+		}
+		queue.Consume(msgHandler)
 
 	} else {
 
 		queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, uuid, []string{"jobs", "builds_executor"})
 
 		defer queue.Close()
-		queue.Consume(func(msg string, subject string) {
+		queue.Consume(func(msg string, subject string) (err error) {
+
+			err = nil
 
 			logger.Println("**************************")
 
@@ -530,7 +538,7 @@ func Start() {
 			bootstrap.CONSTANTS.Reset()
 			data := &bootstrap.TaskResult{}
 
-			err := json.Unmarshal([]byte(msg), &data)
+			err = json.Unmarshal([]byte(msg), &data)
 			if err != nil {
 				logger.Println(err, "Invalid data format:  task-deferred", msg)
 				return
@@ -543,6 +551,7 @@ func Start() {
 			}
 			// Override the constants with message-spec
 
+			return
 		})
 
 	}

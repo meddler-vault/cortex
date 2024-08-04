@@ -29,7 +29,7 @@ type queue struct {
 	mu sync.Mutex
 }
 
-type messageConsumer func(string, string)
+type messageConsumer func(string, string) error
 
 func NewQueue(url string, qName string, consumerId string, topics []string) *queue {
 	q := new(queue)
@@ -271,7 +271,9 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 		}
 
-		consumer(string(msg.Data), msg.Subject)
+		logger.Println("--consumer--starts--")
+		status := consumer(string(msg.Data), msg.Subject)
+		logger.Println("--consumer--ends--", status)
 
 	}
 
