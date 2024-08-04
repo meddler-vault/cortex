@@ -120,7 +120,7 @@ func Start() {
 
 			defer func() {
 				if r := recover(); r != nil {
-					logger.Println("Recovered from panic due to unhandled exception:", r)
+					logger.Println("Recovered easily from panic due to unhandled exception:", r)
 				}
 				logger.Println("**************************")
 				logger.Println()
