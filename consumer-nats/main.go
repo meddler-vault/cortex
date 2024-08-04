@@ -85,28 +85,34 @@ func Start() {
 	logger.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
 
 	connectionString := fmt.Sprintf("wss://%s:%s@%s", username, password, host)
-	queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, uuid)
-
-	if bootstrap.CONSTANTS.Reserved.MOCKMESSAGE != "" {
-
-		logger.Println("Publishing", "mock-message", bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
-
-		// err := PublishMockMessage(connectionString, bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
-		err := SendMessage(queue, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, string(bootstrap.CONSTANTS.Reserved.MOCKMESSAGE))
-
-		if err != nil {
-
-			log.Println("MOCK Mode is turned on, but coudn;t publish the message. Returning to genesis", "ERror: ", err)
-			return
-		}
-	}
-
-	defer queue.Close()
 
 	// If this is not a result publisher, but a watchdog
 	if bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE != bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE {
 
-		queue.Consume(func(msg string) {
+		queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, uuid, []string{bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE})
+
+		if bootstrap.CONSTANTS.Reserved.MOCKMESSAGE != "" {
+
+			logger.Println("Publishing", "mock-message", bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
+
+			// err := PublishMockMessage(connectionString, bootstrap.CONSTANTS.Reserved.MOCKMESSAGE)
+			err := SendMessage(queue, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, string(bootstrap.CONSTANTS.Reserved.MOCKMESSAGE))
+
+			if err != nil {
+
+				log.Println("MOCK Mode is turned on, but coudn;t publish the message. Returning to genesis", "ERror: ", err)
+				return
+			}
+		}
+
+		defer func() {
+
+			logger.Println("********** Closing Connection****************")
+			queue.Close()
+			logger.Println("********** Closed Connection****************")
+
+		}()
+		queue.Consume(func(msg string, subject string) {
 			logger.Println("**************************")
 
 			// logger.Println(msg)
@@ -501,7 +507,10 @@ func Start() {
 
 	} else {
 
-		queue.Consume(func(msg string) {
+		queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, uuid, []string{"jobs", "builds_executor"})
+
+		defer queue.Close()
+		queue.Consume(func(msg string, subject string) {
 
 			logger.Println("**************************")
 
@@ -526,7 +535,7 @@ func Start() {
 				logger.Println(err, "Invalid data format:  task-deferred", msg)
 				return
 			}
-			log.Println("msg-received", msg)
+			log.Println("msg-received", msg, subject)
 
 			err = db.UpdateTaskResult(*data)
 			if err != nil {
@@ -535,6 +544,7 @@ func Start() {
 			// Override the constants with message-spec
 
 		})
+
 	}
 
 	// queue.Consume(func(i string) {
