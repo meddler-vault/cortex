@@ -16,7 +16,6 @@ const globalTimeoutInterval = 4 * time.Second
 type queue struct {
 	url        string
 	name       string
-	topics     []string
 	consumerId string
 
 	connection   *nats.Conn
@@ -29,14 +28,13 @@ type queue struct {
 	mu sync.Mutex
 }
 
-type messageConsumer func(string, string)
+type messageConsumer func(string)
 
-func NewQueue(url string, qName string, consumerId string, topics []string) *queue {
+func NewQueue(url string, qName string, consumerId string) *queue {
 	q := new(queue)
 	q.url = url
 	q.name = qName
 	q.consumerId = consumerId
-	q.topics = topics
 
 	q.connect()
 	log.Println("Connect", qName)
@@ -146,7 +144,7 @@ func (q *queue) connect() {
 			// Ensure the stream is durable
 			_, err = q.js.AddStream(&nats.StreamConfig{
 				Name:     q.name,
-				Subjects: q.topics,
+				Subjects: []string{q.name},
 				Storage:  nats.FileStorage,
 			})
 			if err != nil {
@@ -271,7 +269,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 		}
 
-		consumer(string(msg.Data), msg.Subject)
+		consumer(string(msg.Data))
 
 	}
 
