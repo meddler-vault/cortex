@@ -9,13 +9,12 @@ on:
 
 
 permissions:
-  contents: write
-  packages: write
-  id-token: read
-  issues: write
-  pull-requests: write
-  deployments: write
-
+    contents: write
+    packages: write
+    id-token: read
+    issues: write
+    pull-requests: write
+    deployments: write
 
 
 
