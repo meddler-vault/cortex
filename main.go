@@ -15,8 +15,9 @@ import (
 )
 
 func doUpdate() error {
-	selfupdate.Update()
-	return nil
+	_, _, err := selfupdate.Update()
+
+	return err
 
 }
 
@@ -83,5 +84,7 @@ func _main() {
 func main() {
 
 	log.Println("My version", consumernats.WatchdogVersion)
-	doUpdate()
+	err := doUpdate()
+	log.Println("Error", err)
+
 }
