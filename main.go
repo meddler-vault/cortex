@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	consumernats "github.com/meddler-vault/cortex/consumer-nats"
 	"github.com/meddler-vault/cortex/logger"
@@ -81,5 +82,6 @@ func _main() {
 // const version = "1.0.0" // Current version of your application
 func main() {
 
+	log.Println("My version", consumernats.WatchdogVersion)
 	doUpdate()
 }

@@ -86,7 +86,7 @@ jobs:
 
         echo "Cross-compilation completed."
 
-        go-selfupdate  -o ./public/ ${output_dir}  ${{ github.ref_name }}  
+        # go-selfupdate  -o ./public/ ${output_dir}  ${{ github.ref_name }}  
 
 
     - name: Manage GitHub Release
@@ -129,7 +129,7 @@ jobs:
 
     - name: Upload release assets
       run: |
-        for file in public/*; do
+        for file in build_for_all_test/*; do
           if [ -f "$file" ]; then
             echo "Uploading $file"
             curl -X POST \
