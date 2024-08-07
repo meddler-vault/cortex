@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"syscall"
 	"time"
 
 	"github.com/minio/selfupdate"
@@ -188,5 +187,5 @@ func ForceQuit(newBinaryPath string) {
 
 	// Send SIGTERM to the current process
 	fmt.Println("Terminating old process.")
-	syscall.Kill(os.Getpid(), syscall.SIGTERM)
+	// syscall.Kill(os.Getpid(), syscall.SIGTERM)
 }
