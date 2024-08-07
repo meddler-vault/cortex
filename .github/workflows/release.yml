@@ -108,6 +108,7 @@ jobs:
         # Extract the upload URL from the response
         UPLOAD_URL=$(echo "$RESPONSE" | jq -r '.upload_url' | sed 's/{?name,label}//')
         echo "Upload URL: $UPLOAD_URL"
+        echo "UPLOAD_URL=$UPLOAD_URL" >> $GITHUB_ENV
         
 
     - name: Upload release assets
