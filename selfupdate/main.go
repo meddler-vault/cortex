@@ -2,6 +2,7 @@ package selfupdate
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"os/exec"
 	"runtime"
 
+	consumernats "github.com/meddler-vault/cortex/consumer-nats"
 	"github.com/minio/selfupdate"
 )
 
@@ -67,6 +69,10 @@ func Update() (string, string, error) {
 
 	}
 
+	if release.TagName == consumernats.WatchdogVersion {
+		return "", "", errors.New("no update required ")
+	}
+
 	downloadURL, err := findDownloadURL(release, platform, arch)
 	if err != nil {
 		log.Fatalf("Error finding download URL: %v", err)
@@ -76,6 +82,7 @@ func Update() (string, string, error) {
 	fmt.Printf("Download URL for %s-%s binary: %s version: %s \n\n ", platform, arch, downloadURL, release.TagName)
 
 	err = doUpdate(downloadURL)
+
 	return downloadURL, release.TagName, err
 }
 
