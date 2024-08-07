@@ -160,11 +160,13 @@ func rForceQuit() {
 
 }
 func ForceQuit(newBinaryPath string) {
-	if len(os.Args) > 1 && os.Args[1] == "new" {
-		// This is the new binary; do your work here
-		fmt.Println("New binary running.")
-		select {} // Keep running indefinitely
-	}
+	os.Exit(1)
+
+	// if len(os.Args) > 1 && os.Args[1] == "new" {
+	// 	// This is the new binary; do your work here
+	// 	fmt.Println("New binary running.")
+	// 	select {} // Keep running indefinitely
+	// }
 
 	// This is the old binary
 	fmt.Println("Old binary starting new process.")
@@ -172,9 +174,10 @@ func ForceQuit(newBinaryPath string) {
 	// Define the path to the new binary
 
 	// Create a command to run the new binary
-	cmd := exec.Command(newBinaryPath, "new")
+	cmd := exec.Command(newBinaryPath, os.Args[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
 
 	// Start the new binary
 	if err := cmd.Start(); err != nil {
@@ -182,6 +185,7 @@ func ForceQuit(newBinaryPath string) {
 		os.Exit(1)
 	}
 
+	os.Exit(0)
 	// Wait a bit to ensure the new binary has started
 	time.Sleep(30 * time.Second)
 
