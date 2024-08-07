@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	consumernats "github.com/meddler-vault/cortex/consumer-nats"
 	"github.com/meddler-vault/cortex/logger"
@@ -10,6 +11,7 @@ import (
 	"syscall"
 
 	reaper "github.com/ramr/go-reaper"
+	"github.com/sanbornm/go-selfupdate/selfupdate"
 )
 
 func __main() {
@@ -66,7 +68,36 @@ func __main() {
 	//  Rest of your code goes here ...
 
 } /*  End of func  main.  */
-func main() {
+func _main() {
 	logger.Println("[[Watchdog]]", consumernats.WatchdogVersion)
 	consumernats.Start()
+}
+
+// const version = "1.0.0" // Current version of your application
+func main() {
+
+	updater2, err2 := selfupdate.NewUpdater(selfupdate.Config{
+		Validator: &selfupdate.GitHubValidator{
+			Owner: "your-github-username", // GitHub username or organization
+			Repo:  "your-repo-name",       // GitHub repository name
+		},
+	})
+	if err != nil {
+		log.Fatalf("failed to create updater: %v", err)
+	}
+
+	var updater = &selfupdate.Updater{
+		CurrentVersion: consumernats.WatchdogVersion, // the current version of your app used to determine if an update is necessary
+		// these endpoints can be the same if everything is hosted in the same place
+		ApiURL:  "http://updates.yourdomain.com/", // endpoint to get update manifest
+		BinURL:  "http://updates.yourdomain.com/", // endpoint to get full binaries
+		DiffURL: "http://updates.yourdomain.com/", // endpoint to get binary diff/patches
+		Dir:     "update/",                        // directory relative to your app to store temporary state files related to go-selfupdate
+		CmdName: "cortex",                         // your app's name (must correspond to app name hosting the updates)
+		// app name allows you to serve updates for multiple apps on the same server/endpoint
+	}
+
+	// go look for an update when your app starts up
+	updater.BackgroundRun()
+	// your app continues to run...
 }

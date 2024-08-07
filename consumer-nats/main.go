@@ -19,7 +19,7 @@ import (
 	"github.com/meddler-vault/cortex/watchdog"
 )
 
-var WatchdogVersion = "version"
+var WatchdogVersion = "0.0.1"
 
 func getenvStr(key string, defaultValue string) string {
 	v := os.Getenv(key)

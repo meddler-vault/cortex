@@ -1,0 +1,96 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main  # Trigger on pushes to the main branch
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.19'  # Specify your Go version
+
+    - name: Build binaries
+      run: |
+        #!/bin/bash
+
+        # List of OS/Arch combinations to build
+        platforms=(
+            "linux/amd64"
+            "linux/386"
+            "linux/arm"
+            "linux/arm64"
+            "darwin/amd64"
+            "darwin/arm64"
+            "freebsd/amd64"
+            "freebsd/386"
+            "freebsd/arm"
+        )
+
+        # Name of the output binary
+        output_name="myapp"
+
+        # Loop through each platform and build
+        for platform in "${platforms[@]}"
+        do
+            IFS="/" read -r -a arr <<< "$platform"
+            GOOS="${arr[0]}"
+            GOARCH="${arr[1]}"
+            output_dir="build_for_all_test/"
+            output_file="${output_dir}/${GOOS}-${GOARCH}"
+
+            # Create the output directory if it doesn't exist
+            mkdir -p "${output_dir}"
+
+            # Set the environment variables and build the binary
+            WATCHDOG_VERSION=0.1
+            env GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o ${output_file}
+
+            if [ $? -ne 0 ]; then
+                echo "An error occurred while building for ${platform}"
+                exit 1
+            fi
+
+            echo "Built ${output_file}"
+        done
+
+        echo "Cross-compilation completed."
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}  # Use the Git reference (branch or tag)
+        release_name: Release ${{ github.ref_name }}
+        body: |
+          Automatically created release for commit ${{ github.sha }}.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build_for_all_test/myapp-linux-amd64
+        asset_name: myapp-linux-amd64
+        asset_content_type: application/octet-stream
+
+    - name: Upload release assets (darwin)
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build_for_all_test/myapp-darwin-amd64
+        asset_name: myapp-darwin-amd64
+        asset_content_type: application/octet-stream
+
+    # Add more upload steps as needed for other platforms
