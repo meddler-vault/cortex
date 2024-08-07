@@ -1,3 +1,6 @@
+export PATH=$PATH:$(go env GOPATH)/bin
+
+
 
 docker build  --progress=plain --no-cache  --build-arg WATCHDOG_VERSION=$(date +%Y.%m.%d.%H.%M.%S)  -t rounak316/watchdog:linux .
 

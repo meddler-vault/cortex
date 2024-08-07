@@ -105,7 +105,18 @@ type SystemConstants struct {
 	EXPORT_VOLUME_S3_HOST       *string `json:"export_volume_s3_host" `
 	EXPORT_VOLUME_S3_REGION     *string `json:"export_volume_s3_region" `
 
-	// secoflex specific constants
+	// Host as variable
+	HOST                    *string `json:"host" `                    // Host name Ex: example.com
+	IP_ADDRESS              *string `json:"ip" `                      // Host name Ex: example.com
+	IP_ADDRESS_V4           *string `json:"ip_v4" `                   // Host name Ex: example.com
+	IP_ADDRESS_V6           *string `json:"ip_v6" `                   // Host name Ex: example.com
+	URL                     *string `json:"url" `                     // Host name Ex: example.com
+	FQDN                    *string `json:"fqdn" `                    // Host name Ex: example.com
+	ANDROID_APK             *string `json:"android_apk_path" `        // Host name Ex: example.com
+	IOS_IPA                 *string `json:"ios_ipa_path" `            // Host name Ex: example.com
+	POSTMAN_COLLECTION_JSON *string `json:"postman_collection_json" ` // Host name Ex: example.com
+	SWAGGER_COLLECTION_JSON *string `json:"swagger_json" `            // Host name Ex: example.com
+
 }
 
 // Git Constants: Auth Mode
@@ -284,6 +295,9 @@ func (current *Constants) resolveRelativePaths() {
 	// Export volume path
 	*current.System.EXPORT_VOLUME_PATH = filepath.Join(*current.System.BASEPATH, *current.System.EXPORT_VOLUME_PATH)
 
+	// Scanner Inputs Path
+	// This will go in dependency part resolution: Just above function
+
 }
 
 // Constants
@@ -456,6 +470,47 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 	if constants.System.EXPORT_VOLUME_OBJECT_PATH != nil {
 		dataMap["export_volume_s3_object_path"] = *constants.System.EXPORT_VOLUME_OBJECT_PATH
 
+	}
+
+	// For scanner related variables
+	if constants.System.HOST != nil {
+		dataMap["host"] = *constants.System.HOST
+	}
+
+	if constants.System.IP_ADDRESS != nil {
+		dataMap["ip"] = *constants.System.IP_ADDRESS
+	}
+
+	if constants.System.IP_ADDRESS_V4 != nil {
+		dataMap["ip_v4"] = *constants.System.IP_ADDRESS_V4
+	}
+
+	if constants.System.IP_ADDRESS_V6 != nil {
+		dataMap["ip_v6"] = *constants.System.IP_ADDRESS_V6
+	}
+
+	if constants.System.URL != nil {
+		dataMap["url"] = *constants.System.URL
+	}
+
+	if constants.System.FQDN != nil {
+		dataMap["fqdn"] = *constants.System.FQDN
+	}
+
+	if constants.System.ANDROID_APK != nil {
+		dataMap["android_apk_path"] = *constants.System.ANDROID_APK
+	}
+
+	if constants.System.IOS_IPA != nil {
+		dataMap["ios_ipa_path"] = *constants.System.IOS_IPA
+	}
+
+	if constants.System.POSTMAN_COLLECTION_JSON != nil {
+		dataMap["postman_collection_json"] = *constants.System.POSTMAN_COLLECTION_JSON
+	}
+
+	if constants.System.SWAGGER_COLLECTION_JSON != nil {
+		dataMap["swagger_json"] = *constants.System.SWAGGER_COLLECTION_JSON
 	}
 
 	return dataMap
