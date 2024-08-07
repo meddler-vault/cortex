@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/meddler-vault/cortex/logger"
+	"github.com/meddler-vault/cortex/selfupdate"
 	"github.com/nats-io/nats.go"
 )
 
@@ -248,6 +249,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 	for {
 
+		selfupdate.DoUpdateInBetweenRuntimeCheck(WatchdogVersion)
 		if !sub.IsValid() {
 			time.Sleep(globalTimeoutInterval)
 			continue

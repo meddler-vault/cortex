@@ -14,27 +14,20 @@ import (
 	reaper "github.com/ramr/go-reaper"
 )
 
-func doUpdate() error {
-	_, _, err := selfupdate.Update()
+// Do not change this logic
+func doUpdateStartupCheck() error {
+	log.Println("doUpdateStartupCheck")
+
+	_, version, err := selfupdate.Update(consumernats.WatchdogVersion)
 	if err != nil {
 		// Handle error
+		log.Println("+++++++ [[No Force Restarting Startup]] +++++++", err)
+
 		return err
-	}
+	} else {
+		log.Println("+++++++ [[Force Restarting Startup]] +++++++", consumernats.WatchdogVersion, " -->", version)
+		selfupdate.ForceQuit()
 
-	if len(os.Args) > 1 && os.Args[1] == "--restarted" {
-		// Handle logic for when the app is restarted
-		// For example, reinitialize resources or reconfigure settings
-		log.Println("Restarted App ", consumernats.WatchdogVersion)
-	}
-
-	// Perform application logic
-	// ...
-
-	// Restart the application
-	err = selfupdate.RestartApp()
-	if err != nil {
-		// Handle error
-		return err
 	}
 
 	return nil
@@ -95,16 +88,18 @@ func __main() {
 	//  Rest of your code goes here ...
 
 } /*  End of func  main.  */
-func _main() {
-	logger.Println("[[Watchdog]]", consumernats.WatchdogVersion)
+func main() {
+	logger.Println("+++++++ [[Watchdog Started]] +++++++", consumernats.WatchdogVersion)
+
+	doUpdateStartupCheck()
 	consumernats.Start()
 }
 
 // const version = "1.0.0" // Current version of your application
-func main() {
+func _main() {
 
 	log.Println("My version", consumernats.WatchdogVersion)
-	err := doUpdate()
+	err := doUpdateStartupCheck()
 	log.Println("Error", err)
 
 }
