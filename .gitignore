@@ -1,6 +1,6 @@
 tmp/*
 
-vendor
+vendor/
 ./local-data/
 local-data/*
 
