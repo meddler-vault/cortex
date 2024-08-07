@@ -5,13 +5,19 @@ import (
 
 	consumernats "github.com/meddler-vault/cortex/consumer-nats"
 	"github.com/meddler-vault/cortex/logger"
+	"github.com/meddler-vault/cortex/selfupdate"
 
 	"os"
 	"syscall"
 
 	reaper "github.com/ramr/go-reaper"
-	"github.com/sanbornm/go-selfupdate/selfupdate"
 )
+
+func doUpdate() error {
+	selfupdate.Update()
+	return nil
+
+}
 
 func __main() {
 	reap, hasReaper := os.LookupEnv("REAPER")
@@ -75,18 +81,5 @@ func _main() {
 // const version = "1.0.0" // Current version of your application
 func main() {
 
-	var updater = &selfupdate.Updater{
-		CurrentVersion: consumernats.WatchdogVersion, // the current version of your app used to determine if an update is necessary
-		// these endpoints can be the same if everything is hosted in the same place
-		ApiURL:  "http://updates.yourdomain.com/", // endpoint to get update manifest
-		BinURL:  "http://updates.yourdomain.com/", // endpoint to get full binaries
-		DiffURL: "http://updates.yourdomain.com/", // endpoint to get binary diff/patches
-		Dir:     "update/",                        // directory relative to your app to store temporary state files related to go-selfupdate
-		CmdName: "cortex",                         // your app's name (must correspond to app name hosting the updates)
-		// app name allows you to serve updates for multiple apps on the same server/endpoint
-	}
-
-	// go look for an update when your app starts up
-	updater.BackgroundRun()
-	// your app continues to run...
+	doUpdate()
 }
