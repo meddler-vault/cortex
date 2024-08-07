@@ -86,7 +86,7 @@ jobs:
 
         echo "Cross-compilation completed."
 
-        go-selfupdate  -o ./public/ ${build_for_all_test}  ${{ github.ref_name }}  
+        go-selfupdate  -o ./public/ ${output_dir}  ${{ github.ref_name }}  
 
 
     - name: Manage GitHub Release
