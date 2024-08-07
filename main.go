@@ -15,8 +15,11 @@ import (
 )
 
 // Do not change this logic
-func doUpdateStartupCheck() error {
-	log.Println("doUpdateStartupCheck")
+func doUpdateStartupCheck(execPath string) error {
+	log.Println("doUpdateStartupCheck", execPath)
+
+	// selfupdate.ForceQuit()
+	// return nil
 
 	_, version, err := selfupdate.Update(consumernats.WatchdogVersion)
 	if err != nil {
@@ -26,7 +29,7 @@ func doUpdateStartupCheck() error {
 		return err
 	} else {
 		log.Println("+++++++ [[Force Restarting Startup]] +++++++", consumernats.WatchdogVersion, " -->", version)
-		selfupdate.ForceQuit()
+		selfupdate.ForceQuit(execPath)
 
 	}
 
@@ -89,9 +92,15 @@ func __main() {
 
 } /*  End of func  main.  */
 func main() {
+	// Get the path to the current executable
+	execPath, err := os.Executable()
+	if err != nil {
+		fmt.Printf("Error getting executable path: %v\n", err)
+		os.Exit(1)
+	}
 	logger.Println("+++++++ [[Watchdog Started]] +++++++", consumernats.WatchdogVersion)
 
-	doUpdateStartupCheck()
+	doUpdateStartupCheck(execPath)
 	consumernats.Start()
 }
 
@@ -99,7 +108,7 @@ func main() {
 func _main() {
 
 	log.Println("My version", consumernats.WatchdogVersion)
-	err := doUpdateStartupCheck()
+	err := doUpdateStartupCheck("")
 	log.Println("Error", err)
 
 }

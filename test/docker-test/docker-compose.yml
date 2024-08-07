@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  myapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: myapp:latest
+    container_name: myapp_container
+    # Optionally, set environment variables or other configurations
+    environment:
+      - ENV_VAR=value
+    # Optionally, expose ports
+    ports:
+      - "8080:8080"
