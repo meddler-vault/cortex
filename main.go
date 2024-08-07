@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	consumernats "github.com/meddler-vault/cortex/consumer-nats"
 	"github.com/meddler-vault/cortex/logger"
@@ -75,16 +74,6 @@ func _main() {
 
 // const version = "1.0.0" // Current version of your application
 func main() {
-
-	updater2, err2 := selfupdate.NewUpdater(selfupdate.Config{
-		Validator: &selfupdate.GitHubValidator{
-			Owner: "your-github-username", // GitHub username or organization
-			Repo:  "your-repo-name",       // GitHub repository name
-		},
-	})
-	if err != nil {
-		log.Fatalf("failed to create updater: %v", err)
-	}
 
 	var updater = &selfupdate.Updater{
 		CurrentVersion: consumernats.WatchdogVersion, // the current version of your app used to determine if an update is necessary
