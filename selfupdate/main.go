@@ -144,6 +144,6 @@ func ForceQuit() {
 
 	// logger.Println("")
 	log.Println("+++++++ Force Restarting app +++++++")
-	os.Exit(1)
+	os.Exit(0)
 
 }
