@@ -26,6 +26,14 @@ jobs:
       with:
         go-version: '1.21'  # Specify your Go version
 
+    - name: Install go-selfupdate
+      run: |
+        go install github.com/sanbornm/go-selfupdate@latest
+
+    - name: Run go-selfupdate
+      run: |
+
+
     - name: Build binaries
       run: |
         #!/bin/bash
@@ -74,6 +82,9 @@ jobs:
 
         echo "Cross-compilation completed."
 
+        go-selfupdate  -o ./public/ ${build_for_all_test}  ${{ github.ref_name }}  
+
+
     - name: Manage GitHub Release
       id: manage_release
       run: |
@@ -113,7 +124,7 @@ jobs:
 
     - name: Upload release assets
       run: |
-        for file in build_for_all_test/*; do
+        for file in public/*; do
           if [ -f "$file" ]; then
             echo "Uploading $file"
             curl -X POST \
