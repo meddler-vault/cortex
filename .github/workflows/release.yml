@@ -21,6 +21,8 @@ jobs:
     - name: Build binaries
       run: |
         #!/bin/bash
+        go mod download
+
 
         # List of OS/Arch combinations to build
         platforms=(

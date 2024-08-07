@@ -5,3 +5,5 @@ vendor
 local-data/*
 
 .env
+build_for_all_test/
+build_for_all/
