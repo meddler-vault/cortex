@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"runtime"
-	"strings"
 
 	"github.com/minio/selfupdate"
 )
@@ -45,7 +44,9 @@ func getLatestReleaseDetails(repo string) (Release, error) {
 // Function to find the download URL for the specified platform and architecture
 func findDownloadURL(release Release, platform, arch string) (string, error) {
 	for _, asset := range release.Assets {
-		if strings.Contains(asset.Name, platform) && strings.Contains(asset.Name, arch) {
+		fileName := platform + "-" + arch
+		if asset.Name == fileName {
+
 			return asset.DownloadURL, nil
 		}
 	}
@@ -72,7 +73,7 @@ func Update() (string, string, error) {
 
 	fmt.Printf("Download URL for %s-%s binary: %s version: %s \n\n ", platform, arch, downloadURL, release.TagName)
 
-	doUpdate(downloadURL)
+	err = doUpdate(downloadURL)
 	return downloadURL, release.TagName, err
 }
 
