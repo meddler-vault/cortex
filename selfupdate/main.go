@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
 	"runtime"
 
 	"github.com/minio/selfupdate"
@@ -88,4 +90,28 @@ func doUpdate(url string) error {
 		// error handling
 	}
 	return err
+}
+
+func RestartApp() error {
+	cmd := exec.Command(os.Args[0], "--restarted")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	// Start the new process
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	// Wait for the new process to be started
+	err = cmd.Wait()
+	if err != nil {
+		return err
+	}
+
+	// Exit the current process
+	os.Exit(0)
+
+	return nil
 }

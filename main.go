@@ -16,8 +16,28 @@ import (
 
 func doUpdate() error {
 	_, _, err := selfupdate.Update()
+	if err != nil {
+		// Handle error
+		return err
+	}
 
-	return err
+	if len(os.Args) > 1 && os.Args[1] == "--restarted" {
+		// Handle logic for when the app is restarted
+		// For example, reinitialize resources or reconfigure settings
+		log.Println("Restarted App ", consumernats.WatchdogVersion)
+	}
+
+	// Perform application logic
+	// ...
+
+	// Restart the application
+	err = selfupdate.RestartApp()
+	if err != nil {
+		// Handle error
+		return err
+	}
+
+	return nil
 
 }
 
