@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"runtime"
 
-	consumernats "github.com/meddler-vault/cortex/consumer-nats"
 	"github.com/minio/selfupdate"
 )
 
@@ -57,7 +56,25 @@ func findDownloadURL(release Release, platform, arch string) (string, error) {
 	return "", fmt.Errorf("no matching binary found for platform: %s and arch: %s", platform, arch)
 }
 
-func Update() (string, string, error) {
+// Do not change this logic
+func DoUpdateInBetweenRuntimeCheck(currentVersion string) error {
+	log.Println("++doUpdateInBetweenRuntimeCheck")
+	_, version, err := Update(currentVersion)
+	if err != nil {
+		// Handle error
+		log.Println("+++++++ [[No Force Restarting Startup]] +++++++", err)
+		return err
+	} else {
+		log.Println("+++++++ [[Force Restarting Startup]] +++++++", currentVersion, " -->", version)
+		ForceQuit()
+
+	}
+
+	return nil
+
+}
+
+func Update(currentVersion string) (string, string, error) {
 	repo := "meddler-vault/cortex" // Replace with your repository
 	platform := runtime.GOOS
 	arch := runtime.GOARCH
@@ -69,7 +86,7 @@ func Update() (string, string, error) {
 
 	}
 
-	if release.TagName == consumernats.WatchdogVersion {
+	if release.TagName == currentVersion {
 		return "", "", errors.New("no update required ")
 	}
 
@@ -121,4 +138,12 @@ func RestartApp() error {
 	os.Exit(0)
 
 	return nil
+}
+
+func ForceQuit() {
+
+	// logger.Println("")
+	log.Println("+++++++ Force Restarting app +++++++")
+	os.Exit(1)
+
 }
