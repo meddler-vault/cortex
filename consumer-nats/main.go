@@ -72,7 +72,7 @@ func Start() {
 
 	uuid := getenvStr("uuid", "uuid")
 
-	connectionString := getenvStr("NATS_CONNECTION_STRING", "nats://whitehat:4Jy6P%29%24Ep%40c%5ESenL@hawki-rabbitmq.indiatimes.com:4222")
+	connectionString := getenvStr("NATS_CONNECTION_STRING", "nats://connection-string")
 
 	// username = url.QueryEscape(username)
 	// password = url.QueryEscape(password)
