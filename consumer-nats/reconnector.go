@@ -242,11 +242,13 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 		var err error
 
 		subscriptionSubject := q.topics[0]
-		sub, err = q.js.SubscribeSync(
+		sub, err = q.js.QueueSubscribeSync(
 			subscriptionSubject,
-
+			q.name+"_group",
+			nats.DeliverNew(),
 			nats.ManualAck(), nats.Durable(q.consumerId+"-durable-consumer"))
-		log.Println("Sub Sync", err, sub.IsValid(), subscriptionSubject)
+
+		log.Println("Sub Sync", err, q.name, sub.IsValid(), subscriptionSubject)
 		if err == nil {
 			break
 		}
