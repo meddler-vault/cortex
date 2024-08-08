@@ -162,15 +162,53 @@ func (q *queue) connect() (err error) {
 			q.js = js
 
 			// Ensure the stream is durable
-			_, err = q.js.AddStream(&nats.StreamConfig{
-				Name:     q.name,
-				Subjects: q.topics,
-				Storage:  nats.FileStorage,
-			})
+
+			// _, err = q.js.AddStream(&nats.StreamConfig{
+			// 	Name:     q.name,
+			// 	Subjects: q.topics,
+			// 	Storage:  nats.FileStorage,
+			// })
+			// if err != nil {
+			// 	logError("Error adding stream", err)
+			// 	return err
+			// }
+
+			//
+
+			// Ensure the stream is durable
+			_, err = q.js.StreamInfo(q.name)
 			if err != nil {
-				logError("Error adding stream", err)
-				return err
+				if err == nats.ErrStreamNotFound {
+					// Stream does not exist, create it
+					_, err = q.js.AddStream(&nats.StreamConfig{
+						Name:     q.name,
+						Subjects: q.topics,
+						Storage:  nats.FileStorage,
+					})
+					if err != nil {
+						logError("Error adding stream", err)
+						return err
+					}
+					log.Println("Stream %s created successfully.", q.name)
+				} else {
+					logger.Println("Error getting stream info", err)
+					return err
+				}
+			} else {
+				// Stream exists, update it with the new configuration
+				_, err = q.js.UpdateStream(&nats.StreamConfig{
+					Name:     q.name,
+					Subjects: q.topics,
+					Storage:  nats.FileStorage,
+				})
+				if err != nil {
+					logError("Error updating stream", err)
+					return err
+				}
+				log.Println("Stream %s updated successfully.", q.name)
 			}
+
+			//
 
 			q.closed = false
 
