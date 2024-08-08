@@ -527,13 +527,6 @@ func Start() {
 
 		//
 
-		SendTaskUpdate(queue, bootstrap.TaskResult{
-			Identifier:      "ident",
-			TaskStatus:      bootstrap.INITIATED,
-			Message:         "Task Initiated",
-			WatchdogVersion: WatchdogVersion,
-		})
-
 		//
 
 		defer queue.Close()

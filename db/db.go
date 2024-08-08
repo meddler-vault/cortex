@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,7 +59,16 @@ func getenvStr(key string, defaultValue string) string {
 	return v
 }
 
-func UpdateTaskResult(collectionName string, taskResult bootstrap.TaskResult) error {
+func UpdateTaskResult(subject string, taskResult bootstrap.TaskResult) error {
+
+	prefixSplit := strings.Split(subject, bootstrap.RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX)
+
+	var collectionName string
+
+	if len(prefixSplit) > 1 {
+		collectionName = prefixSplit[1]
+	}
+
 	client, err := getMongoClient()
 	if err != nil {
 		return err

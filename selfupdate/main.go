@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/meddler-vault/cortex/bootstrap"
 	"github.com/minio/selfupdate"
 )
 
@@ -56,12 +57,10 @@ func findDownloadURL(release Release, platform, arch string) (string, error) {
 	return "", fmt.Errorf("no matching binary found for platform: %s and arch: %s", platform, arch)
 }
 
-const DEBUG = false
-
 // Do not change this logic
 func DoUpdateInBetweenRuntimeCheck(currentVersion string) error {
 
-	if DEBUG {
+	if bootstrap.DEBUG {
 		return errors.New("debug mode enabled...skipping update and restaet!")
 	}
 	log.Println("++doUpdateInBetweenRuntimeCheck")
@@ -85,7 +84,7 @@ func Update(currentVersion string) (string, string, error) {
 
 	release, err := getLatestReleaseDetails(repo)
 	if err != nil {
-		log.Fatalf("Error fetching latest release: %v", err)
+		log.Println("Error fetching latest release: %v", err)
 		return "", "", err
 
 	}
