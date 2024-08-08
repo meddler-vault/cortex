@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"flag"
+	"log"
 
 	"github.com/meddler-vault/cortex/logger"
 
@@ -15,7 +16,7 @@ import (
 type BaseConstants struct {
 }
 
-const DEBUG = true
+var DEBUG = false
 
 const RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX = "action.collection_name."
 
@@ -523,6 +524,9 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 }
 
 func initialize() *Constants {
+
+	DEBUG = *PopulateBool("DEBUG", false, "Publish Subject")
+	log.Println("BUGMODE", DEBUG)
 
 	reservedConstants := ReservedConstants{
 		MESSAGEQUEUE:        *PopulateStr("message_queue_topic", "tasks_test", "Message Queue Topic"),
