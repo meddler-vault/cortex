@@ -56,8 +56,14 @@ func findDownloadURL(release Release, platform, arch string) (string, error) {
 	return "", fmt.Errorf("no matching binary found for platform: %s and arch: %s", platform, arch)
 }
 
+const DEBUG = false
+
 // Do not change this logic
 func DoUpdateInBetweenRuntimeCheck(currentVersion string) error {
+
+	if DEBUG {
+		return errors.New("debug mode enabled...skipping update and restaet!")
+	}
 	log.Println("++doUpdateInBetweenRuntimeCheck")
 	_, version, err := Update(currentVersion)
 	if err != nil {
