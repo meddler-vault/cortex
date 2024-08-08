@@ -21,6 +21,7 @@ type ReservedConstants struct {
 	BaseConstants
 	MESSAGEQUEUE        string `json:"message_queue_topic"`
 	PUBLISHMESSAGEQUEUE string `json:"publish_message_queue_topic"`
+	PUBLISHSUBJECT      string `json:"publish_subject"`
 	MOCKMESSAGE         string `json:"mock_message"`
 }
 type ProcessConstants struct {
@@ -524,7 +525,9 @@ func initialize() *Constants {
 	reservedConstants := ReservedConstants{
 		MESSAGEQUEUE:        *PopulateStr("message_queue_topic", "tasks_test", "Message Queue Topic"),
 		PUBLISHMESSAGEQUEUE: *PopulateStr("publish_message_queue_topic", "tasks_publish", "Publish Message Queue Topic"),
-		MOCKMESSAGE:         *PopulateStr("mock_message", "", "Test message to mock on init."),
+		PUBLISHSUBJECT:      *PopulateStr("publish_subject", "jobs", "Publish Subject"),
+
+		MOCKMESSAGE: *PopulateStr("mock_message", "", "Test message to mock on init."),
 	}
 
 	systemConstants := SystemConstants{

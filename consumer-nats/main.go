@@ -47,7 +47,7 @@ func SendMessage(queue *queue, topic string, message string) (err error) {
 	return
 }
 
-func SendTaskUpdate(queue *queue, topic string, taskResult bootstrap.TaskResult) (err error) {
+func SendTaskUpdate(queue *queue, taskResult bootstrap.TaskResult) (err error) {
 
 	message, err := json.Marshal(taskResult)
 	if err != nil {
@@ -55,6 +55,7 @@ func SendTaskUpdate(queue *queue, topic string, taskResult bootstrap.TaskResult)
 		message = []byte{}
 
 	}
+	topic := bootstrap.RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX + bootstrap.CONSTANTS.Reserved.PUBLISHSUBJECT
 
 	logger.Println("Sending message", topic, string(message))
 	err = SendMessage(queue, topic, string(message))
@@ -151,7 +152,7 @@ func Start() {
 			identifier := &data.Identifier
 
 			// Mark Initiated
-			SendTaskUpdate(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, bootstrap.TaskResult{
+			SendTaskUpdate(queue, bootstrap.TaskResult{
 				Identifier:      data.Identifier,
 				TaskStatus:      bootstrap.INITIATED,
 				Message:         "Task Initiated",
@@ -477,7 +478,7 @@ func Start() {
 
 			if processErr != nil {
 				// Mark Finished failure
-				SendTaskUpdate(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, bootstrap.TaskResult{
+				SendTaskUpdate(queue, bootstrap.TaskResult{
 					Identifier:      data.Identifier,
 					TaskStatus:      bootstrap.FAILURE,
 					Message:         processErr.Error(),
@@ -486,7 +487,7 @@ func Start() {
 
 			} else {
 				// Mark Finished success
-				SendTaskUpdate(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, bootstrap.TaskResult{
+				SendTaskUpdate(queue, bootstrap.TaskResult{
 					Identifier:      data.Identifier,
 					TaskStatus:      bootstrap.SUCCESS,
 					Message:         "Task completed successfully",
@@ -518,11 +519,22 @@ func Start() {
 	} else {
 
 		queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, uuid, []string{
-			// bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE,
+			// bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE,
 			// "jobs",
-			// bootstrap.RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX +
-			">",
+			bootstrap.RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX +
+				">",
 		})
+
+		//
+
+		SendTaskUpdate(queue, bootstrap.TaskResult{
+			Identifier:      "ident",
+			TaskStatus:      bootstrap.INITIATED,
+			Message:         "Task Initiated",
+			WatchdogVersion: WatchdogVersion,
+		})
+
+		//
 
 		defer queue.Close()
 		queue.Consume(func(msg string, subject string) (err error) {
@@ -530,6 +542,11 @@ func Start() {
 			err = nil
 
 			logger.Println("**************************")
+			logger.Println("************subject**************")
+			logger.Println(subject)
+
+			logger.Println("************msg**************")
+			logger.Println(msg)
 
 			// logger.Println(msg)
 			logger.Println("**************************")

@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/meddler-vault/cortex/bootstrap"
 	"github.com/meddler-vault/cortex/logger"
 	"github.com/meddler-vault/cortex/selfupdate"
 	"github.com/nats-io/nats.go"
@@ -72,7 +71,6 @@ func (q *queue) Send(message string) (err error) {
 
 func (q *queue) SendToTopic(topic string, message string) (err error) {
 
-	topic = bootstrap.RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX + topic
 	_, err = q.js.Publish(topic, []byte(message))
 	logError("Sending message to queue failed", err)
 	return
@@ -166,15 +164,17 @@ func (q *queue) connect() (err error) {
 
 			// Ensure the stream is durable
 
-			// _, err = q.js.AddStream(&nats.StreamConfig{
-			// 	Name:     q.name,
-			// 	Subjects: q.topics,
-			// 	Storage:  nats.FileStorage,
-			// })
-			// if err != nil {
-			// 	log.Println("Error adding stream", err, q.topics)
-			// 	return err
-			// }
+			_, err = q.js.AddStream(&nats.StreamConfig{
+				Name:     q.name,
+				Subjects: q.topics,
+				Storage:  nats.FileStorage,
+			})
+
+			if err != nil {
+				log.Println("Error adding stream..may be it already exists", err, q.topics)
+				// return err
+				err = nil
+			}
 
 			//
 
@@ -220,11 +220,33 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 	log.Println("New subscription mechanism")
 
+	//
+	// Delete the consumer that is already registered so as to handle
+	//
+
+	// Step 1: Delete the existing consumer if it exists
+
+	// err := q.js.DeleteConsumer(q.name, q.consumerId)
+	// if err != nil && !errors.Is(err, nats.ErrConsumerNotFound) {
+	// 	log.Println("error deleting consumer", q.name, q.consumerId, err)
+	// 	err = nil
+	// } else {
+	// 	log.Println("deleted already existing consumer", q.name, q.consumerId)
+
+	// }
+
+	//
+
 	var sub *nats.Subscription
 	for {
 		var err error
-		sub, err = q.js.SubscribeSync(q.name, nats.ManualAck(), nats.Durable(q.consumerId+"durable-consumer"))
-		log.Println("Sub Sync", err, sub.IsValid())
+
+		subscriptionSubject := q.topics[0]
+		sub, err = q.js.SubscribeSync(
+			subscriptionSubject,
+
+			nats.ManualAck(), nats.Durable(q.consumerId+"-durable-consumer"))
+		log.Println("Sub Sync", err, sub.IsValid(), subscriptionSubject)
 		if err == nil {
 			break
 		}
@@ -243,6 +265,8 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 			log.Println("+++++++ [[Force Restarting-Closing-NATS-Q Startup]] +++++++")
 			q.Close()
 			selfupdate.ForceQuit()
+		} else {
+			log.Println("error", updateRestartReqErr)
 		}
 
 		//
