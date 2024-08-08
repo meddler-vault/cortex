@@ -517,7 +517,11 @@ func Start() {
 
 	} else {
 
-		queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, uuid, []string{"jobs", "builds_executor"})
+		queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, uuid, []string{
+			// bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE,
+			// "jobs",
+			">",
+		})
 
 		defer queue.Close()
 		queue.Consume(func(msg string, subject string) (err error) {
