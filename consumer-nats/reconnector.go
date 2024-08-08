@@ -239,52 +239,8 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 	}
 
 	// Function to subscribe to the queue
-	var subscribe func(nc nats.JetStreamContext) error
 
-	handleMessage := func(msg *nats.Msg) {
-		log.Println("msg-recevied()()()")
-		err := msg.Ack()
-
-		if err != nil {
-			log.Println("msg-recevied()()()", "acknowledged", "failed")
-			return
-		}
-
-		// Unsubscribe after receiving one message
-		// log.Println("UnSubscribing")
-		// err = msg.Sub.Unsubscribe()
-
-		if err != nil {
-			logger.Println("Error unsubscribing:", err)
-		}
-		log.Println("msg-recevied()()()", "acknowledged", "success")
-		log.Println("sleeing")
-
-		time.Sleep(3 * time.Second)
-		log.Println("sleeing complete")
-
-		// subscribe(q.js)
-		// consumer(string(msg.Data))
-	}
-
-	// Function to subscribe to the queue
-	subscribe = func(js nats.JetStreamContext) error {
-		log.Println("Subscribing", q.consumerId+"durable-consumer")
-
-		sub, err := js.Subscribe(q.name, handleMessage, nats.Durable(q.consumerId+"durable-consumer"), nats.ManualAck())
-
-		// js.SubscribeSync(q.name, nats.ManualAck())
-		// handleMessage()
-		log.Println("Subscribing err", err)
-
-		if err == nil {
-			q.subscription = sub
-			q.currentConsumer = consumer
-		}
-		return err
-	}
-
-	log.Println("Invalid log", subscribe)
+	// log.Println("Invalid log", subscribe)
 
 	// err := subscribe(q.js)
 
