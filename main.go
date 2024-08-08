@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os/signal"
 	"path/filepath"
 	"time"
 
@@ -17,9 +18,9 @@ import (
 )
 
 // Do not change this logic
-func doUpdateStartupCheck(execPath string) error {
+func doUpdateStartupCheck() error {
 
-	log.Println("doUpdateStartupCheck", execPath)
+	log.Println("doUpdateStartupCheck")
 
 	// selfupdate.ForceQuit()
 	// return nil
@@ -31,22 +32,33 @@ func doUpdateStartupCheck(execPath string) error {
 
 		return err
 	} else {
-		log.Println("+++++++ [[Force Restarting Startup]] +++++++", consumernats.WatchdogVersion, " -->", version)
-		selfupdate.ForceQuit(execPath)
+		log.Println("+++++++ [[Force Restarting Startup Required]] +++++++", consumernats.WatchdogVersion, " -->", version)
+		selfupdate.ForceQuit()
 
 	}
 
 	return nil
 
 }
+func handleSignals(pid int) {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
+	go func() {
+		sig := <-signals
+		fmt.Printf("Received signal %s, terminating child process %d\n", sig, pid)
+		// Send signal to child process
+		syscall.Kill(pid, sig.(syscall.Signal))
+		os.Exit(0)
+	}()
+}
 func main() {
 	reap, hasReaper := os.LookupEnv("REAPER")
 	logger.Println("LookupEnv REAPER", reap, hasReaper)
 	// Use an environment variable REAPER to indicate whether or not
 	// we are the child/parent.
 	if _, hasReaper = os.LookupEnv("REAPER"); !hasReaper {
-		logger.Println("Started REAPER")
+		log.Println("Started REAPER")
 
 		var wstatus syscall.WaitStatus
 
@@ -68,7 +80,9 @@ func main() {
 			// Note: Optionally add an argument to the end to more
 			//       easily distinguish the parent and child in
 			//       something like `ps` etc.
-			args := os.Args
+			// args := os.Args
+			// Typically, you want to include the executable path in the args
+			args := append([]string{execPath}, os.Args[1:]...)
 			// args := append(os.Args, "#kiddo")
 
 			pwd, err := os.Getwd()
@@ -93,6 +107,7 @@ func main() {
 			log.Println("ForkExec", execPath, args)
 
 			pid, err := syscall.ForkExec(execPath, args, pattrs)
+			handleSignals(pid)
 
 			if err != nil {
 				log.Fatalf("Error forking the process: %v", err)
@@ -142,14 +157,10 @@ func main() {
 func cMain() {
 	log.Println("cMain")
 	// Get the path to the current executable
-	execPath, err := os.Executable()
-	if err != nil {
-		fmt.Printf("Error getting executable path: %v\n", err)
-		os.Exit(1)
-	}
+
 	logger.Println("+++++++ [[Watchdog Started]] +++++++", consumernats.WatchdogVersion)
 
-	doUpdateStartupCheck(execPath)
+	doUpdateStartupCheck()
 
 	consumernats.Start()
 }
@@ -158,7 +169,7 @@ func cMain() {
 func _main() {
 
 	log.Println("My version", consumernats.WatchdogVersion)
-	err := doUpdateStartupCheck("")
+	err := doUpdateStartupCheck()
 	log.Println("Error", err)
 
 }

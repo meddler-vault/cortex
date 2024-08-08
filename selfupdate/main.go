@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"time"
 
 	"github.com/minio/selfupdate"
 )
@@ -67,17 +66,9 @@ func DoUpdateInBetweenRuntimeCheck(currentVersion string) error {
 		return err
 	} else {
 		log.Println("+++++++ [[Force Restarting Startup]] +++++++", currentVersion, " -->", version)
-		execPath, err := os.Executable()
-		if err != nil {
-			fmt.Printf("Error getting executable path: %v\n", err)
-			os.Exit(1)
-		}
-
-		ForceQuit(execPath)
+		return nil
 
 	}
-
-	return nil
 
 }
 
@@ -99,7 +90,7 @@ func Update(currentVersion string) (string, string, error) {
 
 	downloadURL, err := findDownloadURL(release, platform, arch)
 	if err != nil {
-		log.Fatalf("Error finding download URL: %v", err)
+		log.Println("Error finding download URL: %v", err)
 		return "", "", err
 	}
 
@@ -159,7 +150,7 @@ func rForceQuit() {
 	os.Exit(0)
 
 }
-func ForceQuit(newBinaryPath string) {
+func ForceQuit() {
 	os.Exit(1)
 
 	// if len(os.Args) > 1 && os.Args[1] == "new" {
@@ -168,28 +159,4 @@ func ForceQuit(newBinaryPath string) {
 	// 	select {} // Keep running indefinitely
 	// }
 
-	// This is the old binary
-	fmt.Println("Old binary starting new process.")
-
-	// Define the path to the new binary
-
-	// Create a command to run the new binary
-	cmd := exec.Command(newBinaryPath, os.Args[1:]...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-
-	// Start the new binary
-	if err := cmd.Start(); err != nil {
-		fmt.Printf("Error starting new binary: %v\n", err)
-		os.Exit(1)
-	}
-
-	os.Exit(0)
-	// Wait a bit to ensure the new binary has started
-	time.Sleep(30 * time.Second)
-
-	// Send SIGTERM to the current process
-	fmt.Println("Terminating old process.")
-	// syscall.Kill(os.Getpid(), syscall.SIGTERM)
 }

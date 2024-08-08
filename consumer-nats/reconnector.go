@@ -249,13 +249,25 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 	for {
 
-		selfupdate.DoUpdateInBetweenRuntimeCheck(WatchdogVersion)
+		// Checking for updates
+		updateRestartReqErr := selfupdate.DoUpdateInBetweenRuntimeCheck(WatchdogVersion)
+
+		// Try to close
+		if updateRestartReqErr == nil {
+			log.Println("+++++++ [[Force Restarting-Closing-NATS-Q Startup]] +++++++")
+			q.Close()
+			selfupdate.ForceQuit()
+		}
+
+		//
+		//
+
 		if !sub.IsValid() {
 			time.Sleep(globalTimeoutInterval)
 			continue
 		}
 
-		msg, err := sub.NextMsg(1<<63 - 1)
+		msg, err := sub.NextMsg(60 * time.Second)
 		if err != nil {
 			log.Println("NextMsg", err)
 
