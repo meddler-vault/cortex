@@ -166,15 +166,15 @@ func (q *queue) connect() (err error) {
 
 			// Ensure the stream is durable
 
-			_, err = q.js.AddStream(&nats.StreamConfig{
-				Name:     q.name,
-				Subjects: q.topics,
-				Storage:  nats.FileStorage,
-			})
-			if err != nil {
-				log.Println("Error adding stream", err, q.topics)
-				return err
-			}
+			// _, err = q.js.AddStream(&nats.StreamConfig{
+			// 	Name:     q.name,
+			// 	Subjects: q.topics,
+			// 	Storage:  nats.FileStorage,
+			// })
+			// if err != nil {
+			// 	log.Println("Error adding stream", err, q.topics)
+			// 	return err
+			// }
 
 			//
 
