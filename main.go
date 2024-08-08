@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 	"time"
 
 	consumernats "github.com/meddler-vault/cortex/consumer-nats"
@@ -67,6 +68,16 @@ func main() {
 			kidEnv := []string{fmt.Sprintf("REAPER=%d", os.Getpid())}
 
 			var wstatus syscall.WaitStatus
+
+			execPath, err := os.Executable()
+			if err != nil {
+				log.Fatalf("Error getting executable path: %v", err)
+			}
+			execPath, err = filepath.Abs(execPath) // Get absolute path
+			if err != nil {
+				log.Fatalf("Error getting absolute path of executable: %v", err)
+			}
+
 			pattrs := &syscall.ProcAttr{
 				Dir: pwd,
 				Env: append(os.Environ(), kidEnv...),
@@ -78,9 +89,9 @@ func main() {
 				},
 			}
 
-			log.Println("ForkExec", args)
+			log.Println("ForkExec", execPath, args)
 
-			pid, err := syscall.ForkExec(args[0], args, pattrs)
+			pid, err := syscall.ForkExec(execPath, args, pattrs)
 
 			if err != nil {
 				log.Fatalf("Error forking the process: %v", err)
