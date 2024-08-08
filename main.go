@@ -48,6 +48,16 @@ func main() {
 	if _, hasReaper = os.LookupEnv("REAPER"); !hasReaper {
 		logger.Println("Started REAPER")
 
+		var wstatus syscall.WaitStatus
+
+		execPath, err := os.Executable()
+		if err != nil {
+			log.Fatalf("Error getting executable path: %v", err)
+		}
+		execPath, err = filepath.Abs(execPath) // Get absolute path
+		if err != nil {
+			log.Fatalf("Error getting absolute path of executable: %v", err)
+		}
 		//  Start background reaping of orphaned child processes.
 		go reaper.Reap()
 
@@ -66,17 +76,6 @@ func main() {
 			}
 
 			kidEnv := []string{fmt.Sprintf("REAPER=%d", os.Getpid())}
-
-			var wstatus syscall.WaitStatus
-
-			execPath, err := os.Executable()
-			if err != nil {
-				log.Fatalf("Error getting executable path: %v", err)
-			}
-			execPath, err = filepath.Abs(execPath) // Get absolute path
-			if err != nil {
-				log.Fatalf("Error getting absolute path of executable: %v", err)
-			}
 
 			pattrs := &syscall.ProcAttr{
 				Dir: pwd,
