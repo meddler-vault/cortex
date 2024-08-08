@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/meddler-vault/cortex/bootstrap"
 	"github.com/meddler-vault/cortex/logger"
 	"github.com/meddler-vault/cortex/selfupdate"
 	"github.com/nats-io/nats.go"
@@ -70,6 +71,8 @@ func (q *queue) Send(message string) (err error) {
 }
 
 func (q *queue) SendToTopic(topic string, message string) (err error) {
+
+	topic = bootstrap.RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX + topic
 	_, err = q.js.Publish(topic, []byte(message))
 	logError("Sending message to queue failed", err)
 	return

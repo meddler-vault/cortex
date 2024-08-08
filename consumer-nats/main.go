@@ -520,7 +520,7 @@ func Start() {
 		queue := NewQueue(connectionString, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, uuid, []string{
 			// bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE,
 			// "jobs",
-			">",
+			bootstrap.RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX + ">",
 		})
 
 		defer queue.Close()
