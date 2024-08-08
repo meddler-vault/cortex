@@ -33,13 +33,30 @@ type queue struct {
 type messageConsumer func(string, string) error
 
 func NewQueue(url string, qName string, consumerId string, topics []string) *queue {
+	reconnectInterval := 10 * time.Second
 	q := new(queue)
 	q.url = url
 	q.name = qName
 	q.consumerId = consumerId
 	q.topics = topics
 
-	q.connect()
+	// Retry to have an initla connectin foreverx
+	for {
+		log.Println("Atttempt to Connect", qName)
+
+		err := q.connect()
+
+		if err == nil {
+			log.Println("Atttempt to Connect Success", qName)
+
+			break
+		}
+
+		q.Close()
+		log.Println("Will reatttempt to Connect in ", reconnectInterval, " ", qName)
+
+		time.Sleep(reconnectInterval)
+	}
 	log.Println("Connect", qName)
 	// go q.reconnector()
 
@@ -94,7 +111,7 @@ func (q *queue) reconnector() {
 	}
 }
 
-func (q *queue) connect() {
+func (q *queue) connect() (err error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	for {
@@ -111,8 +128,8 @@ func (q *queue) connect() {
 			PingInterval:   5 * time.Second,
 			MaxReconnect:   -1,
 			MaxPingsOut:    1,
-			Secure:         true,      // Enable TLS
-			TLSConfig:      tlsConfig, // Custom TLS settings
+			// Secure:         false,     // Enable TLS
+			TLSConfig: tlsConfig, // Custom TLS settings
 
 			DisconnectedErrCB: func(nc *nats.Conn, err error) {
 				logger.Println("Disconnected from NATS: ", err)
@@ -140,7 +157,7 @@ func (q *queue) connect() {
 			js, err := q.connection.JetStream()
 			if err != nil {
 				logError("Error getting JetStream context", err)
-				return
+				return err
 			}
 			q.js = js
 
@@ -152,16 +169,19 @@ func (q *queue) connect() {
 			})
 			if err != nil {
 				logError("Error adding stream", err)
-				return
+				return err
 			}
 
 			q.closed = false
 
 			logger.Println("Connection established!")
-			return
+			return err
+		} else {
+			logError("Connection to NATS failed. Retrying in 1 sec... ", err)
+
+			return err
 		}
 
-		logError("Connection to NATS failed. Retrying in 1 sec... ", err)
 		time.Sleep(1 * time.Second) // Add a sleep to prevent tight loop
 	}
 }

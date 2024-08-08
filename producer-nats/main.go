@@ -29,7 +29,7 @@ func Produce(username string, password string, host string, topic string, data s
 	encodedUser := url.QueryEscape(username)
 	encodedPassword := url.QueryEscape(password)
 
-	connectionString := fmt.Sprintf("wss://%s:%s@%s", encodedUser, encodedPassword, host)
+	connectionString := fmt.Sprintf("nats://%s:%s@%s", encodedUser, encodedPassword, host)
 
 	queue := NewQueue(connectionString, topic)
 	// if(err != nil){

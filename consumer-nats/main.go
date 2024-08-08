@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -12,7 +11,6 @@ import (
 	"github.com/meddler-vault/cortex/db"
 	"github.com/meddler-vault/cortex/logger"
 
-	"net/url"
 	"os"
 
 	"github.com/meddler-vault/cortex/bootstrap"
@@ -69,23 +67,29 @@ func SendTaskUpdate(queue *queue, topic string, taskResult bootstrap.TaskResult)
 func Start() {
 	forever := make(chan bool)
 
-	username := getenvStr("RMQ_USERNAME", "whitehat")
-	password := getenvStr("RMQ_PASSWORD", "4Jy6P)$Ep@c^SenL")
+	// username := getenvStr("RMQ_USERNAME", "whitehat")
+	// password := getenvStr("RMQ_PASSWORD", "4Jy6P)$Ep@c^SenL")
 
 	uuid := getenvStr("uuid", "uuid")
 
-	username = url.QueryEscape(username)
-	password = url.QueryEscape(password)
-	host := getenvStr("RMQ_HOST", "rmq.meddler.io:443")
+	connectionString := getenvStr("NATS_CONNECTION_STRING", "nats://whitehat:4Jy6P%29%24Ep%40c%5ESenL@hawki-rabbitmq.indiatimes.com:4222")
+
+	// username = url.QueryEscape(username)
+	// password = url.QueryEscape(password)
+	// host := getenvStr("RMQ_HOST", "hawki-rabbitmq.indiatimes.com:4222")
 	logger.Println("uuid", uuid)
-	logger.Println("username", username)
-	logger.Println("password", password)
-	logger.Println("host", host)
+	// logger.Println("username", username)
+	// logger.Println("password", password)
+	// logger.Println("host", host)
 	logger.Println("MESSAGEQUEUE", bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE)
+	logger.Println("natsConnString", connectionString)
 
 	logger.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
 
-	connectionString := fmt.Sprintf("wss://%s:%s@%s", username, password, host)
+	// connectionString := fmt.Sprintf("nats://%s:%s@%s", username, password, host)
+
+	// connectionString = "wss://_whitehat:4Jy6P%29%24Ep%40c%5ESenL@rmq.meddler.io:443"
+	// connectionString = natsConnString
 
 	// If this is not a result publisher, but a watchdog
 	if bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE != bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE {
