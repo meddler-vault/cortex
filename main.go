@@ -58,6 +58,8 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error getting absolute path of executable: %v", err)
 		}
+
+		log.Println("execPathDefined", execPath)
 		//  Start background reaping of orphaned child processes.
 		go reaper.Reap()
 
