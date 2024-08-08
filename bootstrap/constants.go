@@ -15,6 +15,8 @@ import (
 type BaseConstants struct {
 }
 
+const DEBUG = true
+
 const RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX = "action.collection_name."
 
 type ReservedConstants struct {

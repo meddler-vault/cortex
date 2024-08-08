@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os/signal"
 	"path/filepath"
 	"time"
 
+	"github.com/meddler-vault/cortex/bootstrap"
 	consumernats "github.com/meddler-vault/cortex/consumer-nats"
 	"github.com/meddler-vault/cortex/logger"
 	"github.com/meddler-vault/cortex/selfupdate"
@@ -21,7 +23,9 @@ import (
 func doUpdateStartupCheck() error {
 
 	log.Println("doUpdateStartupCheck")
-
+	if bootstrap.DEBUG {
+		return errors.New("debug mode enabled...skipping update and restaet!")
+	}
 	// selfupdate.ForceQuit()
 	// return nil
 
@@ -160,7 +164,7 @@ func cMain() {
 
 	logger.Println("+++++++ [[Watchdog Started]] +++++++", consumernats.WatchdogVersion)
 
-	doUpdateStartupCheck()
+	// doUpdateStartupCheck()
 
 	consumernats.Start()
 }
