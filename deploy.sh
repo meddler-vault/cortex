@@ -1,3 +1,6 @@
+sudo git pull
+
+
 export PATH=$PATH:$(go env GOPATH)/bin
 
 
