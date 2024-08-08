@@ -549,7 +549,7 @@ func Start() {
 			}
 			log.Println("msg-received", msg, subject)
 
-			err = db.UpdateTaskResult(*data)
+			err = db.UpdateTaskResult(subject, *data)
 			if err != nil {
 				log.Println("Coudn't update data", err)
 			}

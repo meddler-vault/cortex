@@ -58,21 +58,20 @@ func getenvStr(key string, defaultValue string) string {
 	return v
 }
 
-func UpdateTaskResult(taskResult bootstrap.TaskResult) error {
+func UpdateTaskResult(collectionName string, taskResult bootstrap.TaskResult) error {
 	client, err := getMongoClient()
 	if err != nil {
 		return err
 	}
 
 	MONGO_DB := getenvStr("MONGO_DB", "secoflex")
-	MONGO_COLL := getenvStr("MONGO_COLLECTION", "jobs")
 
 	_id, err := primitive.ObjectIDFromHex(taskResult.Identifier)
 	if err != nil {
 		return err
 	}
 
-	collection := client.Database(MONGO_DB).Collection(MONGO_COLL)
+	collection := client.Database(MONGO_DB).Collection(collectionName)
 
 	responseStruct := bson.M{
 		"exec_status":      taskResult.TaskStatus,
@@ -106,8 +105,8 @@ func UpdateTaskResult(taskResult bootstrap.TaskResult) error {
 	}
 
 	logger.Println("Task:", "Updated Results", taskResult.Identifier, result, err)
-	logger.Println("MONGO_COLL")
-	logger.Println(MONGO_COLL, result.MatchedCount, result.ModifiedCount)
+
+	logger.Println("collectionName", collectionName, result.MatchedCount, result.ModifiedCount)
 
 	return nil
 }
