@@ -74,7 +74,7 @@ jobs:
 
             # Set the environment variables and build the binary
 
-            env GOOS=${GOOS} GOARCH=${GOARCH} go build -mod=mod -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o ${output_file}
+            env GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0  go build -mod=mod -ldflags "-X github.com/meddler-vault/cortex/consumer-nats.WatchdogVersion=$WATCHDOG_VERSION" -o ${output_file}
 
             if [ $? -ne 0 ]; then
                 echo "An error occurred while building for ${platform}"
