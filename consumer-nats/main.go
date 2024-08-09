@@ -163,14 +163,15 @@ func Start() {
 
 			logger.Println("[[Watchdog]]", WatchdogVersion)
 
+			logger.Println("SystemConstants preProcess: VARIABLES:", data.Variables)
 			logger.Println("SystemConstants preProcess: BASEPATH:", *bootstrap.CONSTANTS.System.BASEPATH)
 			logger.Println("SystemConstants preProcess: INPUTDIR:", *bootstrap.CONSTANTS.System.INPUTDIR)
 			logger.Println("SystemConstants preProcess: OUTPUTDIR:", *bootstrap.CONSTANTS.System.OUTPUTDIR)
 			logger.Println("SystemConstants preProcess: MOUNT_VOLUME_PATH:", *bootstrap.CONSTANTS.System.MOUNT_VOLUME_PATH)
 			logger.Println("SystemConstants preProcess: EXPORT_VOLUME_PATH:", *bootstrap.CONSTANTS.System.EXPORT_VOLUME_PATH)
-			logger.Println("SystemConstants preProcess: RESULTSJSON:", *bootstrap.CONSTANTS.System.RESULTSJSON)
-			logger.Println("SystemConstants preProcess: SuccessEndpoint:", data.SuccessEndpoint)
-			logger.Println("SystemConstants preProcess: FailureEndpoint:", data.FailureEndpoint)
+			// logger.Println("SystemConstants preProcess: RESULTSJSON:", *bootstrap.CONSTANTS.System.RESULTSJSON)
+			// logger.Println("SystemConstants preProcess: SuccessEndpoint:", data.SuccessEndpoint)
+			// logger.Println("SystemConstants preProcess: FailureEndpoint:", data.FailureEndpoint)
 
 			if err = bootstrap.Bootstrap(); err != nil {
 				logger.Println("Error Bootstraping")
