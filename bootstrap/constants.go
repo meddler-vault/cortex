@@ -610,12 +610,12 @@ func initialize() *Constants {
 
 		// Scaner based variables
 		// Host as variable
-		HOST:          PopulateStr("host", "default-host.com", "Host name"),
-		IP_ADDRESS:    PopulateStr("ip", "default-host.com", "Host name"),
-		IP_ADDRESS_V4: PopulateStr("ip_v4", "default-host.com", "Host name"),
-		IP_ADDRESS_V6: PopulateStr("ip_v6", "default-host.com", "Host name"),
-		URL:           PopulateStr("url", "default-host.com", "Host name"),
-		FQDN:          PopulateStr("fqdn", "default-host.com", "Host name"),
+		HOST:          PopulateStr("host", "", "Host name"),
+		IP_ADDRESS:    PopulateStr("ip", "", "Host name"),
+		IP_ADDRESS_V4: PopulateStr("ip_v4", "", "Host name"),
+		IP_ADDRESS_V6: PopulateStr("ip_v6", "", "Host name"),
+		URL:           PopulateStr("url", "", "Host name"),
+		FQDN:          PopulateStr("fqdn", "", "Host name"),
 	}
 
 	processConstants := ProcessConstants{
