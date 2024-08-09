@@ -279,6 +279,20 @@ func (current *Constants) Override(new *Constants) {
 		current.System.EXPORT_VOLUME_S3_HOST = new.System.EXPORT_VOLUME_S3_HOST
 	}
 
+	// scanner variables
+	if new.System.HOST != nil {
+		current.System.HOST = new.System.HOST
+	}
+	if new.System.IP_ADDRESS != nil {
+		current.System.IP_ADDRESS = new.System.IP_ADDRESS
+	}
+	if new.System.IP_ADDRESS_V4 != nil {
+		current.System.IP_ADDRESS_V4 = new.System.IP_ADDRESS_V4
+	}
+	if new.System.URL != nil {
+		current.System.URL = new.System.URL
+	}
+
 	current.resolveRelativePaths()
 }
 
@@ -593,6 +607,15 @@ func initialize() *Constants {
 		EXPORT_VOLUME_S3_SECURE:     PopulateBool("export_volume_s3_secure", true, "To mount the volume"),
 		EXPORT_VOLUME_S3_HOST:       PopulateStr("export_volume_s3_host", "", "Result Type!"),
 		EXPORT_VOLUME_S3_REGION:     PopulateStr("export_volume_s3_region", "auto", "Region!"),
+
+		// Scaner based variables
+		// Host as variable
+		HOST:          PopulateStr("host", "default-host.com", "Host name"),
+		IP_ADDRESS:    PopulateStr("ip", "default-host.com", "Host name"),
+		IP_ADDRESS_V4: PopulateStr("ip_v4", "default-host.com", "Host name"),
+		IP_ADDRESS_V6: PopulateStr("ip_v6", "default-host.com", "Host name"),
+		URL:           PopulateStr("url", "default-host.com", "Host name"),
+		FQDN:          PopulateStr("fqdn", "default-host.com", "Host name"),
 	}
 
 	processConstants := ProcessConstants{
