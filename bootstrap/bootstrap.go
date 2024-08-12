@@ -16,7 +16,7 @@ func setupFileSystem() {
 // Bootstrap...
 func Bootstrap() (err error) {
 
-	err = os.RemoveAll(*CONSTANTS.System.BASEPATH)
+	os.RemoveAll(*CONSTANTS.System.BASEPATH)
 
 	inputDir := *CONSTANTS.System.INPUTDIR
 	outputDir := *CONSTANTS.System.OUTPUTDIR
