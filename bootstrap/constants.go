@@ -598,7 +598,7 @@ func initialize() *Constants {
 
 		// Export to minio constants
 		EXPORT_VOLUME:               PopulateBool("export_volume", false, "To mount the volume"),
-		EXPORT_VOLUME_PATH:          PopulateStr("export_volume_path", "mount", "Result Type!"),
+		EXPORT_VOLUME_PATH:          PopulateStr("export_volume_path", "export", "Result Type!"),
 		EXPORT_VOLUME_BUCKET:        PopulateStr("export_volume_s3_bucket", "", "Result Type!"),
 		EXPORT_VOLUME_OBJECT_PATH:   PopulateStr("export_volume_s3_object_path", "", "Result Type!"),
 		EXPORT_VOLUME_FOLDER_PATH:   PopulateStr("export_volume_s3_folder_path", "", "Result Type!"),
