@@ -304,7 +304,9 @@ func ExportDirToStorage(
 
 		// Upload the file
 		logger.Println("Uploading", bucketName, objectName, path)
-		_, err = minioClient.FPutObject(ctx, bucketName, objectName, path, minio.PutObjectOptions{})
+		_, err = minioClient.FPutObject(ctx, bucketName, objectName, path, minio.PutObjectOptions{
+			ContentType: "application/octet-stream",
+		})
 		if err != nil {
 			log.Println("Error", err)
 			return err
