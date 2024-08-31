@@ -81,6 +81,8 @@ func UpdateTaskResult(subject string, taskResult bootstrap.TaskResult) error {
 		"exec_status":      taskResult.TaskStatus,
 		"message":          taskResult.Message,
 		"watchdog_version": taskResult.WatchdogVersion,
+
+		"deployed": false,
 	}
 
 	err = UpdateTaskStatusInDraft(taskResult.Identifier, updateRes)
@@ -201,7 +203,7 @@ func UpdateTaskStatusInDraft(id string, updateRes bson.M) error {
 		return err
 	}
 
-	log.Println("update-result", _id)
+	log.Println("update-result", _id, doc)
 
 	return nil
 
