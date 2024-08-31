@@ -171,16 +171,25 @@ func Start() {
 
 					//
 
-					// Mark Initiated
+					// 	// Mark Finished success
 					SendTaskUpdate(queue, bootstrap.TaskResult{
 						Identifier:      data.Identifier,
-						TaskStatus:      bootstrap.INITIATED,
-						Message:         "Task Initiated",
+						TaskStatus:      bootstrap.SUCCESS,
+						Message:         "Task completed successfully",
 						WatchdogVersion: WatchdogVersion,
 					})
 
+					// Mark Initiated
+
 				}
 			}()
+
+			SendTaskUpdate(queue, bootstrap.TaskResult{
+				Identifier:      data.Identifier,
+				TaskStatus:      bootstrap.INITIATED,
+				Message:         "Task Initiated",
+				WatchdogVersion: WatchdogVersion,
+			})
 
 			logger.InitNewTask(*identifier)
 
