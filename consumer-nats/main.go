@@ -120,6 +120,9 @@ func Start() {
 		}()
 
 		msgHandler := func(msg string, subject string) (err error) {
+
+			var processErr error
+
 			logger.Println("**************************")
 
 			// logger.Println(msg)
@@ -151,13 +154,33 @@ func Start() {
 			bootstrap.CONSTANTS.Override(&data.Config)
 			identifier := &data.Identifier
 
-			// Mark Initiated
-			SendTaskUpdate(queue, bootstrap.TaskResult{
-				Identifier:      data.Identifier,
-				TaskStatus:      bootstrap.INITIATED,
-				Message:         "Task Initiated",
-				WatchdogVersion: WatchdogVersion,
-			})
+			//
+			// Defer to notify
+			// Mark Finished failure
+			defer func() {
+
+				if processErr != nil {
+
+					SendTaskUpdate(queue, bootstrap.TaskResult{
+						Identifier:      data.Identifier,
+						TaskStatus:      bootstrap.FAILURE,
+						Message:         processErr.Error(),
+						WatchdogVersion: WatchdogVersion,
+					})
+				} else {
+
+					//
+
+					// Mark Initiated
+					SendTaskUpdate(queue, bootstrap.TaskResult{
+						Identifier:      data.Identifier,
+						TaskStatus:      bootstrap.INITIATED,
+						Message:         "Task Initiated",
+						WatchdogVersion: WatchdogVersion,
+					})
+
+				}
+			}()
 
 			logger.InitNewTask(*identifier)
 
@@ -176,6 +199,8 @@ func Start() {
 			if err = bootstrap.Bootstrap(); err != nil {
 				logger.Println("Error Bootstraping")
 				logger.Println(err)
+
+				processErr = err
 				return
 
 			}
@@ -207,6 +232,7 @@ func Start() {
 				)
 
 				if err != nil {
+					processErr = err
 					return err
 				}
 
@@ -256,6 +282,7 @@ func Start() {
 
 				if err != nil {
 					logger.Println("Erro Syncing Git Repo", err)
+					processErr = err
 					return err
 				} else {
 					logger.Println("Finished Syncing Git Repo", repository)
@@ -297,6 +324,8 @@ func Start() {
 
 				if err != nil {
 					logger.Println("Erro Syncing Minio Volume", err)
+					processErr = err
+
 					return
 				} else {
 					logger.Println("minio-mount:success", "folderPath->", folderPath, "filePath->", filePath)
@@ -427,7 +456,7 @@ func Start() {
 			logger.Println("Reaper", data.Identifier, data.Cmd, data.Args, environment)
 
 			// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
-			processErr := watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
+			processErr = watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
 			logger.Println("Finished task", "Error:", processErr)
 			// Process Finished
 
@@ -465,6 +494,8 @@ func Start() {
 
 				if err != nil {
 					logger.Println("Erro Exporting Minio Volume", err)
+					processErr = err
+
 					return err
 				} else {
 					logger.Println("minio-export:success")
@@ -477,25 +508,25 @@ func Start() {
 
 			// TODO: Inplement results DB Sync
 
-			if processErr != nil {
-				// Mark Finished failure
-				SendTaskUpdate(queue, bootstrap.TaskResult{
-					Identifier:      data.Identifier,
-					TaskStatus:      bootstrap.FAILURE,
-					Message:         processErr.Error(),
-					WatchdogVersion: WatchdogVersion,
-				})
+			// if processErr != nil {
+			// 	// Mark Finished failure
+			// 	SendTaskUpdate(queue, bootstrap.TaskResult{
+			// 		Identifier:      data.Identifier,
+			// 		TaskStatus:      bootstrap.FAILURE,
+			// 		Message:         processErr.Error(),
+			// 		WatchdogVersion: WatchdogVersion,
+			// 	})
 
-			} else {
-				// Mark Finished success
-				SendTaskUpdate(queue, bootstrap.TaskResult{
-					Identifier:      data.Identifier,
-					TaskStatus:      bootstrap.SUCCESS,
-					Message:         "Task completed successfully",
-					WatchdogVersion: WatchdogVersion,
-				})
+			// } else {
+			// 	// Mark Finished success
+			// 	SendTaskUpdate(queue, bootstrap.TaskResult{
+			// 		Identifier:      data.Identifier,
+			// 		TaskStatus:      bootstrap.SUCCESS,
+			// 		Message:         "Task completed successfully",
+			// 		WatchdogVersion: WatchdogVersion,
+			// 	})
 
-			}
+			// }
 
 			// err = PublishEndResult(connectionString, string(taskResultString))
 			// err = SendMessage(queue, bootstrap.CONSTANTS.Reserved.PUBLISHMESSAGEQUEUE, string(taskResultString))
@@ -512,6 +543,8 @@ func Start() {
 			logger.Println("Published to messag queue")
 
 			logger.Println("Finished Sync")
+
+			processErr = err
 
 			return err
 		}

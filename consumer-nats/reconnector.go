@@ -163,6 +163,7 @@ func (q *queue) connect() (err error) {
 			q.js = js
 
 			// Ensure the stream is durable
+			log.Println("Adding Stream", q.name)
 
 			_, err = q.js.AddStream(&nats.StreamConfig{
 				Name:     q.name,
@@ -172,8 +173,8 @@ func (q *queue) connect() (err error) {
 
 			if err != nil {
 				log.Println("Error adding stream..may be it already exists", err, q.topics)
-				// return err
-				err = nil
+				return err
+				// err = nil
 			}
 
 			//
@@ -246,6 +247,8 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 			subscriptionSubject,
 			q.name+"_group",
 			nats.DeliverNew(),
+			nats.MaxAckPending(1),
+			nats.MaxDeliver(1),
 			nats.ManualAck(), nats.Durable(q.consumerId+"-durable-consumer"))
 
 		log.Println("Sub Sync", err, q.name, sub.IsValid(), subscriptionSubject)
@@ -294,6 +297,9 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 			time.Sleep(globalTimeoutInterval)
 			continue
+
+		} else {
+			log.Println("Acknowledged")
 
 		}
 
