@@ -53,7 +53,7 @@ func NewQueue(url string, qName string, consumerId string, topics []string) *que
 		}
 
 		q.Close()
-		log.Println("Will reatttempt to Connect in ", reconnectInterval, " ", qName)
+		log.Println("Will reatttempt to Connect in ", reconnectInterval, " ", qName, err)
 
 		time.Sleep(reconnectInterval)
 	}
