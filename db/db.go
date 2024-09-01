@@ -203,7 +203,7 @@ func UpdateTaskStatusInDraft(id string, updateRes bson.M) error {
 		return err
 	}
 
-	log.Println("update-result", _id, doc)
+	log.Println("update-result", _id)
 
 	return nil
 
