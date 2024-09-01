@@ -165,16 +165,17 @@ func (q *queue) connect() (err error) {
 			// Ensure the stream is durable
 			log.Println("Adding Stream", q.name)
 
-			_, err = q.js.UpdateStream(&nats.StreamConfig{
-				Name:     q.name,
-				Subjects: q.topics,
-			})
+			//
+			// _, err = q.js.UpdateStream(&nats.StreamConfig{
+			// 	Name:     q.name,
+			// 	Subjects: q.topics,
+			// })
 
-			if err != nil {
-				log.Println("Error adding stream..may be it already exists", err, q.topics)
-				return err
-				// err = nil
-			}
+			// if err != nil {
+			// 	log.Println("Error adding stream..may be it already exists", err, q.topics)
+			// 	return err
+			// 	// err = nil
+			// }
 
 			//
 
