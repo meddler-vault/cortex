@@ -255,6 +255,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 			subscriptionSubject,
 			q.name+"_group",
 			// nats.DeliverAll(),
+			nats.DeliverNew(),
 			// nats.MaxAckPending(1),
 			nats.MaxDeliver(1),
 			nats.ManualAck(),
