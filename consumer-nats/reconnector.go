@@ -258,9 +258,10 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 			// nats.MaxAckPending(1),
 			nats.MaxDeliver(1),
 			nats.ManualAck(),
-			// nats.Durable(q.consumerId+"-durable-consumer")
+			nats.Durable(q.consumerId+"-durable-consumer"),
 		)
 
+		log.Println("error", err, q.name)
 		log.Println("Sub Sync", err, q.name, sub.IsValid(), subscriptionSubject)
 		if err == nil {
 			break
