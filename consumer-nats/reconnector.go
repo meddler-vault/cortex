@@ -166,16 +166,24 @@ func (q *queue) connect() (err error) {
 			log.Println("Adding Stream", q.name)
 
 			//
-			// _, err = q.js.UpdateStream(&nats.StreamConfig{
-			// 	Name:     q.name,
-			// 	Subjects: q.topics,
+			// If stream does not exist..this has to be handled by cneteal authority...just quit
+
+			_, err = q.js.StreamInfo(q.name)
+			if err != nil {
+				return err
+			}
+			// _, err = q.js.AddStream(&nats.StreamConfig{
+			// 	Name:      q.name,
+			// 	Subjects:  q.topics,
+			// 	Retention: nats.WorkQueuePolicy,
+			// 	MaxMsgs:   -1,
 			// })
 
-			// if err != nil {
-			// 	log.Println("Error adding stream..may be it already exists", err, q.topics)
-			// 	return err
-			// 	// err = nil
-			// }
+			if err != nil {
+				log.Println("Error adding stream..may be it already exists", err, q.topics)
+				// return err
+				err = nil
+			}
 
 			//
 
@@ -282,9 +290,9 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 			continue
 		}
 
-		msg, err := sub.NextMsg(60 * time.Second)
+		msg, err := sub.NextMsg(5 * time.Second)
 		if err != nil {
-			log.Println("NextMsg", err)
+			log.Println("NextMsg", err, sub.IsValid())
 
 			time.Sleep(globalTimeoutInterval)
 			continue
