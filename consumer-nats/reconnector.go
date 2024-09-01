@@ -165,10 +165,9 @@ func (q *queue) connect() (err error) {
 			// Ensure the stream is durable
 			log.Println("Adding Stream", q.name)
 
-			_, err = q.js.AddStream(&nats.StreamConfig{
+			_, err = q.js.UpdateStream(&nats.StreamConfig{
 				Name:     q.name,
 				Subjects: q.topics,
-				Storage:  nats.FileStorage,
 			})
 
 			if err != nil {
@@ -248,7 +247,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 			q.name+"_group",
 			// nats.DeliverNew(),
 			// nats.MaxAckPending(1),
-			// nats.MaxDeliver(1),
+			nats.MaxDeliver(1),
 			nats.ManualAck(), nats.Durable(q.consumerId+"-durable-consumer"))
 
 		log.Println("Sub Sync", err, q.name, sub.IsValid(), subscriptionSubject)
