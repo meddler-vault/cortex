@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -112,8 +113,8 @@ func Println(v ...interface{}) error {
 
 	// _logger.Info("logging:", TaskId.taskid, loggingData)
 
+	log.Println(loggingData)
 	return logger.Post(TaskId.taskid, loggingData)
-	// log.Println(loggingData)
 
 	// err := logger.Post("system", loggingData)
 	// log.Println(err)
