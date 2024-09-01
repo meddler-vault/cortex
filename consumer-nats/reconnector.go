@@ -254,7 +254,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 		sub, err = q.js.QueueSubscribeSync(
 			subscriptionSubject,
 			q.name+"_group",
-			// nats.DeliverNew(),
+			nats.DeliverAll(),
 			// nats.MaxAckPending(1),
 			nats.MaxDeliver(1),
 			nats.ManualAck(), nats.Durable(q.consumerId+"-durable-consumer"))
