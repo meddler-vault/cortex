@@ -33,6 +33,9 @@ type queue struct {
 type messageConsumer func(string, string) error
 
 func NewQueue(url string, qName string, consumerId string, topics []string) *queue {
+
+	qName = "TASKS"
+
 	reconnectInterval := 10 * time.Second
 	q := new(queue)
 	q.url = url
@@ -77,14 +80,19 @@ func (q *queue) SendToTopic(topic string, message string) (err error) {
 }
 
 func (q *queue) Consume(consumer messageConsumer) {
-	logger.Println("Registering consumer...")
-	err := q.registerQueueConsumer(consumer)
-	if err != nil {
-		logError("Error in registering consumer Consume", err)
-	} else {
+	for {
 
-		logger.Println("Consumer registered! Processing messages...")
+		logger.Println("Registering consumer...")
+		err := q.registerQueueConsumer(consumer)
+		if err != nil {
+			logError("Error in registering consumer Consume", err)
+			// return
+		} else {
 
+			logger.Println("Consumer registered! Processing messages...")
+
+		}
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -170,6 +178,7 @@ func (q *queue) connect() (err error) {
 
 			_, err = q.js.StreamInfo(q.name)
 			if err != nil {
+				log.Println(err)
 				return err
 			}
 			// _, err = q.js.AddStream(&nats.StreamConfig{
@@ -179,11 +188,11 @@ func (q *queue) connect() (err error) {
 			// 	MaxMsgs:   -1,
 			// })
 
-			if err != nil {
-				log.Println("Error adding stream..may be it already exists", err, q.topics)
-				// return err
-				err = nil
-			}
+			// if err != nil {
+			// 	log.Println("Error adding stream..may be it already exists", err, q.topics)
+			// 	// return err
+			// 	err = nil
+			// }
 
 			//
 
@@ -219,46 +228,21 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 		q.subscription = nil
 	}
 
-	// Function to subscribe to the queue
-
-	// log.Println("Invalid log", subscribe)
-
-	// err := subscribe(q.js)
-
-	// New way out
-
-	log.Println("New subscription mechanism")
-
-	//
-	// Delete the consumer that is already registered so as to handle
-	//
-
-	// Step 1: Delete the existing consumer if it exists
-
-	// err := q.js.DeleteConsumer(q.name, q.consumerId)
-	// if err != nil && !errors.Is(err, nats.ErrConsumerNotFound) {
-	// 	log.Println("error deleting consumer", q.name, q.consumerId, err)
-	// 	err = nil
-	// } else {
-	// 	log.Println("deleted already existing consumer", q.name, q.consumerId)
-
-	// }
-
-	//
-
 	var sub *nats.Subscription
+
+	subscriptionSubject := "task." + q.topics[0]
+
 	for {
 		var err error
 
-		subscriptionSubject := q.topics[0]
+		log.Println("subscribing_to", subscriptionSubject)
 		sub, err = q.js.QueueSubscribeSync(
 			subscriptionSubject,
-			q.name+"_group",
-			nats.DeliverNew(),
-			// nats.MaxAckPending(1),
+			q.name+"task-group-"+q.topics[0],
+			nats.MaxAckPending(1),
 			nats.MaxDeliver(1),
 			nats.ManualAck(),
-			nats.Durable(q.consumerId+"-durable-consumer"),
+			// nats.Durable(q.consumerId+"-durable-consumer"),
 		)
 
 		log.Println("error", err, q.name)
@@ -296,8 +280,15 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 		msg, err := sub.NextMsg(5 * time.Second)
 		if err != nil {
 			log.Println("NextMsg", err, sub.IsValid())
-
 			time.Sleep(globalTimeoutInterval)
+
+			_, err := q.js.StreamInfo(q.name)
+			if err != nil {
+				log.Println("stream_error", err)
+				return err
+
+			}
+
 			continue
 
 		}
