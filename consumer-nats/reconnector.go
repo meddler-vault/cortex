@@ -82,7 +82,7 @@ func NewQueue(
 func (q *queue) SendToTopic(topic string, message string) (err error) {
 
 	_, err = q.js.Publish(topic, []byte(message))
-	logError("Sending message to queue failed", err)
+	log.Println("Sending message to queue failed", q.streamName, q.workerGroupName, topic, message, err)
 	return
 }
 
