@@ -15,10 +15,17 @@ import (
 const globalTimeoutInterval = 4 * time.Second
 
 type queue struct {
-	url        string
-	name       string
-	topics     []string
-	consumerId string
+	streamName string
+
+	publisherSubject string
+	consumerSubject  string
+	workerGroupName  string
+
+	//
+	url string
+	// name       string
+	// subject    string
+	// consumerId string
 
 	connection   *nats.Conn
 	js           nats.JetStreamContext
@@ -30,46 +37,46 @@ type queue struct {
 	mu sync.Mutex
 }
 
-type messageConsumer func(string, string) error
+type messageConsumer func(*queue, string, string) error
 
-func NewQueue(url string, qName string, consumerId string, topics []string) *queue {
+func NewQueue(
+	url string,
+	workerGroupName string,
+	publisherSubject string,
+	consumerSubject string,
 
-	qName = "TASKS"
-
+) *queue {
+	//
 	reconnectInterval := 10 * time.Second
 	q := new(queue)
+	q.streamName = "TASKS"
+
 	q.url = url
-	q.name = qName
-	q.consumerId = consumerId
-	q.topics = topics
+	q.publisherSubject = publisherSubject
+	q.consumerSubject = consumerSubject
+	q.workerGroupName = workerGroupName
 
 	// Retry to have an initla connectin foreverx
 	for {
-		log.Println("Atttempt to Connect", qName)
+		log.Println("Atttempt to Connect")
 
 		err := q.connect()
 
 		if err == nil {
-			log.Println("Atttempt to Connect Success", qName)
+			log.Println("Atttempt to Connect Success")
 
 			break
 		}
 
 		q.Close()
-		log.Println("Will reatttempt to Connect in ", reconnectInterval, " ", qName, err)
+		log.Println("Will reatttempt to Connect in ", reconnectInterval, "duration")
 
 		time.Sleep(reconnectInterval)
 	}
-	log.Println("Connect", qName)
+
 	// go q.reconnector()
 
 	return q
-}
-
-func (q *queue) Send(message string) (err error) {
-	_, err = q.js.Publish(q.name, []byte(message))
-	logError("Sending message to queue failed", err)
-	return
 }
 
 func (q *queue) SendToTopic(topic string, message string) (err error) {
@@ -79,10 +86,13 @@ func (q *queue) SendToTopic(topic string, message string) (err error) {
 	return
 }
 
-func (q *queue) Consume(consumer messageConsumer) {
+func (q *queue) Consume(
+
+	consumer messageConsumer) {
+
 	for {
 
-		logger.Println("Registering consumer...")
+		logger.Println("Registering consumer...", q.consumerSubject)
 		err := q.registerQueueConsumer(consumer)
 		if err != nil {
 			logError("Error in registering consumer Consume", err)
@@ -105,7 +115,7 @@ func (q *queue) Close() {
 	q.connection.Close()
 }
 
-func (q *queue) reconnector() {
+func (q *queue) reconnector(subjectPrefix string) {
 	for {
 
 		if q.closed {
@@ -171,12 +181,11 @@ func (q *queue) connect() (err error) {
 			q.js = js
 
 			// Ensure the stream is durable
-			log.Println("Adding Stream", q.name)
 
 			//
 			// If stream does not exist..this has to be handled by cneteal authority...just quit
 
-			_, err = q.js.StreamInfo(q.name)
+			_, err = q.js.StreamInfo(q.streamName)
 			if err != nil {
 				log.Println(err)
 				return err
@@ -230,23 +239,22 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 	var sub *nats.Subscription
 
-	subscriptionSubject := "task." + q.topics[0]
-
 	for {
 		var err error
 
-		log.Println("subscribing_to", subscriptionSubject)
+		log.Println("subscribing_via_consumer_name", q.workerGroupName)
+
 		sub, err = q.js.QueueSubscribeSync(
-			subscriptionSubject,
-			q.name+"task-group-"+q.topics[0],
+			q.consumerSubject,
+			q.workerGroupName,
 			nats.MaxAckPending(1),
 			nats.MaxDeliver(1),
 			nats.ManualAck(),
 			// nats.Durable(q.consumerId+"-durable-consumer"),
 		)
 
-		log.Println("error", err, q.name)
-		log.Println("Sub Sync", err, q.name, sub.IsValid(), subscriptionSubject)
+		log.Println("error", err)
+		log.Println("Sub Sync", err)
 		if err == nil {
 			break
 		}
@@ -282,7 +290,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 			log.Println("NextMsg", err, sub.IsValid())
 			time.Sleep(globalTimeoutInterval)
 
-			_, err := q.js.StreamInfo(q.name)
+			_, err := q.js.StreamInfo(q.streamName)
 			if err != nil {
 				log.Println("stream_error", err)
 				return err
@@ -306,7 +314,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 		}
 
 		logger.Println("--consumer--starts--")
-		status := consumer(string(msg.Data), msg.Subject)
+		status := consumer(q, string(msg.Data), msg.Subject)
 		logger.Println("--consumer--ends--", status)
 
 	}
