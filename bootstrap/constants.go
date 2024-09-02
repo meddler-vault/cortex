@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"flag"
+	"fmt"
 	"log"
 
 	"github.com/meddler-vault/cortex/logger"
@@ -18,10 +19,99 @@ type BaseConstants struct {
 
 var DEBUG = false
 
-const RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX = "action.collection_name."
+// Cortex Mode : task_worker , image_builder , task_result_processor , image_builder_result_processor
+// CortexMode is a custom type to represent different modes as strings.
+type CortexMode string
+
+// Define the possible values for CortexMode.
+const (
+	CortexModeTaskWorker                  CortexMode = "task_worker"
+	CortexModeImageBuilder                CortexMode = "image_builder"
+	CortexModeTaskResultProcessor         CortexMode = "task_result_processor"
+	CortexModeImageBuilderResultProcessor CortexMode = "image_builder_result_processor"
+
+	// Define the default mode
+	DefaultCortexMode CortexMode = CortexModeTaskWorker
+)
+
+// getCortexModeFromEnv retrieves the CortexMode based on an environment variable.
+func getCortexMode(mode string, defaultCortexMode CortexMode) CortexMode {
+
+	mode = populateStringFromEnv(mode, "")
+	log.Println("populateStringFromEnv", mode)
+	switch mode {
+	case string(CortexModeTaskWorker):
+		return CortexModeTaskWorker
+	case string(CortexModeImageBuilder):
+		return CortexModeImageBuilder
+	case string(CortexModeTaskResultProcessor):
+		return CortexModeTaskResultProcessor
+	case string(CortexModeImageBuilderResultProcessor):
+		return CortexModeImageBuilderResultProcessor
+	default:
+		fmt.Println("Invalid or unset CORTEX_MODE, defaulting to:", defaultCortexMode)
+		return defaultCortexMode
+	}
+}
+
+const TASK_MESSAGE_QUEUE_SUBJECT_PREFIX = "task"
+const TASK_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME = "task_worker"
+
+const RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX = "result.task.*"
+const RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME = "task_result_worker"
+
+const BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX = "build.*"
+const BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME = "build_worker"
+
+const RESULT_BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX = "result.build.*"
+const RESULT_BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME = "build_result_worker"
+
+// Publishing subjects
+const TASKS_MESSAGE_QUEUE_SUBJECT_PUBLISH = "result.task"
+const BUILD_MESSAGE_QUEUE_SUBJECT_PUBLISH = "result.build"
+
+func GetCortexMode(mode string, defaultCortexMode CortexMode) CortexMode {
+
+	cortex_mode := getCortexMode(mode, defaultCortexMode)
+
+	if cortex_mode == CortexModeTaskWorker {
+		CORTEX_MQ_PUBLISHER_SUBJECT = TASK_MESSAGE_QUEUE_SUBJECT_PREFIX
+		CORTEX_MQ_CONSUMER_SUBJECT = TASKS_MESSAGE_QUEUE_SUBJECT_PUBLISH + "." + "result"
+		CORTEX_MQ_CONSUMER_NAME = TASK_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME
+	} else if cortex_mode == CortexModeImageBuilder {
+		CORTEX_MQ_CONSUMER_SUBJECT = BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX
+		CORTEX_MQ_PUBLISHER_SUBJECT = BUILD_MESSAGE_QUEUE_SUBJECT_PUBLISH
+		CORTEX_MQ_CONSUMER_NAME = BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME
+	} else if cortex_mode == CortexModeTaskResultProcessor {
+		CORTEX_MQ_CONSUMER_SUBJECT = RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX
+		CORTEX_MQ_PUBLISHER_SUBJECT = ""
+		CORTEX_MQ_CONSUMER_NAME = RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME
+	} else if cortex_mode == CortexModeImageBuilderResultProcessor {
+		CORTEX_MQ_CONSUMER_SUBJECT = RESULT_BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX
+		CORTEX_MQ_PUBLISHER_SUBJECT = ""
+		CORTEX_MQ_CONSUMER_NAME = RESULT_BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME
+	} else {
+		log.Panicln("Invalid mode...Quitting!")
+	}
+
+	log.Println("cortex_mode", cortex_mode)
+
+	return cortex_mode
+
+}
+
+// CortexConstants{
+var (
+	CORTEX_MQ_CONSUMER_SUBJECT  string = ""
+	CORTEX_MQ_PUBLISHER_SUBJECT string = ""
+	CORTEX_MQ_CONSUMER_NAME     string = ""
+)
 
 type ReservedConstants struct {
 	BaseConstants
+
+	CORTEXMODE CortexMode `json:"cortex_mode"`
+
 	MESSAGEQUEUE        string `json:"message_queue_topic"`
 	PUBLISHMESSAGEQUEUE string `json:"publish_message_queue_topic"`
 	PUBLISHSUBJECT      string `json:"publish_subject"`
@@ -543,8 +633,10 @@ func initialize() *Constants {
 	log.Println("BUGMODE", DEBUG)
 
 	reservedConstants := ReservedConstants{
+		CORTEXMODE: GetCortexMode("CORTEX_MODE", DefaultCortexMode),
+
 		MESSAGEQUEUE:        *PopulateStr("message_queue_topic", "tasks_test", "Message Queue Topic"),
-		PUBLISHMESSAGEQUEUE: *PopulateStr("publish_message_queue_topic", "tasks_publish", "Publish Message Queue Topic"),
+		PUBLISHMESSAGEQUEUE: *PopulateStr("publish_message_queue_topic", "task_result", "Publish Message Queue Topic"),
 		PUBLISHSUBJECT:      *PopulateStr("publish_subject", "jobs", "Publish Subject"),
 
 		MOCKMESSAGE: *PopulateStr("mock_message", "", "Test message to mock on init."),
