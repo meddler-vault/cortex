@@ -74,7 +74,22 @@ func getMongoCollection(collectionName string) (error, *mongo.Collection) {
 	return nil, collection
 
 }
-func UpdateTaskResult(subject string, taskResult bootstrap.TaskResult) error {
+
+func UpdateJobResult(taskResult bootstrap.TaskResult) error {
+	var err error
+
+	updateRes := bson.M{
+		"exec_status":      taskResult.TaskStatus,
+		"message":          taskResult.Message,
+		"watchdog_version": taskResult.WatchdogVersion,
+	}
+
+	err = updateBuildJobStatus(taskResult.Identifier, updateRes)
+
+	return err
+
+}
+func UpdateTaskResult(taskResult bootstrap.TaskResult) error {
 	var err error
 
 	updateRes := bson.M{
@@ -85,7 +100,7 @@ func UpdateTaskResult(subject string, taskResult bootstrap.TaskResult) error {
 		"deployed": false,
 	}
 
-	err = UpdateTaskStatusInDraft(taskResult.Identifier, updateRes)
+	err = updateTaskStatusInDraft(taskResult.Identifier, updateRes)
 
 	return err
 
@@ -179,7 +194,35 @@ func ReplaceVariables(s string, vars map[string]string) string {
 	})
 }
 
-func UpdateTaskStatusInDraft(id string, updateRes bson.M) error {
+func updateBuildJobStatus(id string, updateRes bson.M) error {
+	err, collection := getMongoCollection("builds_executor")
+	if err != nil {
+		return err
+	}
+
+	_id, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return err
+	}
+
+	doc := collection.FindOneAndUpdate(context.Background(), bson.M{
+
+		"_id": _id,
+	},
+		bson.M{"$set": updateRes},
+	)
+
+	if doc == nil {
+		return err
+	}
+
+	log.Println("update-result", _id)
+
+	return nil
+}
+
+func updateTaskStatusInDraft(id string, updateRes bson.M) error {
 	err, collection := getMongoCollection("job_drafts")
 
 	if err != nil {
