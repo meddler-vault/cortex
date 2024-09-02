@@ -16,16 +16,6 @@ func msgHandlerForTaskResultProcessor(queue *queue, msg string, subject string) 
 
 	err = nil
 
-	logger.Println("**************************")
-	logger.Println("***********subject**************")
-	logger.Println(subject)
-
-	logger.Println("************msg**************")
-	logger.Println(msg)
-
-	// logger.Println(msg)
-	logger.Println("**************************")
-
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Println("Recovered from panic due to unhandled exception:", r)
@@ -46,13 +36,28 @@ func msgHandlerForTaskResultProcessor(queue *queue, msg string, subject string) 
 	}
 	log.Println("msg-received", msg, subject)
 
-	err = db.UpdateTaskResult(subject, *data)
-	if err != nil {
-		log.Println("Coudn't update data", err)
+	logger.Println("**************************")
+
+	if strings.HasPrefix(subject, bootstrap.TASKS_MESSAGE_QUEUE_SUBJECT_PUBLISH) {
+		// task result
+		err = db.UpdateTaskResult(*data)
+		if err != nil {
+			log.Println("Coudn't update data", err)
+		}
+	} else if strings.HasPrefix(subject, bootstrap.BUILD_MESSAGE_QUEUE_SUBJECT_PUBLISH) {
+		// build result
+		err = db.UpdateJobResult(*data)
+		if err != nil {
+			log.Println("Coudn't update data", err)
+		}
+	} else {
+		err = errors.New("Unknwon type of sibject in the result queue: " + subject)
+		return
 	}
-	// Override the constants with message-spec
 
 	return
+	// Override the constants with message-spec
+
 }
 
 func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err error) {

@@ -92,7 +92,11 @@ func (q *queue) Consume(
 
 	for {
 
-		logger.Println("Registering consumer...", q.consumerSubject)
+		logger.Println("Registering consumer...", q.consumerSubject,
+
+			q.consumerSubject,
+			q.workerGroupName,
+		)
 		err := q.registerQueueConsumer(consumer)
 		if err != nil {
 			logError("Error in registering consumer Consume", err)
