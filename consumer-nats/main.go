@@ -100,7 +100,7 @@ func Start() {
 
 		publisherSubject = bootstrap.CORTEX_MQ_CONSUMER_SUBJECT
 		consumerSubject = bootstrap.CORTEX_MQ_PUBLISHER_SUBJECT + "." + bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE
-		workerGroupName = bootstrap.CORTEX_MQ_CONSUMER_NAME + "." + bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE
+		workerGroupName = bootstrap.CORTEX_MQ_CONSUMER_NAME + "-" + bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE
 		cortexMode = bootstrap.CONSTANTS.Reserved.CORTEXMODE
 
 		msgHandler = msgHandlerForTaskWorker
