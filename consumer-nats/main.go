@@ -578,7 +578,7 @@ func Start() {
 			err = nil
 
 			logger.Println("**************************")
-			logger.Println("************subject**************")
+			logger.Println("***********subject**************")
 			logger.Println(subject)
 
 			logger.Println("************msg**************")
