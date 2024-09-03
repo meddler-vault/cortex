@@ -29,6 +29,7 @@ const (
 	CortexModeImageBuilder                CortexMode = "image_builder"
 	CortexModeTaskResultProcessor         CortexMode = "task_result_processor"
 	CortexModeImageBuilderResultProcessor CortexMode = "image_builder_result_processor"
+	CortexModeResultProcessor             CortexMode = "result_processor"
 
 	// Define the default mode
 	DefaultCortexMode CortexMode = CortexModeTaskWorker
@@ -48,6 +49,8 @@ func getCortexMode(mode string, defaultCortexMode CortexMode) CortexMode {
 		return CortexModeTaskResultProcessor
 	case string(CortexModeImageBuilderResultProcessor):
 		return CortexModeImageBuilderResultProcessor
+	case string(CortexModeResultProcessor):
+		return CortexModeResultProcessor
 	default:
 		fmt.Println("Invalid or unset CORTEX_MODE, defaulting to:", defaultCortexMode)
 		return defaultCortexMode
@@ -60,7 +63,7 @@ const TASK_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME = "task_worker"
 const RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX = "result.task.*"
 const RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME = "task_result_worker"
 
-const RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX_COMMON_PARENT = "result.*"
+const RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX_COMMON_PARENT = "result.>"
 
 const BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX = "build.*"
 const BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME = "build_worker"
@@ -89,13 +92,15 @@ func GetCortexMode(mode string, defaultCortexMode CortexMode) CortexMode {
 	} else if cortex_mode == CortexModeTaskResultProcessor {
 		CORTEX_MQ_CONSUMER_SUBJECT = RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX
 		CORTEX_MQ_PUBLISHER_SUBJECT = ""
-		CORTEX_MQ_CONSUMER_NAME = COMMON_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME
+		CORTEX_MQ_CONSUMER_NAME = RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME
 	} else if cortex_mode == CortexModeImageBuilderResultProcessor {
+		CORTEX_MQ_CONSUMER_SUBJECT = RESULT_BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX
+		CORTEX_MQ_PUBLISHER_SUBJECT = ""
+		CORTEX_MQ_CONSUMER_NAME = RESULT_BUILD_ASSEMBLER_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME
+	} else if cortex_mode == CortexModeResultProcessor {
 		CORTEX_MQ_CONSUMER_SUBJECT = RESULT_MESSAGE_QUEUE_SUBJECT_PREFIX_COMMON_PARENT
 		CORTEX_MQ_PUBLISHER_SUBJECT = ""
 		CORTEX_MQ_CONSUMER_NAME = COMMON_MESSAGE_QUEUE_SUBJECT_PREFIX_CONSUMER_GROUP_NAME
-	} else {
-		log.Panicln("Invalid mode...Quitting!")
 	}
 
 	log.Println("cortex_mode", cortex_mode)
