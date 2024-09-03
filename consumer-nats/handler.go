@@ -39,6 +39,9 @@ func msgHandlerForTaskResultProcessor(queue *queue, msg string, subject string) 
 	logger.Println("**************************")
 
 	if strings.HasPrefix(subject, bootstrap.TASKS_MESSAGE_QUEUE_SUBJECT_PUBLISH) {
+
+		log.Println("processor-category", "task")
+
 		// task result
 		err = db.UpdateTaskResult(*data)
 		if err != nil {
@@ -46,11 +49,15 @@ func msgHandlerForTaskResultProcessor(queue *queue, msg string, subject string) 
 		}
 	} else if strings.HasPrefix(subject, bootstrap.BUILD_MESSAGE_QUEUE_SUBJECT_PUBLISH) {
 		// build result
+		log.Println("processor-category", "job")
+
 		err = db.UpdateJobResult(*data)
 		if err != nil {
 			log.Println("Coudn't update data", err)
 		}
 	} else {
+		log.Println("processor-category", "unknwon")
+
 		err = errors.New("Unknwon type of sibject in the result queue: " + subject)
 		return
 	}

@@ -132,6 +132,15 @@ func Start() {
 
 		msgHandler = msgHandlerForTaskResultProcessor
 
+	} else if bootstrap.CONSTANTS.Reserved.CORTEXMODE == bootstrap.CortexModeResultProcessor {
+
+		consumerSubject = bootstrap.CORTEX_MQ_CONSUMER_SUBJECT
+		publisherSubject = bootstrap.CORTEX_MQ_PUBLISHER_SUBJECT
+		workerGroupName = bootstrap.CORTEX_MQ_CONSUMER_NAME
+		cortexMode = bootstrap.CONSTANTS.Reserved.CORTEXMODE
+
+		msgHandler = msgHandlerForTaskResultProcessor
+
 	} else {
 
 	}
