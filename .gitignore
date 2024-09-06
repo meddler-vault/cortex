@@ -10,3 +10,5 @@ build_for_all/
 
 waste/
 public/
+
+test/*
