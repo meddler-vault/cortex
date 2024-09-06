@@ -628,6 +628,8 @@ func cloneRepositoryToken(url string, path string, username string, token string
 }
 
 func cloneRepository(url string, path string, ref string, auth *transport.AuthMethod, gitdepth int) (repository *git.Repository, err error) {
+
+	log.Println("auth_data", *auth)
 	repository, err = git.PlainClone(path, false, &git.CloneOptions{
 		URL:           url,
 		Progress:      os.Stdout,
@@ -663,6 +665,8 @@ func Clone(url string, path string, auth_mode string, username string, password 
 	if auth_mode == NOAUTH {
 
 	} else if auth_mode == BASICAUTH {
+		log.Println("auth_mode", auth_mode)
+
 		auth = &http.BasicAuth{
 			Username: username,
 			Password: password,

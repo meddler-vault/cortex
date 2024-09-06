@@ -350,6 +350,9 @@ func (current *Constants) Override(new *Constants) {
 	if new.System.MOUNT_VOLUME_S3_HOST != nil {
 		current.System.MOUNT_VOLUME_S3_HOST = new.System.MOUNT_VOLUME_S3_HOST
 	}
+	if new.System.MOUNT_VOLUME_S3_SECURE != nil {
+		current.System.MOUNT_VOLUME_S3_SECURE = new.System.MOUNT_VOLUME_S3_SECURE
+	}
 
 	// Export volume to  configs
 	if new.System.EXPORT_VOLUME != nil {
@@ -376,6 +379,10 @@ func (current *Constants) Override(new *Constants) {
 
 	if new.System.EXPORT_VOLUME_S3_HOST != nil {
 		current.System.EXPORT_VOLUME_S3_HOST = new.System.EXPORT_VOLUME_S3_HOST
+	}
+
+	if new.System.EXPORT_VOLUME_S3_SECURE != nil {
+		current.System.EXPORT_VOLUME_S3_SECURE = new.System.EXPORT_VOLUME_S3_SECURE
 	}
 
 	// scanner variables

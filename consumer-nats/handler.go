@@ -49,7 +49,7 @@ func msgHandlerForTaskResultProcessor(queue *queue, msg string, subject string) 
 		}
 	} else if strings.HasPrefix(subject, bootstrap.BUILD_MESSAGE_QUEUE_SUBJECT_PUBLISH) {
 		// build result
-		log.Println("processor-category", "job")
+		log.Println("processor-category", "build-job")
 
 		err = db.UpdateJobResult(*data)
 		if err != nil {
