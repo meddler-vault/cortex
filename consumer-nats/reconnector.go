@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"errors"
 	"log"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -254,7 +256,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 		log.Println("subscribing_via_consumer_name", q.workerGroupName)
 
-		sub, err = q.js.QueueSubscribeSync(
+		sub, err = q.js.PullSubscribe(
 			q.consumerSubject,
 			q.workerGroupName,
 			nats.MaxAckPending(1),
@@ -273,18 +275,24 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 
 	}
 
+	cortex_auto_update := strings.ToLower(os.Getenv("cortex_auto_update"))
+
+	log.Println("cortex_auto_update", cortex_auto_update)
 	for {
 
 		// Checking for updates
-		updateRestartReqErr := selfupdate.DoUpdateInBetweenRuntimeCheck(WatchdogVersion)
+		if cortex_auto_update == "true" || os.Getenv("cortex_auto_update") == "1" {
 
-		// Try to close
-		if updateRestartReqErr == nil {
-			log.Println("+++++++ [[Force Restarting-Closing-NATS-Q Startup]] +++++++")
-			q.Close()
-			selfupdate.ForceQuit()
-		} else {
-			log.Println("error", updateRestartReqErr)
+			updateRestartReqErr := selfupdate.DoUpdateInBetweenRuntimeCheck(WatchdogVersion)
+
+			// Try to close
+			if updateRestartReqErr == nil {
+				log.Println("+++++++ [[Force Restarting-Closing-NATS-Q Startup]] +++++++")
+				q.Close()
+				selfupdate.ForceQuit()
+			} else {
+				log.Println("error", updateRestartReqErr)
+			}
 		}
 
 		//
@@ -295,7 +303,7 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 			continue
 		}
 
-		msg, err := sub.NextMsg(5 * time.Second)
+		msgs, err := sub.Fetch(1, nats.MaxWait(30*time.Second))
 		if err != nil {
 			log.Println("NextMsg", err, sub.IsValid())
 			time.Sleep(globalTimeoutInterval)
@@ -310,6 +318,12 @@ func (q *queue) registerQueueConsumer(consumer messageConsumer) error {
 			continue
 
 		}
+
+		if len(msgs) != 1 {
+			continue
+		}
+
+		msg := msgs[0]
 
 		err = msg.AckSync()
 		if err != nil {
