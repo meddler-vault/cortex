@@ -549,6 +549,13 @@ func (constants Constants) GenerateMapForSystemEnv() map[string]string {
 		dataMap["git_path"] = *constants.System.GITPATH
 
 	}
+
+	// TODO: this si reserved variable should be passsed in to all the pipeline
+	if constants.System.GITPATH != nil {
+		dataMap["git_remote"] = *constants.System.GITREMOTE
+
+	}
+
 	if constants.System.GITREF != nil {
 		dataMap["git_ref"] = *constants.System.GITREF
 
