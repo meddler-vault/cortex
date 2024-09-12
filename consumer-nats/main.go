@@ -45,6 +45,10 @@ func SendMessage(queue *queue, topic string, message string) (err error) {
 
 func SendTaskUpdate(queue *queue, taskResult bootstrap.TaskResult) (err error) {
 
+	//
+	taskResult.WorkerId = queue.workerId
+
+	//
 	message, err := json.Marshal(taskResult)
 	if err != nil {
 		logger.Println(err)
@@ -164,11 +168,13 @@ func Start() {
 		workerGroupName,
 		publisherSubject,
 		consumerSubject,
+		uuid,
 	)
 
 	defer Queue.Close()
 
 	Queue.Consume(
+
 		msgHandler,
 	)
 

@@ -105,6 +105,7 @@ type TaskResult struct {
 	Message         string     `json:"message" validate:"required"`
 	WatchdogVersion string     `json:"watchdog_version" validate:"required"`
 	Identifier      string     `json:"identifier" validate:"required"`
+	WorkerId        string     `json:"worker_id" `
 
 	Response string `json:"response" ` // success_endpoint
 }

@@ -19,6 +19,7 @@ const globalTimeoutInterval = 4 * time.Second
 type queue struct {
 	streamName string
 
+	workerId         string
 	publisherSubject string
 	consumerSubject  string
 	workerGroupName  string
@@ -46,12 +47,14 @@ func NewQueue(
 	workerGroupName string,
 	publisherSubject string,
 	consumerSubject string,
+	uuid string,
 
 ) *queue {
 	//
 	reconnectInterval := 10 * time.Second
 	q := new(queue)
 	q.streamName = "TASKS"
+	q.workerId = uuid
 
 	q.url = url
 	q.publisherSubject = publisherSubject
