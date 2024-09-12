@@ -164,8 +164,7 @@ func cMain() {
 
 	logger.Println("+++++++ [[Watchdog Started]] +++++++", consumernats.WatchdogVersion)
 
-	// doUpdateStartupCheck()
-
+	doUpdateStartupCheck()
 	consumernats.Start()
 }
 
