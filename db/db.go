@@ -139,6 +139,7 @@ func UpdateTaskResultOld(subject string, taskResult bootstrap.TaskResult) error 
 		"exec_status":      taskResult.TaskStatus,
 		"message":          taskResult.Message,
 		"watchdog_version": taskResult.WatchdogVersion,
+		"worker_id":        taskResult.WorkerId,
 	}
 
 	var response map[string]interface{}
