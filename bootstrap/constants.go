@@ -119,7 +119,12 @@ var (
 type ReservedConstants struct {
 	BaseConstants
 
+	CORTEXUUID string `json:"cortex_uuid"`
+
 	CORTEXMODE CortexMode `json:"cortex_mode"`
+
+	CORTEXPINGURL      string `json:"cortex_ping_url"`
+	CORTEXPINGINTERVAL int    `json:"cortex_ping_interval"`
 
 	MESSAGEQUEUE        string `json:"message_queue_topic"`
 	PUBLISHMESSAGEQUEUE string `json:"publish_message_queue_topic"`
@@ -656,7 +661,13 @@ func initialize() *Constants {
 	log.Println("BUGMODE", DEBUG)
 
 	reservedConstants := ReservedConstants{
+
+		CORTEXUUID: *PopulateStr("CORTEX_UUID", "", ""),
+
 		CORTEXMODE: GetCortexMode("CORTEX_MODE", DefaultCortexMode),
+
+		CORTEXPINGURL:      *PopulateStr("CORTEX_PING_URL", "", ""),
+		CORTEXPINGINTERVAL: *PopulateInt("CORTEX_PING_INTERVAL", 10, ""),
 
 		MESSAGEQUEUE:        *PopulateStr("message_queue_topic", "tasks_test", "Message Queue Topic"),
 		PUBLISHMESSAGEQUEUE: *PopulateStr("publish_message_queue_topic", "task_result", "Publish Message Queue Topic"),

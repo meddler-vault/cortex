@@ -98,6 +98,8 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 		return
 	}
 
+	// Set a webhook call here
+
 	// Override the constants with message-spec
 	bootstrap.CONSTANTS.Override(&data.Config)
 	identifier := &data.Identifier

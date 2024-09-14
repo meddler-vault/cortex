@@ -10,6 +10,7 @@ import (
 
 	"github.com/meddler-vault/cortex/bootstrap"
 	consumernats "github.com/meddler-vault/cortex/consumer-nats"
+	"github.com/meddler-vault/cortex/healthchecker"
 	"github.com/meddler-vault/cortex/logger"
 	"github.com/meddler-vault/cortex/selfupdate"
 
@@ -165,6 +166,22 @@ func cMain() {
 	logger.Println("+++++++ [[Watchdog Started]] +++++++", consumernats.WatchdogVersion)
 
 	doUpdateStartupCheck()
+
+	// Start the health checker
+
+	endpoint := "https://api.meddler.io/secoflex/health-check"
+
+	endpoint = bootstrap.CONSTANTS.Reserved.CORTEXPINGURL
+
+	initialMessage := map[string]interface{}{
+		"state": "resurrected", "details": "Ressurected. Probably my first times in this world, or reincarnation!"}
+	healthchecker.InitializeGlobalHealth(bootstrap.CONSTANTS.Reserved.CORTEXUUID, endpoint, initialMessage)
+	// stopCh := make(chan struct{})
+	// interval := time.Duration(bootstrap.CONSTANTS.Reserved.CORTEXPINGINTERVAL) * time.Second
+	// healthchecker.HealthCheckWorker(interval, stopCh)
+
+	//
+
 	consumernats.Start()
 }
 

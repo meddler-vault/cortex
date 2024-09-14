@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/meddler-vault/cortex/healthchecker"
 	"github.com/meddler-vault/cortex/logger"
 
 	"os"
@@ -46,6 +47,14 @@ func SendMessage(queue *queue, topic string, message string) (err error) {
 func SendTaskUpdate(queue *queue, taskResult bootstrap.TaskResult) (err error) {
 
 	//
+	healthCheckMessage := map[string]interface{}{
+		"identifier":  taskResult.Identifier,
+		"exec_status": taskResult.TaskStatus,
+		"state":       "working", "details": "Inside working mode!"}
+
+	healthchecker.SetMessage(healthCheckMessage)
+
+	//
 	taskResult.WorkerId = queue.workerId
 
 	//
@@ -70,14 +79,12 @@ func Start() {
 	// username := getenvStr("RMQ_USERNAME", "whitehat")
 	// password := getenvStr("RMQ_PASSWORD", "4Jy6P)$Ep@c^SenL")
 
-	uuid := getenvStr("uuid", "uuid")
-
 	connectionString := getenvStr("NATS_CONNECTION_STRING", "nats://connection-string")
 
 	// username = url.QueryEscape(username)
 	// password = url.QueryEscape(password)
 	// host := getenvStr("RMQ_HOST", "hawki-rabbitmq.indiatimes.com:4222")
-	logger.Println("uuid", uuid)
+
 	// logger.Println("username", username)
 	// logger.Println("password", password)
 	// logger.Println("host", host)
@@ -168,7 +175,7 @@ func Start() {
 		workerGroupName,
 		publisherSubject,
 		consumerSubject,
-		uuid,
+		bootstrap.CONSTANTS.Reserved.CORTEXUUID,
 	)
 
 	defer Queue.Close()
