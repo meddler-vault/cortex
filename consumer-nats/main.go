@@ -165,6 +165,8 @@ func Start() {
 		publisherSubject,
 		"\n {CORTEX_MQ_WORKER_NAME} \n",
 		workerGroupName,
+		"\n {CORTEXUUID} \n",
+		bootstrap.CONSTANTS.Reserved.CORTEXUUID,
 		"\n",
 	)
 
