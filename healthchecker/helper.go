@@ -43,22 +43,24 @@ func SetMessage(newMessage map[string]interface{}) {
 	newMessage["worker_id"] = uuid
 	newMessage["created_at"] = created_at
 	newMessage["updated_at"] = time.Now().Format(time.RFC3339)
-
-	if uuid == "" {
-		return
-	}
 	globalHealth.message.Store(newMessage)
+
 }
 
 // GetMessage returns the atomic message
 func (ah *AtomicHealth) GetMessage() map[string]interface{} {
 	val := ah.message.Load()
-	if val != nil {
-		_val := val.(map[string]interface{})
-		_val["sequence_number"] = sequence_number
+	var _val map[string]interface{}
 
+	if val == nil {
+		_val = make(map[string]interface{})
+	} else {
+		_val = val.(map[string]interface{})
 	}
-	return nil
+
+	_val["sequence_number"] = sequence_number
+
+	return _val
 }
 
 // InitializeGlobalHealth initializes the global AtomicHealth instance
