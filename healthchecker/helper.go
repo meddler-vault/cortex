@@ -40,6 +40,9 @@ type AtomicHealth struct {
 // SetMessage sets the atomic message
 func SetMessage(newMessage map[string]interface{}) {
 
+	// seq should increase only when a new message is set!
+	sequence_number += 1
+	//
 	newMessage["worker_id"] = uuid
 	newMessage["created_at"] = created_at
 	newMessage["updated_at"] = time.Now().Format(time.RFC3339)
@@ -86,7 +89,6 @@ func InitializeGlobalHealth(worker_id string, current_endpoint string, initialMe
 
 // sendHealthData sends the current health data to the server
 func sendHealthData(endpoint string) {
-	sequence_number += 1
 	// Prepare the latest health data with the current timestamp
 	healthData := HealthData{
 		Message:   globalHealth.GetMessage(),
