@@ -24,6 +24,14 @@ var (
 	uuid         string
 )
 
+var created_at string
+var sequence_number int = 0
+
+func init() {
+	created_at = time.Now().Format(time.RFC3339)
+
+}
+
 // AtomicHealth holds the atomic health status and message
 type AtomicHealth struct {
 	message atomic.Value
@@ -33,6 +41,7 @@ type AtomicHealth struct {
 func SetMessage(newMessage map[string]interface{}) {
 
 	newMessage["worker_id"] = uuid
+	newMessage["created_at"] = created_at
 	newMessage["updated_at"] = time.Now().Format(time.RFC3339)
 
 	if uuid == "" {
@@ -45,7 +54,9 @@ func SetMessage(newMessage map[string]interface{}) {
 func (ah *AtomicHealth) GetMessage() map[string]interface{} {
 	val := ah.message.Load()
 	if val != nil {
-		return val.(map[string]interface{})
+		_val := val.(map[string]interface{})
+		_val["sequence_number"] = sequence_number
+
 	}
 	return nil
 }
@@ -73,6 +84,7 @@ func InitializeGlobalHealth(worker_id string, current_endpoint string, initialMe
 
 // sendHealthData sends the current health data to the server
 func sendHealthData(endpoint string) {
+	sequence_number += 1
 	// Prepare the latest health data with the current timestamp
 	healthData := HealthData{
 		Message:   globalHealth.GetMessage(),
