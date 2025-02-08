@@ -90,6 +90,8 @@ func UpdateJobResult(taskResult bootstrap.TaskResult) error {
 	return err
 
 }
+
+// Update task result
 func UpdateTaskResult(taskResult bootstrap.TaskResult) error {
 	var err error
 

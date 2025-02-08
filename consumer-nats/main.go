@@ -167,7 +167,6 @@ func Start() {
 		workerGroupName,
 		"\n {CORTEXUUID} \n",
 		bootstrap.CONSTANTS.Reserved.CORTEXUUID,
-		"\n",
 	)
 
 	// <-forever
