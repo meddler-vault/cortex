@@ -665,7 +665,6 @@ func Clone(url string, path string, auth_mode string, username string, password 
 	if auth_mode == NOAUTH {
 
 	} else if auth_mode == BASICAUTH {
-		log.Println("auth_mode", auth_mode)
 
 		auth = &http.BasicAuth{
 			Username: username,
@@ -692,6 +691,8 @@ func Clone(url string, path string, auth_mode string, username string, password 
 	} else {
 		// repository, err = cloneRepository(url, path)
 	}
+
+	log.Println("auth mode is ", url, path, gitref, auth, gitdepth)
 
 	repository, err = cloneRepository(url, path, gitref, &auth, gitdepth)
 

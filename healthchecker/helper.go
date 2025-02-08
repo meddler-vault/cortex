@@ -19,9 +19,10 @@ type HealthData struct {
 
 // AtomicHealth holds the atomic health status and message
 var (
-	globalHealth *AtomicHealth
-	endpoint     string
-	uuid         string
+	globalHealth       *AtomicHealth
+	endpoint           string
+	uuid               string
+	subscription_topic string
 )
 
 var created_at string
@@ -44,6 +45,7 @@ func SetMessage(newMessage map[string]interface{}) {
 	sequence_number += 1
 	//
 	newMessage["worker_id"] = uuid
+	newMessage["subscription_topic"] = subscription_topic
 	newMessage["created_at"] = created_at
 	newMessage["updated_at"] = time.Now().Format(time.RFC3339)
 	globalHealth.message.Store(newMessage)
@@ -67,13 +69,14 @@ func (ah *AtomicHealth) GetMessage() map[string]interface{} {
 }
 
 // InitializeGlobalHealth initializes the global AtomicHealth instance
-func InitializeGlobalHealth(worker_id string, current_endpoint string, initialMessage map[string]interface{}) {
+func InitializeGlobalHealth(worker_id string, subscription_topic_id string, current_endpoint string, initialMessage map[string]interface{}) {
 	if globalHealth != nil {
 		log.Println("Global health already initialized")
 		return
 	}
 	endpoint = current_endpoint
 	uuid = worker_id
+	subscription_topic = subscription_topic_id
 	globalHealth = &AtomicHealth{}
 	SetMessage(initialMessage)
 
