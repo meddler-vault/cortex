@@ -2,6 +2,9 @@ package watchdog
 
 import (
 	"os"
+	"os/exec"
+	"syscall"
+	"time"
 
 	"github.com/meddler-vault/cortex/logger"
 
@@ -9,7 +12,7 @@ import (
 	"github.com/meddler-vault/cortex/executor"
 )
 
-func Start(id string, cmd []string, args []string, env map[string]string) error {
+func Start(id string, cmd []string, args []string, env map[string]string) (error, map[string]interface{}) {
 
 	// environment := make(map[string]string)
 	environment := []string{}
@@ -54,9 +57,25 @@ func Start(id string, cmd []string, args []string, env map[string]string) error 
 
 	logger.Println("Environment", req.Environment)
 
+	start_time := time.Now().Unix()
 	err := functionInvoker.Run(req)
+	end_time := time.Now().Unix()
+
+	exitCode := -1
 	if err != nil {
 		logger.Println(err)
+
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+				exitCode = status.ExitStatus()
+			}
+		}
 	}
-	return err
+
+	return err, map[string]interface{}{
+		"start_time":     start_time,
+		"end_time":       end_time,
+		"execution_time": end_time - start_time,
+		"exit_code":      exitCode,
+	}
 }

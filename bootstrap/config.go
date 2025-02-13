@@ -107,5 +107,7 @@ type TaskResult struct {
 	Identifier      string     `json:"identifier" validate:"required"`
 	WorkerId        string     `json:"worker_id" `
 
-	Response string `json:"response" ` // success_endpoint
+	Response string                 `json:"response" ` // success_endpoint
+	MetaData map[string]interface{} `json:"meta_data"` // TODO: ANy extrea meta data that we wish to send
+
 }

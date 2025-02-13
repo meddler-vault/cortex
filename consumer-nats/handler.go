@@ -70,6 +70,7 @@ func msgHandlerForTaskResultProcessor(queue *queue, msg string, subject string) 
 func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err error) {
 
 	var processErr error
+	var meta_data map[string]interface{}
 
 	logger.Println("**************************")
 
@@ -116,6 +117,7 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 				TaskStatus:      bootstrap.FAILURE,
 				Message:         processErr.Error(),
 				WatchdogVersion: WatchdogVersion,
+				MetaData:        meta_data,
 			})
 		} else {
 
@@ -127,6 +129,7 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 				TaskStatus:      bootstrap.SUCCESS,
 				Message:         "Task completed successfully",
 				WatchdogVersion: WatchdogVersion,
+				MetaData:        meta_data,
 			})
 
 			// Mark Initiated
@@ -139,6 +142,7 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 		TaskStatus:      bootstrap.INITIATED,
 		Message:         "Task Initiated",
 		WatchdogVersion: WatchdogVersion,
+		MetaData:        meta_data,
 	})
 
 	logger.InitNewTask(*identifier)
@@ -415,7 +419,7 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 	logger.Println("Reaper", data.Identifier, data.Cmd, data.Args, environment)
 
 	// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
-	processErr = watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
+	processErr, meta_data = watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
 	logger.Println("Finished task", "Error:", processErr)
 	// Process Finished
 
