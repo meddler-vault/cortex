@@ -72,7 +72,7 @@ func (ah *AtomicHealth) GetMessage() map[string]interface{} {
 }
 
 // InitializeGlobalHealth initializes the global AtomicHealth instance
-func InitializeGlobalHealth(worker_id string, subscription_topic_id string, current_endpoint string, initialMessage map[string]interface{}) (pubsubref *pubsub.PubSub) {
+func InitializeGlobalHealth(worker_id string, subscription_topic_id string, current_endpoint string, initialMessage map[string]interface{}) *pubsub.PubSub {
 
 	if pubsubref != nil {
 		log.Println("Pubsub for healthcheck already initialized!")
@@ -82,7 +82,7 @@ func InitializeGlobalHealth(worker_id string, subscription_topic_id string, curr
 
 	if globalHealth != nil {
 		log.Println("Global health already initialized")
-		return
+		return pubsubref
 	}
 
 	endpoint = current_endpoint
@@ -99,7 +99,7 @@ func InitializeGlobalHealth(worker_id string, subscription_topic_id string, curr
 
 	HealthCheckWorker(interval, stopCh)
 
-	return
+	return pubsubref
 
 }
 
