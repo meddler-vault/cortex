@@ -8,6 +8,7 @@ import (
 
 	"github.com/meddler-vault/cortex/healthchecker"
 	"github.com/meddler-vault/cortex/logger"
+	"github.com/meddler-vault/cortex/pubsub"
 
 	"os"
 
@@ -15,6 +16,7 @@ import (
 )
 
 var WatchdogVersion = "0.0.1"
+var PubSubRef *pubsub.PubSub
 
 func getenvStr(key string, defaultValue string) string {
 	v := os.Getenv(key)
@@ -73,7 +75,9 @@ func SendTaskUpdate(queue *queue, taskResult bootstrap.TaskResult) (err error) {
 	return
 }
 
-func Start() {
+func Start(pubsub *pubsub.PubSub) {
+	PubSubRef = pubsub
+
 	forever := make(chan bool)
 
 	// username := getenvStr("RMQ_USERNAME", "whitehat")

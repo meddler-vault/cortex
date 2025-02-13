@@ -10,7 +10,7 @@ import (
 	"github.com/meddler-vault/cortex/executor"
 )
 
-func Start(id string, cmd []string, args []string, env map[string]string) (map[string]interface{}, error) {
+func Start(id string, cmd []string, args []string, env map[string]string, gracefullKillingSignal <-chan string) (map[string]interface{}, error) {
 
 	// environment := make(map[string]string)
 	environment := []string{}
@@ -51,6 +51,7 @@ func Start(id string, cmd []string, args []string, env map[string]string) (map[s
 		Environment:             environment,
 		TractID:                 id,
 		CurrentWorkingDirectory: env["CWD"],
+		GracefullProcessKiller:  gracefullKillingSignal,
 	}
 
 	logger.Println("Environment", req.Environment)

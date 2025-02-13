@@ -175,14 +175,14 @@ func cMain() {
 
 	initialMessage := map[string]interface{}{
 		"state": "resurrected", "details": "Ressurected. Probably my first times in this world, or reincarnation!"}
-	healthchecker.InitializeGlobalHealth(bootstrap.CONSTANTS.Reserved.CORTEXUUID, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, endpoint, initialMessage)
+	pubsub := healthchecker.InitializeGlobalHealth(bootstrap.CONSTANTS.Reserved.CORTEXUUID, bootstrap.CONSTANTS.Reserved.MESSAGEQUEUE, endpoint, initialMessage)
 	// stopCh := make(chan struct{})
 	// interval := time.Duration(bootstrap.CONSTANTS.Reserved.CORTEXPINGINTERVAL) * time.Second
 	// healthchecker.HealthCheckWorker(interval, stopCh)
 
 	//
 
-	consumernats.Start()
+	consumernats.Start(pubsub)
 }
 
 // const version = "1.0.0" // Current version of your application

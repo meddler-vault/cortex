@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/meddler-vault/cortex/bootstrap"
+	pubsub "github.com/meddler-vault/cortex/pubsub"
 )
 
 // HealthData represents the data structure for the health check payload
@@ -19,7 +20,9 @@ type HealthData struct {
 
 // AtomicHealth holds the atomic health status and message
 var (
-	globalHealth       *AtomicHealth
+	globalHealth *AtomicHealth
+	pubsubref    *pubsub.PubSub
+
 	endpoint           string
 	uuid               string
 	subscription_topic string
@@ -69,11 +72,19 @@ func (ah *AtomicHealth) GetMessage() map[string]interface{} {
 }
 
 // InitializeGlobalHealth initializes the global AtomicHealth instance
-func InitializeGlobalHealth(worker_id string, subscription_topic_id string, current_endpoint string, initialMessage map[string]interface{}) {
+func InitializeGlobalHealth(worker_id string, subscription_topic_id string, current_endpoint string, initialMessage map[string]interface{}) (pubsubref *pubsub.PubSub) {
+
+	if pubsubref != nil {
+		log.Println("Pubsub for healthcheck already initialized!")
+	} else {
+		pubsubref = pubsub.NewPubSub("healthcheck-process-killer")
+	}
+
 	if globalHealth != nil {
 		log.Println("Global health already initialized")
 		return
 	}
+
 	endpoint = current_endpoint
 	uuid = worker_id
 	subscription_topic = subscription_topic_id
@@ -87,6 +98,8 @@ func InitializeGlobalHealth(worker_id string, subscription_topic_id string, curr
 	interval := time.Duration(bootstrap.CONSTANTS.Reserved.CORTEXPINGINTERVAL) * time.Second
 
 	HealthCheckWorker(interval, stopCh)
+
+	return
 
 }
 
@@ -123,11 +136,24 @@ func sendHealthData(endpoint string) {
 	defer resp.Body.Close()
 
 	// Check for successful response
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("Non-OK HTTP response: %s", resp.Status)
+	if resp.StatusCode == http.StatusOK {
+
+	} else if resp.StatusCode == http.StatusResetContent {
+
+		if val, exists := healthData.Message["identifier"]; exists {
+			if identifier, ok := val.(string); ok {
+				pubsubref.Publish((identifier))
+
+			}
+
+		}
+
 	} else {
-		log.Println("Health check successful")
+
 	}
+
+	log.Printf("HTTP response: %s", resp.Status)
+
 }
 
 // HealthCheckWorker sends the latest health data to the server periodically

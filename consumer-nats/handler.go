@@ -105,6 +105,11 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 	bootstrap.CONSTANTS.Override(&data.Config)
 	identifier := &data.Identifier
 
+	gracefullProcessKillerChannelId, gracefullProcessKillerChannel := PubSubRef.Subscribe(*identifier)
+	defer func() {
+		PubSubRef.Unsubscribe(gracefullProcessKillerChannelId)
+	}()
+
 	//
 	// Defer to notify
 	// Mark Finished failure
@@ -419,7 +424,7 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 	logger.Println("Reaper", data.Identifier, data.Cmd, data.Args, environment)
 
 	// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
-	meta_data, processErr = watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
+	meta_data, processErr = watchdog.Start(data.Identifier, data.Cmd, data.Args, environment, gracefullProcessKillerChannel)
 	logger.Println("Finished task", "Error:", processErr)
 	// Process Finished
 
