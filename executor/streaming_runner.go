@@ -91,46 +91,6 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) (map[string]interface{}, e
 		_logger.Println("PM: Starting Process Killer Timeout", f.ExecTimeout)
 
 		go func() {
-			meta_data["exec_stop_gracefull_attempt"] = false
-
-			_logger.Println("gracefull-process Killer Activated")
-			<-req.GracefullProcessKiller
-			_logger.Println("gracefull-process Killer Executing")
-
-			meta_data["exec_stop_gracefull_attempt"] = true
-			_logger.Println("Function will be killed by ExecTimeout:", f.ExecTimeout.String())
-
-			pgid, err := syscall.Getpgid(cmd.Process.Pid)
-			if err != nil {
-				meta_data["exec_stop_gracefull_status"] = false
-
-				_logger.Println("Kill Signal Failed: coudnb;t get process group_id")
-				_logger.Println("Error", err)
-				return
-			}
-
-			// killErr := cmd.Process.Kill()
-			killErr := syscall.Kill(-pgid, syscall.SIGKILL)
-			if killErr != nil {
-				meta_data["exec_stop_gracefull_status"] = false
-				fmt.Println("Error killing function due to ExecTimeout", killErr)
-			}
-
-			_logger.Println("Kill Signal Sent")
-
-			killErr = cmd.Wait()
-			if killErr != nil {
-				meta_data["exec_stop_gracefull_status"] = false
-				fmt.Println("Error waiting function due to ExecTimeout", killErr)
-			}
-
-			meta_data["exec_stop_gracefull_status"] = true
-
-			_logger.Println("Successully Killed")
-
-		}()
-
-		go func() {
 			_logger.Println("PM: Started Process Killer Timeout", f.ExecTimeout)
 
 			<-timer.C
@@ -201,6 +161,46 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) (map[string]interface{}, e
 		})
 		return meta_data, startErr
 	}
+
+	go func() {
+		meta_data["exec_stop_gracefull_attempt"] = false
+
+		_logger.Println("gracefull-process Killer Activated")
+		<-req.GracefullProcessKiller
+		_logger.Println("gracefull-process Killer Executing")
+
+		meta_data["exec_stop_gracefull_attempt"] = true
+		_logger.Println("Function will be killed by ExecTimeout:", f.ExecTimeout.String())
+
+		pgid, err := syscall.Getpgid(cmd.Process.Pid)
+		if err != nil {
+			meta_data["exec_stop_gracefull_status"] = false
+
+			_logger.Println("Kill Signal Failed: coudnb;t get process group_id")
+			_logger.Println("Error", err)
+			return
+		}
+
+		// killErr := cmd.Process.Kill()
+		killErr := syscall.Kill(-pgid, syscall.SIGKILL)
+		if killErr != nil {
+			meta_data["exec_stop_gracefull_status"] = false
+			fmt.Println("Error killing function due to ExecTimeout", killErr)
+		}
+
+		_logger.Println("Kill Signal Sent")
+
+		killErr = cmd.Wait()
+		if killErr != nil {
+			meta_data["exec_stop_gracefull_status"] = false
+			fmt.Println("Error waiting function due to ExecTimeout", killErr)
+		}
+
+		meta_data["exec_stop_gracefull_status"] = true
+
+		_logger.Println("Successully Killed")
+
+	}()
 
 	logger.Post(req.TractID, map[string]string{
 		"pipe":    "stdend",
