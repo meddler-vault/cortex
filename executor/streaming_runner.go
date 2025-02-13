@@ -83,6 +83,34 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) (map[string]interface{}, e
 	// _logger.Println("EnvVaribles", cmd.Env)
 	cmd.Dir = req.CurrentWorkingDirectory
 
+	if req.InputReader != nil {
+		defer req.InputReader.Close()
+		cmd.Stdin = req.InputReader
+	}
+	// cmd.Stdout = req.OutputWriter
+
+	// Prints stderr to console and is picked up by container logging driver.
+	errPipe, _ := cmd.StderrPipe()
+	stdoutPipe, _ := cmd.StdoutPipe()
+	// _logger.Printf("TractId", req.TractID)
+
+	var wg sync.WaitGroup
+	bindFluentLoggingPipe(logger, "stderr", req.TractID, errPipe, &wg)
+	bindFluentLoggingPipe(logger, "stdout", req.TractID, stdoutPipe, &wg)
+
+	startErr := cmd.Start()
+
+	if startErr != nil {
+		meta_data["startup_status"] = false
+		_logger.Println("Starting error", startErr, "path", cmd.Path, "lookPathErr")
+
+		logger.Post(req.TractID, map[string]string{
+			"pipe":    "stdend",
+			"message": "End: " + startErr.Error(),
+		})
+		return meta_data, startErr
+	}
+
 	var timer *time.Timer
 	if f.ExecTimeout > time.Millisecond*0 {
 		timer = time.NewTimer(f.ExecTimeout)
@@ -131,35 +159,6 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) (map[string]interface{}, e
 
 	if timer != nil {
 		defer timer.Stop()
-	}
-
-	if req.InputReader != nil {
-		defer req.InputReader.Close()
-		cmd.Stdin = req.InputReader
-	}
-	// cmd.Stdout = req.OutputWriter
-
-	// Prints stderr to console and is picked up by container logging driver.
-	errPipe, _ := cmd.StderrPipe()
-	stdoutPipe, _ := cmd.StdoutPipe()
-	// _logger.Printf("TractId", req.TractID)
-
-	var wg sync.WaitGroup
-	bindFluentLoggingPipe(logger, "stderr", req.TractID, errPipe, &wg)
-	bindFluentLoggingPipe(logger, "stdout", req.TractID, stdoutPipe, &wg)
-
-	startErr := cmd.Start()
-	wg.Wait()
-
-	if startErr != nil {
-		meta_data["startup_status"] = false
-		_logger.Println("Starting error", startErr, "path", cmd.Path, "lookPathErr")
-
-		logger.Post(req.TractID, map[string]string{
-			"pipe":    "stdend",
-			"message": "End: " + startErr.Error(),
-		})
-		return meta_data, startErr
 	}
 
 	go func() {
