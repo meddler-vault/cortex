@@ -67,7 +67,10 @@ var logger, _ = fluent.New(fluent.Config{
 })
 
 // Run run a fork for each invocation
-func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
+func (f *ForkFunctionRunner) Run(req FunctionRequest) (map[string]interface{}, error) {
+
+	var meta_data = make(map[string]interface{})
+
 	_logger.Println("Running ", req.Process, req.ProcessArgs, req.Environment)
 	_logger.Println("fluentd debug", getenvInt("fluent_port", 24224), getenvStr("fluent_host", "localhost"))
 	start := time.Now()
@@ -83,6 +86,7 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	var timer *time.Timer
 	if f.ExecTimeout > time.Millisecond*0 {
 		timer = time.NewTimer(f.ExecTimeout)
+		meta_data["exec_stop_timeout_attempt"] = false
 
 		_logger.Println("PM: Starting Process Killer Timeout", f.ExecTimeout)
 
@@ -91,10 +95,13 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 
 			<-timer.C
 
+			meta_data["exec_stop_timeout_attempt"] = true
 			_logger.Println("Function will be killed by ExecTimeout:", f.ExecTimeout.String())
 
 			pgid, err := syscall.Getpgid(cmd.Process.Pid)
 			if err != nil {
+				meta_data["exec_stop_timeout_status"] = false
+
 				_logger.Println("Kill Signal Failed: coudnb;t get process group_id")
 				_logger.Println("Error", err)
 				return
@@ -103,6 +110,7 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 			// killErr := cmd.Process.Kill()
 			killErr := syscall.Kill(-pgid, syscall.SIGKILL)
 			if killErr != nil {
+				meta_data["exec_stop_timeout_status"] = false
 				fmt.Println("Error killing function due to ExecTimeout", killErr)
 			}
 
@@ -110,8 +118,11 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 
 			killErr = cmd.Wait()
 			if killErr != nil {
+				meta_data["exec_stop_timeout_status"] = false
 				fmt.Println("Error waiting function due to ExecTimeout", killErr)
 			}
+
+			meta_data["exec_stop_timeout_status"] = true
 
 			_logger.Println("Successully Killed")
 
@@ -141,13 +152,14 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	wg.Wait()
 
 	if startErr != nil {
+		meta_data["startup_status"] = false
 		_logger.Println("Starting error", startErr, "path", cmd.Path, "lookPathErr")
 
 		logger.Post(req.TractID, map[string]string{
 			"pipe":    "stdend",
 			"message": "End: " + startErr.Error(),
 		})
-		return startErr
+		return meta_data, startErr
 	}
 
 	logger.Post(req.TractID, map[string]string{
@@ -156,6 +168,10 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	})
 
 	waitErr := cmd.Wait()
+
+	meta_data["exit_code"] = cmd.ProcessState.ExitCode()
+	meta_data["exit_message"] = cmd.ProcessState.String()
+
 	done := time.Since(start)
 	_logger.Println("Took ", done.Seconds(), "seconds")
 	if timer != nil {
@@ -167,8 +183,8 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) error {
 	req.OutputWriter.Write([]byte("Trace-ID: " + req.TractID + strconv.Itoa(getenvInt("fluent_port", 24224)) + getenvStr("fluent_host", "localhost")))
 
 	if waitErr != nil {
-		return waitErr
+		return meta_data, waitErr
 	}
 
-	return nil
+	return meta_data, nil
 }

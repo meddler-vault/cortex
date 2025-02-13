@@ -2,8 +2,6 @@ package watchdog
 
 import (
 	"os"
-	"os/exec"
-	"syscall"
 	"time"
 
 	"github.com/meddler-vault/cortex/logger"
@@ -58,24 +56,16 @@ func Start(id string, cmd []string, args []string, env map[string]string) (error
 	logger.Println("Environment", req.Environment)
 
 	start_time := time.Now().Unix()
-	err := functionInvoker.Run(req)
+	meta_data, err := functionInvoker.Run(req)
 	end_time := time.Now().Unix()
 
-	exitCode := -1
 	if err != nil {
 		logger.Println(err)
 
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				exitCode = status.ExitStatus()
-			}
-		}
 	}
 
-	return err, map[string]interface{}{
-		"start_time":     start_time,
-		"end_time":       end_time,
-		"execution_time": end_time - start_time,
-		"exit_code":      exitCode,
-	}
+	meta_data["start_time"] = start_time
+	meta_data["end_time"] = end_time
+	meta_data["execution_time"] = end_time - start_time
+	return err, meta_data
 }
