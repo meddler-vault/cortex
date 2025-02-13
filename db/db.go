@@ -83,6 +83,7 @@ func UpdateJobResult(taskResult bootstrap.TaskResult) error {
 		"message":          taskResult.Message,
 		"watchdog_version": taskResult.WatchdogVersion,
 		"worker_id":        taskResult.WorkerId,
+		"meta_data":        taskResult.MetaData,
 	}
 
 	err = updateBuildJobStatus(taskResult.Identifier, updateRes)
@@ -102,6 +103,7 @@ func UpdateTaskResult(taskResult bootstrap.TaskResult) error {
 
 		"deployed":  false,
 		"worker_id": taskResult.WorkerId,
+		"meta_data": taskResult.MetaData,
 	}
 
 	err = updateTaskStatusInDraft(taskResult.Identifier, updateRes)
