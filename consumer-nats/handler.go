@@ -419,7 +419,7 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 	logger.Println("Reaper", data.Identifier, data.Cmd, data.Args, environment)
 
 	// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
-	processErr, meta_data = watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
+	meta_data, processErr = watchdog.Start(data.Identifier, data.Cmd, data.Args, environment)
 	logger.Println("Finished task", "Error:", processErr)
 	// Process Finished
 

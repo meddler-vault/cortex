@@ -10,7 +10,7 @@ import (
 	"github.com/meddler-vault/cortex/executor"
 )
 
-func Start(id string, cmd []string, args []string, env map[string]string) (error, map[string]interface{}) {
+func Start(id string, cmd []string, args []string, env map[string]string) (map[string]interface{}, error) {
 
 	// environment := make(map[string]string)
 	environment := []string{}
@@ -67,5 +67,5 @@ func Start(id string, cmd []string, args []string, env map[string]string) (error
 	meta_data["start_time"] = start_time
 	meta_data["end_time"] = end_time
 	meta_data["execution_time"] = end_time - start_time
-	return err, meta_data
+	return meta_data, err
 }
