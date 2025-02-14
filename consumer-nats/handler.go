@@ -430,21 +430,21 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 	logger.Println("Finished task", "Error:", processErr)
 
 	// Assign meta-data for inp variables
-	meta_data["host"] = *bootstrap.CONSTANTS.System.HOST
-	meta_data["ip"] = *bootstrap.CONSTANTS.System.IP_ADDRESS
-	meta_data["ip_v4"] = *bootstrap.CONSTANTS.System.IP_ADDRESS_V4
-	meta_data["ip_v6"] = *bootstrap.CONSTANTS.System.IP_ADDRESS_V6
-	meta_data["url"] = *bootstrap.CONSTANTS.System.URL
-	meta_data["fqdn"] = *bootstrap.CONSTANTS.System.FQDN
-	meta_data["android_apk_path"] = *bootstrap.CONSTANTS.System.ANDROID_APK
-	meta_data["ios_ipa_path"] = *bootstrap.CONSTANTS.System.IOS_IPA
-	meta_data["postman_collection_json"] = *bootstrap.CONSTANTS.System.POSTMAN_COLLECTION_JSON
-	meta_data["swagger_json"] = *bootstrap.CONSTANTS.System.SWAGGER_COLLECTION_JSON
-	meta_data["git_path"] = *bootstrap.CONSTANTS.System.GITPATH
-	meta_data["git_ref"] = *bootstrap.CONSTANTS.System.GITREF
-	meta_data["git_base_commit_id"] = *bootstrap.CONSTANTS.System.GITBASECOMMITID
-	meta_data["git_target_commit_id"] = *bootstrap.CONSTANTS.System.GITTARGETCOMMITID
-	meta_data["git_depth"] = *bootstrap.CONSTANTS.System.GITDEPTH
+	meta_data["host"] = bootstrap.CONSTANTS.System.HOST
+	meta_data["ip"] = bootstrap.CONSTANTS.System.IP_ADDRESS
+	meta_data["ip_v4"] = bootstrap.CONSTANTS.System.IP_ADDRESS_V4
+	meta_data["ip_v6"] = bootstrap.CONSTANTS.System.IP_ADDRESS_V6
+	meta_data["url"] = bootstrap.CONSTANTS.System.URL
+	meta_data["fqdn"] = bootstrap.CONSTANTS.System.FQDN
+	meta_data["android_apk_path"] = bootstrap.CONSTANTS.System.ANDROID_APK
+	meta_data["ios_ipa_path"] = bootstrap.CONSTANTS.System.IOS_IPA
+	meta_data["postman_collection_json"] = bootstrap.CONSTANTS.System.POSTMAN_COLLECTION_JSON
+	meta_data["swagger_json"] = bootstrap.CONSTANTS.System.SWAGGER_COLLECTION_JSON
+	meta_data["git_path"] = bootstrap.CONSTANTS.System.GITPATH
+	meta_data["git_ref"] = bootstrap.CONSTANTS.System.GITREF
+	meta_data["git_base_commit_id"] = bootstrap.CONSTANTS.System.GITBASECOMMITID
+	meta_data["git_target_commit_id"] = bootstrap.CONSTANTS.System.GITTARGETCOMMITID
+	meta_data["git_depth"] = bootstrap.CONSTANTS.System.GITDEPTH
 
 	// Process Finished
 
