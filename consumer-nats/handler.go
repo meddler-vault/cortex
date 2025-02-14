@@ -105,6 +105,8 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 	bootstrap.CONSTANTS.Override(&data.Config)
 	identifier := &data.Identifier
 
+	// meta_data[, *bootstrap.CONSTANTS.System. ,  ]
+
 	gracefullProcessKillerChannelId, gracefullProcessKillerChannel := PubSubRef.Subscribe(*identifier)
 	defer func() {
 		PubSubRef.Unsubscribe(gracefullProcessKillerChannelId)
@@ -426,6 +428,19 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 	// watchdog.Start(data.Cmd, data.Args, data.Config.GenerateMapForProcessEnv())
 	meta_data, processErr = watchdog.Start(data.Identifier, data.Cmd, data.Args, environment, gracefullProcessKillerChannel)
 	logger.Println("Finished task", "Error:", processErr)
+
+	// Assign meta-data for inp variables
+	meta_data["host"] = *bootstrap.CONSTANTS.System.HOST
+	meta_data["ip"] = *bootstrap.CONSTANTS.System.IP_ADDRESS
+	meta_data["ip_v4"] = *bootstrap.CONSTANTS.System.IP_ADDRESS_V4
+	meta_data["ip_v6"] = *bootstrap.CONSTANTS.System.IP_ADDRESS_V6
+	meta_data["url"] = *bootstrap.CONSTANTS.System.URL
+	meta_data["fqdn"] = *bootstrap.CONSTANTS.System.FQDN
+	meta_data["android_apk_path"] = *bootstrap.CONSTANTS.System.ANDROID_APK
+	meta_data["ios_ipa_path"] = *bootstrap.CONSTANTS.System.IOS_IPA
+	meta_data["postman_collection_json"] = *bootstrap.CONSTANTS.System.POSTMAN_COLLECTION_JSON
+	meta_data["swagger_json"] = *bootstrap.CONSTANTS.System.SWAGGER_COLLECTION_JSON
+
 	// Process Finished
 
 	logger.Println("Starting OUT Sync")
