@@ -2,6 +2,7 @@ package pubsub
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 )
@@ -41,6 +42,7 @@ func (ps *PubSub) Subscribe(filter string) (int, <-chan string) {
 		ch:     make(chan string, 1), // Buffered to avoid blocking
 	}
 	ps.subscribers[id] = sub
+	log.Println("local_pubsub_subscription", filter, id)
 	return id, sub.ch
 }
 
