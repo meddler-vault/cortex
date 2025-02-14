@@ -165,13 +165,12 @@ func (f *ForkFunctionRunner) Run(req FunctionRequest) (map[string]interface{}, e
 		meta_data["exec_stop_gracefull_attempt"] = false
 
 		_logger.Println("gracefull-process Killer Activated")
-		key_msg := <-req.GracefullProcessKiller
+		key_msg, ok := <-req.GracefullProcessKiller
 
-		_logger.Println("gracefull-process Killer Executing", key_msg)
-
-		if key_msg == "" {
+		if !ok {
 			return
 		}
+		_logger.Println("gracefull-process Killer Executing", key_msg)
 
 		meta_data["exec_stop_gracefull_attempt"] = true
 		_logger.Println("Function will be killed by ExecTimeout:", f.ExecTimeout.String())
