@@ -446,6 +446,8 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 	meta_data["git_target_commit_id"] = bootstrap.CONSTANTS.System.GITTARGETCOMMITID
 	meta_data["git_depth"] = bootstrap.CONSTANTS.System.GITDEPTH
 
+	logger.Println("meta_data_prepared", meta_data)
+
 	// Process Finished
 
 	logger.Println("Starting OUT Sync")
