@@ -440,7 +440,7 @@ func msgHandlerForTaskWorker(queue *queue, msg string, subject string) (err erro
 	meta_data["ios_ipa_path"] = bootstrap.CONSTANTS.System.IOS_IPA
 	meta_data["postman_collection_json"] = bootstrap.CONSTANTS.System.POSTMAN_COLLECTION_JSON
 	meta_data["swagger_json"] = bootstrap.CONSTANTS.System.SWAGGER_COLLECTION_JSON
-	meta_data["git_path"] = bootstrap.CONSTANTS.System.GITPATH
+	meta_data["git_remote"] = bootstrap.CONSTANTS.System.GITREMOTE
 	meta_data["git_ref"] = bootstrap.CONSTANTS.System.GITREF
 	meta_data["git_base_commit_id"] = bootstrap.CONSTANTS.System.GITBASECOMMITID
 	meta_data["git_target_commit_id"] = bootstrap.CONSTANTS.System.GITTARGETCOMMITID
